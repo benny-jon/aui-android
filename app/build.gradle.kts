@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":aui-compose"))
+    implementation(project(":aui-core"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
