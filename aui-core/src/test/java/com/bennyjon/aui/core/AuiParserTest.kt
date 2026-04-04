@@ -80,57 +80,41 @@ class AuiParserTest {
         assertEquals("poll_submit", button.feedback?.action)
     }
 
-    // ── Sheet step 1 ──────────────────────────────────────────────────────────
+    // ── Sheet flow ────────────────────────────────────────────────────────────
 
     @Test
-    fun `parse poll-sheet-step1`() {
-        val json = loadResource("examples/poll-sheet-step1.json")
+    fun `parse poll-sheet-flow`() {
+        val json = loadResource("examples/poll-sheet-flow.json")
         val response = parser.parse(json)
 
         assertEquals(AuiDisplay.SHEET, response.display)
         assertEquals("Quick Survey", response.sheetTitle)
+        assertEquals(3, response.steps.size)
 
-        val stepper = response.blocks[0] as AuiBlock.StepperHorizontal
-        assertEquals(3, stepper.data.steps.size)
-        assertEquals(0, stepper.data.current)
-        assertEquals("Experience", stepper.data.steps[0].label)
-
-        val chips = response.blocks[3] as AuiBlock.ChipSelectSingle
+        val step1 = response.steps[0]
+        assertEquals("Experience", step1.label)
+        assertEquals("How was your experience?", step1.question)
+        assertTrue(step1.skippable)
+        val chips = step1.blocks[0] as AuiBlock.ChipSelectSingle
         assertEquals("experience", chips.data.key)
         assertEquals(4, chips.data.options.size)
-    }
+        val next1 = step1.blocks[1] as AuiBlock.ButtonPrimary
+        assertEquals("poll_next_step", next1.feedback?.action)
 
-    // ── Sheet step 2 ──────────────────────────────────────────────────────────
+        val step2 = response.steps[1]
+        assertEquals("Features", step2.label)
+        val multiChips = step2.blocks[0] as AuiBlock.ChipSelectMulti
+        assertEquals("improvements", multiChips.data.key)
+        assertEquals(5, multiChips.data.options.size)
 
-    @Test
-    fun `parse poll-sheet-step2`() {
-        val json = loadResource("examples/poll-sheet-step2.json")
-        val response = parser.parse(json)
-
-        assertEquals(AuiDisplay.SHEET, response.display)
-        val stepper = response.blocks[0] as AuiBlock.StepperHorizontal
-        assertEquals(1, stepper.data.current)
-
-        val chips = response.blocks[3] as AuiBlock.ChipSelectMulti
-        assertEquals("improvements", chips.data.key)
-        assertEquals(5, chips.data.options.size)
-    }
-
-    // ── Sheet step 3 ──────────────────────────────────────────────────────────
-
-    @Test
-    fun `parse poll-sheet-step3`() {
-        val json = loadResource("examples/poll-sheet-step3.json")
-        val response = parser.parse(json)
-
-        assertEquals(AuiDisplay.SHEET, response.display)
-        val stepper = response.blocks[0] as AuiBlock.StepperHorizontal
-        assertEquals(2, stepper.data.current)
-
-        val textInput = response.blocks[3] as AuiBlock.InputTextSingle
+        val step3 = response.steps[2]
+        assertEquals("Feedback", step3.label)
+        assertEquals("Anything else you'd like to tell us?", step3.question)
+        val textInput = step3.blocks[0] as AuiBlock.InputTextSingle
         assertEquals("open_feedback", textInput.data.key)
-        assertEquals("Your feedback", textInput.data.label)
-        assertNotNull(textInput.data.placeholder)
+        val submit = step3.blocks[1] as AuiBlock.ButtonPrimary
+        assertEquals("poll_complete", submit.feedback?.action)
+        assertEquals("onboarding_survey", submit.feedback?.params?.get("poll_id"))
     }
 
     // ── Confirmation ──────────────────────────────────────────────────────────
@@ -202,7 +186,7 @@ class AuiParserTest {
         assertNotNull(parser.parseOrNull(json))
     }
 
-    // ── Sheet defaults ────────────────────────────────────────────────────────
+    // ── Sheet flow defaults ───────────────────────────────────────────────────
 
     @Test
     fun `sheetDismissable defaults to true when absent`() {
@@ -210,7 +194,7 @@ class AuiParserTest {
             {
               "display": "sheet",
               "sheet_title": "My Sheet",
-              "blocks": []
+              "steps": []
             }
         """.trimIndent()
         val response = parser.parse(json)

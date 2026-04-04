@@ -14,6 +14,7 @@ import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiResponse
+import com.bennyjon.aui.core.model.AuiStep
 import com.bennyjon.aui.core.model.data.ButtonPrimaryData
 import com.bennyjon.aui.core.model.data.ChipOption
 import com.bennyjon.aui.core.model.data.ChipSelectSingleData
@@ -26,12 +27,13 @@ import com.bennyjon.aui.core.model.data.TextData
  * - **INLINE**: All blocks rendered in a [Column]. Suitable for chat bubbles.
  * - **EXPANDED**: Leading text/heading/caption blocks rendered inline; remaining content
  *   blocks rendered full-width below.
- * - **SHEET**: Leading text/heading/caption blocks rendered inline as a preview; remaining
- *   content blocks rendered in a [ModalBottomSheet][androidx.compose.material3.ModalBottomSheet].
+ * - **SHEET**: Renders a persistent bottom sheet that navigates through each [AuiStep]
+ *   without closing between steps. The library manages step navigation, the stepper indicator,
+ *   and accumulation — emitting a single [AuiFeedback] with all Q+A entries at the end.
  *
- * The split logic: blocks are scanned from the start. Contiguous leading `text`, `heading`,
- * and `caption` blocks accumulate into the "bubble" list. The first non-text block and
- * everything after it form the "content" list.
+ * The split logic for INLINE/EXPANDED: blocks are scanned from the start. Contiguous leading
+ * `text`, `heading`, and `caption` blocks accumulate into the "bubble" list. The first
+ * non-text block and everything after it form the "content" list.
  *
  * @param response The parsed [AuiResponse] to route and render.
  * @param modifier Modifier applied to the outermost layout.
@@ -43,8 +45,6 @@ fun DisplayRouter(
     modifier: Modifier = Modifier,
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
-    val (bubbleBlocks, contentBlocks) = splitBlocks(response.blocks)
-
     when (response.display) {
         AuiDisplay.INLINE -> {
             BlockRenderer(
@@ -55,6 +55,7 @@ fun DisplayRouter(
         }
 
         AuiDisplay.EXPANDED -> {
+            val (bubbleBlocks, contentBlocks) = splitBlocks(response.blocks)
             Column(modifier = modifier.fillMaxWidth()) {
                 if (bubbleBlocks.isNotEmpty()) {
                     BlockRenderer(
@@ -73,21 +74,11 @@ fun DisplayRouter(
         }
 
         AuiDisplay.SHEET -> {
-            if (bubbleBlocks.isNotEmpty()) {
-                BlockRenderer(
-                    blocks = bubbleBlocks,
-                    modifier = modifier,
-                    onFeedback = onFeedback,
-                )
-            }
-            if (contentBlocks.isNotEmpty()) {
-                SheetDisplay(
-                    blocks = contentBlocks,
-                    sheetTitle = response.sheetTitle,
-                    sheetDismissable = response.sheetDismissable,
-                    onFeedback = onFeedback,
-                )
-            }
+            SheetFlowDisplay(
+                steps = response.steps,
+                sheetTitle = response.sheetTitle,
+                onFeedback = onFeedback,
+            )
         }
     }
 }
@@ -96,7 +87,7 @@ fun DisplayRouter(
  * Splits [blocks] into a bubble list (leading text/heading/caption blocks) and a content list
  * (remaining blocks starting at the first non-text block).
  */
-private fun splitBlocks(blocks: List<AuiBlock>): Pair<List<AuiBlock>, List<AuiBlock>> {
+internal fun splitBlocks(blocks: List<AuiBlock>): Pair<List<AuiBlock>, List<AuiBlock>> {
     val splitIndex = blocks.indexOfFirst { block ->
         block !is AuiBlock.Text && block !is AuiBlock.Heading && block !is AuiBlock.Caption
     }
@@ -165,28 +156,37 @@ private fun DisplayRouterExpandedPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "DisplayRouter — Sheet (bubble preview)")
+@Preview(showBackground = true, name = "DisplayRouter — Sheet Flow")
 @Composable
-private fun DisplayRouterSheetBubblePreview() {
+private fun DisplayRouterSheetFlowPreview() {
     AuiThemeProvider {
         DisplayRouter(
             response = AuiResponse(
                 display = AuiDisplay.SHEET,
                 sheetTitle = "Quick Survey",
-                blocks = listOf(
-                    AuiBlock.Text(data = TextData(text = "Opening a quick survey...")),
-                    AuiBlock.ChipSelectSingle(
-                        data = ChipSelectSingleData(
-                            key = "experience",
-                            options = listOf(
-                                ChipOption(label = "Great", value = "great"),
-                                ChipOption(label = "Good", value = "good"),
+                steps = listOf(
+                    AuiStep(
+                        label = "Experience",
+                        question = "How was your experience?",
+                        skippable = true,
+                        blocks = listOf(
+                            AuiBlock.ChipSelectSingle(
+                                data = ChipSelectSingleData(
+                                    key = "experience",
+                                    options = listOf(
+                                        ChipOption(label = "😊 Great", value = "great"),
+                                        ChipOption(label = "🙂 Good", value = "good"),
+                                    ),
+                                ),
+                            ),
+                            AuiBlock.ButtonPrimary(
+                                data = ButtonPrimaryData(label = "Next"),
+                                feedback = AuiFeedback(
+                                    action = "poll_next_step",
+                                    label = "{{experience}}",
+                                ),
                             ),
                         ),
-                    ),
-                    AuiBlock.ButtonPrimary(
-                        data = ButtonPrimaryData(label = "Next"),
-                        feedback = AuiFeedback(action = "poll_next_step", params = mapOf("step" to "1")),
                     ),
                 ),
             ),

@@ -14,8 +14,17 @@ data class AuiResponse(
     /** How to present this response (inline, expanded, or sheet). */
     val display: AuiDisplay,
 
-    /** Ordered list of content blocks to render. */
-    val blocks: List<AuiBlock>,
+    /**
+     * Ordered list of content blocks to render. Used for [AuiDisplay.INLINE] and
+     * [AuiDisplay.EXPANDED]. Empty by default — [AuiDisplay.SHEET] uses [steps] instead.
+     */
+    val blocks: List<AuiBlock> = emptyList(),
+
+    /**
+     * Ordered list of steps for [AuiDisplay.SHEET]. The library renders each step inside
+     * a persistent bottom sheet, navigating between them without closing.
+     */
+    val steps: List<AuiStep> = emptyList(),
 
     /** Title shown in the sheet header when [display] is [AuiDisplay.SHEET]. */
     @SerialName("sheet_title") val sheetTitle: String? = null,

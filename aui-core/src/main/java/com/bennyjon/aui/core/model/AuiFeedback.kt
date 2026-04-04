@@ -3,33 +3,38 @@ package com.bennyjon.aui.core.model
 import kotlinx.serialization.Serializable
 
 /**
- * Describes what happens when the user interacts with an [AuiBlock].
+ * Describes the result of a user interaction with an [AuiBlock].
  *
- * When interaction occurs, the host app receives this object via the `onFeedback` callback.
- * The [label] (with any `{{placeholder}}` values resolved) is shown as a user message bubble.
- *
- * Multi-step flows can mark intermediate steps with `terminal = false`. An [AuiFeedbackAccumulator]
- * will silently collect those steps' params and only emit to the host on the final terminal step.
+ * Received by the host app via the `onFeedback` callback. For [AuiDisplay.SHEET]
+ * responses the library accumulates interactions across all steps and emits a single
+ * consolidated [AuiFeedback] at the end — [entries] contains the full list of
+ * question–answer pairs for display, and [params] contains all collected key-value data.
  */
 @Serializable
 data class AuiFeedback(
-    /** Machine-readable identifier of the action that occurred (e.g. `"poll_submit"`). */
+    /** Machine-readable identifier of the action (e.g. `"poll_submit"`, `"poll_complete"`). */
     val action: String,
 
     /**
-     * Structured data about the interaction (e.g. `{"poll_id": "exp_rating", "value": "4"}`).
-     * Supports `{{value}}` and `{{label}}` placeholder resolution in [label].
+     * Structured key-value data about the interaction.
+     * For [AuiDisplay.SHEET] this is the merged params from all steps.
      */
     val params: Map<String, String> = emptyMap(),
 
-    /** Human-readable text shown as the user's next chat message. Supports `{{value}}` placeholders. */
+    /**
+     * Resolved answer text used internally by [AuiDisplay.SHEET] to populate [entries].
+     * Supports `{{key}}` placeholder substitution from the value registry.
+     */
     val label: String? = null,
 
     /**
-     * Whether this feedback should be emitted to the host immediately.
+     * Ordered list of question–answer pairs captured across all steps.
+     * Populated by the library for [AuiDisplay.SHEET]; empty for all other display types.
      *
-     * Set to `false` on intermediate steps of a multi-step survey so the host only receives
-     * one consolidated callback at the end. Defaults to `true`.
+     * The host app can format these for the chat bubble:
+     * ```kotlin
+     * feedback.entries.joinToString("\n\n") { "${it.question}\n${it.answer}" }
+     * ```
      */
-    val terminal: Boolean = true,
+    val entries: List<AuiEntry> = emptyList(),
 )
