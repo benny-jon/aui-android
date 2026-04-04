@@ -1,0 +1,17 @@
+{
+  "display": "inline",
+  "blocks": [
+    {
+      "type": "status_banner_success",
+      "data": { "text": "Survey complete!" }
+    },
+    {
+      "type": "text",
+      "data": { "text": "Thanks for your feedback. This helps us make the app better for you." }
+    },
+    {
+      "type": "badge_success",
+      "data": { "text": "3 of 3 completed" }
+    }
+  ]
+}

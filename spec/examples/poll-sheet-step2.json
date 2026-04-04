@@ -1,0 +1,45 @@
+{
+  "display": "sheet",
+  "sheet_title": "Quick Survey",
+  "blocks": [
+    {
+      "type": "stepper_horizontal",
+      "data": {
+        "steps": [
+          { "label": "Experience" },
+          { "label": "Features" },
+          { "label": "Feedback" }
+        ],
+        "current": 1
+      }
+    },
+    { "type": "spacer", "data": {} },
+    {
+      "type": "heading",
+      "data": { "text": "What would you like to see improved?" }
+    },
+    {
+      "type": "chip_select_multi",
+      "data": {
+        "key": "improvements",
+        "options": [
+          { "label": "Speed", "value": "speed" },
+          { "label": "Design", "value": "design" },
+          { "label": "Features", "value": "features" },
+          { "label": "Accuracy", "value": "accuracy" },
+          { "label": "Pricing", "value": "pricing" }
+        ]
+      }
+    },
+    { "type": "spacer", "data": {} },
+    {
+      "type": "button_primary",
+      "data": { "label": "Next" },
+      "feedback": {
+        "action": "poll_next_step",
+        "params": { "poll_id": "onboarding_survey", "step": "2" },
+        "label": "Wants improvement in: {{improvements}}"
+      }
+    }
+  ]
+}

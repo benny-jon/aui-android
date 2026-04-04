@@ -1,0 +1,22 @@
+{
+  "display": "inline",
+  "blocks": [
+    {
+      "type": "heading",
+      "data": { "text": "Quick question" }
+    },
+    {
+      "type": "text",
+      "data": { "text": "How would you rate your experience today?" }
+    },
+    {
+      "type": "input_rating_stars",
+      "data": { "key": "rating", "label": "Tap to rate" },
+      "feedback": {
+        "action": "poll_answer",
+        "params": { "poll_id": "exp_rating" },
+        "label": "Rated {{value}} stars"
+      }
+    }
+  ]
+}

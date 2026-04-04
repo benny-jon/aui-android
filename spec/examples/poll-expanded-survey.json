@@ -1,0 +1,52 @@
+{
+  "display": "expanded",
+  "blocks": [
+    {
+      "type": "text",
+      "data": { "text": "Help us improve! A few quick questions:" }
+    },
+    {
+      "type": "heading",
+      "data": { "text": "What features do you use most?" }
+    },
+    {
+      "type": "chip_select_multi",
+      "data": {
+        "key": "features",
+        "options": [
+          { "label": "Chat", "value": "chat" },
+          { "label": "Search", "value": "search" },
+          { "label": "Recommendations", "value": "recs" },
+          { "label": "Order tracking", "value": "tracking" },
+          { "label": "Account settings", "value": "settings" }
+        ]
+      }
+    },
+    { "type": "divider", "data": {} },
+    {
+      "type": "heading",
+      "data": { "text": "How likely are you to recommend us?" }
+    },
+    {
+      "type": "input_slider",
+      "data": {
+        "key": "nps",
+        "label": "0 = Not likely, 10 = Very likely",
+        "min": 0,
+        "max": 10,
+        "value": 5,
+        "step": 1
+      }
+    },
+    { "type": "spacer", "data": {} },
+    {
+      "type": "button_primary",
+      "data": { "label": "Submit Feedback" },
+      "feedback": {
+        "action": "poll_submit",
+        "params": { "poll_id": "feature_survey" },
+        "label": "Submitted feedback"
+      }
+    }
+  ]
+}

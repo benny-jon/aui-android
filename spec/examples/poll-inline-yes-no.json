@@ -1,0 +1,32 @@
+{
+  "display": "inline",
+  "blocks": [
+    {
+      "type": "text",
+      "data": { "text": "Was this response helpful?" }
+    },
+    {
+      "type": "quick_replies",
+      "data": {
+        "options": [
+          {
+            "label": "👍 Yes",
+            "feedback": {
+              "action": "poll_answer",
+              "params": { "poll_id": "helpful", "value": "yes" },
+              "label": "Yes, this was helpful"
+            }
+          },
+          {
+            "label": "👎 No",
+            "feedback": {
+              "action": "poll_answer",
+              "params": { "poll_id": "helpful", "value": "no" },
+              "label": "No, this wasn't helpful"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
