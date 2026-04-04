@@ -23,6 +23,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AUI Android"
-include(":app")
+include(":demo")
 include(":aui-core")
 include(":aui-compose")

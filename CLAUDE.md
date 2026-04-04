@@ -63,5 +63,12 @@ Two library modules + one demo app:
 - JSON schema: `spec/schema/aui-response.schema.json`
 
 ## Current Phase
-Phase 1: Foundation — Render hardcoded AUI JSON as native Compose UI inside a chat screen.
-Focus on: JSON parsing, ~12 starter components, 3 display levels, feedback loop.
+Phase 1: Polls & Feedback Collection — The AI sends polls/surveys as AUI JSON. Users interact with native Compose UI. Feedback flows back.
+
+Focus components (polls-specific):
+- Display: text, heading, caption
+- Input: chip_select_single, chip_select_multi, quick_replies, input_rating_stars, input_text_single, input_slider, button_primary, button_secondary
+- Layout: divider, spacer, stepper_horizontal, progress_bar
+- Status: badge_success, status_banner_success
+
+Detailed plan and sample JSON: `.planning/phase1-polls.md`
