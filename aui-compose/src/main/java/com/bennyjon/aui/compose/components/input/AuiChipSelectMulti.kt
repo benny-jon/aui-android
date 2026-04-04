@@ -15,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -37,6 +39,7 @@ fun AuiChipSelectMulti(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
+    val registry = LocalAuiValueRegistry.current
     var selectedValues by remember { mutableStateOf(block.data.selected.toSet()) }
 
     Column(modifier = modifier) {
@@ -57,19 +60,19 @@ fun AuiChipSelectMulti(
                 FilterChip(
                     selected = isSelected,
                     onClick = {
-                        selectedValues = if (isSelected) {
-                            selectedValues - option.value
-                        } else {
-                            selectedValues + option.value
-                        }
+                        val newValues = if (isSelected) selectedValues - option.value else selectedValues + option.value
+                        selectedValues = newValues
+                        val joinedLabels = block.data.options
+                            .filter { it.value in newValues }
+                            .joinToString(", ") { it.label }
+                        val joinedValues = newValues.joinToString(", ")
+                        registry.value = registry.value + (block.data.key to joinedLabels)
                         block.feedback?.let { feedback ->
-                            onFeedback(
-                                feedback.copy(
-                                    params = feedback.params + mapOf(
-                                        block.data.key to selectedValues.joinToString(","),
-                                    ),
-                                )
-                            )
+                            val updatedParams = feedback.params + mapOf(block.data.key to joinedValues)
+                            val resolvedLabel = feedback.label?.let {
+                                resolvePlaceholders(it, registry.value + updatedParams)
+                            }
+                            onFeedback(feedback.copy(params = updatedParams, label = resolvedLabel))
                         }
                     },
                     label = {

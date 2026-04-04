@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -29,9 +31,16 @@ fun AuiButtonSecondary(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
+    val registry = LocalAuiValueRegistry.current
     OutlinedButton(
         onClick = {
-            block.feedback?.let { onFeedback(it) }
+            block.feedback?.let { feedback ->
+                val allParams = registry.value + feedback.params
+                val resolvedLabel = feedback.label?.let {
+                    resolvePlaceholders(it, allParams)
+                }
+                onFeedback(feedback.copy(params = allParams, label = resolvedLabel))
+            }
         },
         modifier = modifier.fillMaxWidth(),
         shape = theme.shapes.button,

@@ -19,6 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -41,6 +43,7 @@ fun AuiInputRatingStars(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
+    val registry = LocalAuiValueRegistry.current
     var rating by remember { mutableIntStateOf(block.data.value ?: 0) }
 
     Column(modifier = modifier) {
@@ -65,15 +68,13 @@ fun AuiInputRatingStars(
                         .size(32.dp)
                         .clickable {
                             rating = star
+                            registry.value = registry.value + mapOf(block.data.key to star.toString(), "value" to star.toString())
                             block.feedback?.let { feedback ->
-                                onFeedback(
-                                    feedback.copy(
-                                        params = feedback.params + mapOf(
-                                            block.data.key to star.toString(),
-                                            "value" to star.toString(),
-                                        ),
-                                    )
-                                )
+                                val updatedParams = feedback.params + mapOf(block.data.key to star.toString(), "value" to star.toString())
+                                val resolvedLabel = feedback.label?.let {
+                                    resolvePlaceholders(it, registry.value + updatedParams)
+                                }
+                                onFeedback(feedback.copy(params = updatedParams, label = resolvedLabel))
                             }
                         },
                 )

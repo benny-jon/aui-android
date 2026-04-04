@@ -18,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -38,6 +40,7 @@ fun AuiInputTextSingle(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
+    val registry = LocalAuiValueRegistry.current
     var text by remember { mutableStateOf("") }
 
     Column(modifier = modifier) {
@@ -50,7 +53,10 @@ fun AuiInputTextSingle(
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = text,
-                onValueChange = { text = it },
+                onValueChange = {
+                    text = it
+                    registry.value = registry.value + (block.data.key to it)
+                },
                 placeholder = block.data.placeholder?.let {
                     { Text(text = it, style = theme.typography.body) }
                 },
@@ -65,27 +71,28 @@ fun AuiInputTextSingle(
                 ),
                 modifier = Modifier.weight(1f),
             )
-            Spacer(modifier = Modifier.width(theme.spacing.small))
-            Button(
-                onClick = {
-                    block.feedback?.let { feedback ->
-                        onFeedback(
-                            feedback.copy(
-                                params = feedback.params + mapOf(block.data.key to text),
-                            )
-                        )
-                    }
-                },
-                shape = theme.shapes.button,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = theme.colors.primary,
-                    contentColor = theme.colors.onPrimary,
-                ),
-            ) {
-                Text(
-                    text = block.data.submitLabel ?: "Submit",
-                    style = theme.typography.button,
-                )
+            val blockFeedback = block.feedback
+            if (blockFeedback != null) {
+                Spacer(modifier = Modifier.width(theme.spacing.small))
+                Button(
+                    onClick = {
+                        val updatedParams = blockFeedback.params + mapOf(block.data.key to text)
+                        val resolvedLabel = blockFeedback.label?.let {
+                            resolvePlaceholders(it, registry.value + updatedParams)
+                        }
+                        onFeedback(blockFeedback.copy(params = updatedParams, label = resolvedLabel))
+                    },
+                    shape = theme.shapes.button,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = theme.colors.primary,
+                        contentColor = theme.colors.onPrimary,
+                    ),
+                ) {
+                    Text(
+                        text = block.data.submitLabel ?: "Submit",
+                        style = theme.typography.button,
+                    )
+                }
             }
         }
     }

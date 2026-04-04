@@ -3,6 +3,9 @@ package com.bennyjon.aui.compose.internal
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.bennyjon.aui.compose.components.input.AuiButtonPrimary
 import com.bennyjon.aui.compose.components.input.AuiButtonSecondary
@@ -38,6 +41,8 @@ internal fun BlockRenderer(
     modifier: Modifier = Modifier,
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
+    val registry = remember { mutableStateOf(emptyMap<String, String>()) }
+    CompositionLocalProvider(LocalAuiValueRegistry provides registry) {
     Column(modifier = modifier) {
         blocks.forEach { block ->
             when (block) {
@@ -61,5 +66,6 @@ internal fun BlockRenderer(
                 is AuiBlock.Unknown -> Log.w(TAG, "Skipping unknown block type: ${block.type}")
             }
         }
+    }
     }
 }
