@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.bennyjon.aui.compose.internal.BlockRenderer
+import com.bennyjon.aui.compose.display.DisplayRouter
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -20,8 +20,9 @@ import com.bennyjon.aui.core.model.data.TextData
 /**
  * The primary entry point for rendering an [AuiResponse].
  *
- * Wraps all content in an [AuiThemeProvider] and delegates block rendering to the internal
- * [BlockRenderer]. The host app supplies [onFeedback] to receive interaction events.
+ * Wraps all content in an [AuiThemeProvider] and delegates routing to [DisplayRouter], which
+ * selects the appropriate layout (inline, expanded, or bottom sheet) based on
+ * [AuiResponse.display]. The host app supplies [onFeedback] to receive interaction events.
  *
  * Example:
  * ```kotlin
@@ -44,8 +45,8 @@ fun AuiRenderer(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     AuiThemeProvider(theme = theme) {
-        BlockRenderer(
-            blocks = response.blocks,
+        DisplayRouter(
+            response = response,
             modifier = modifier,
             onFeedback = onFeedback,
         )
