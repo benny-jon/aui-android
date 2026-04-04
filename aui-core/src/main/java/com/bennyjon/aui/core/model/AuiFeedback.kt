@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
  *
  * When interaction occurs, the host app receives this object via the `onFeedback` callback.
  * The [label] (with any `{{placeholder}}` values resolved) is shown as a user message bubble.
+ *
+ * Multi-step flows can mark intermediate steps with `terminal = false`. An [AuiFeedbackAccumulator]
+ * will silently collect those steps' params and only emit to the host on the final terminal step.
  */
 @Serializable
 data class AuiFeedback(
@@ -21,4 +24,12 @@ data class AuiFeedback(
 
     /** Human-readable text shown as the user's next chat message. Supports `{{value}}` placeholders. */
     val label: String? = null,
+
+    /**
+     * Whether this feedback should be emitted to the host immediately.
+     *
+     * Set to `false` on intermediate steps of a multi-step survey so the host only receives
+     * one consolidated callback at the end. Defaults to `true`.
+     */
+    val terminal: Boolean = true,
 )

@@ -1,6 +1,7 @@
 package com.bennyjon.auiandroid
 
 import androidx.lifecycle.ViewModel
+import com.bennyjon.aui.core.AuiFeedbackAccumulator
 import com.bennyjon.aui.core.AuiParser
 import com.bennyjon.aui.core.model.AuiFeedback
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * Drives the demo chat screen.
  *
  * Holds a list of [ChatMessage]s and steps through a pre-loaded sequence of poll JSON responses.
- * Each time [onFeedback] is called, a [ChatMessage.UserFeedback] is appended and the next
- * response in the sequence is loaded. [onUserText] appends a plain [ChatMessage.UserText].
+ * Feedback accumulation across multi-step surveys is handled by [AuiFeedbackAccumulator]:
+ * non-terminal steps advance to the next screen silently; only the final step surfaces a user
+ * bubble. [onUserText] appends a plain [ChatMessage.UserText].
  */
 class ChatViewModel : ViewModel() {
 
@@ -22,15 +24,20 @@ class ChatViewModel : ViewModel() {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
+    private val feedbackAccumulator = AuiFeedbackAccumulator(
+        onStep = { loadNextResponse() },
+        onComplete = { feedback ->
+            val label = feedback.label?.takeIf { it.isNotBlank() } ?: feedback.action
+            append(ChatMessage.UserFeedback(label = label))
+            loadNextResponse()
+        },
+    )
+
     init {
         loadNextResponse()
     }
 
-    fun onFeedback(feedback: AuiFeedback) {
-        val label = feedback.label?.takeIf { it.isNotBlank() } ?: feedback.action
-        append(ChatMessage.UserFeedback(label = label))
-        loadNextResponse()
-    }
+    fun onFeedback(feedback: AuiFeedback) = feedbackAccumulator.process(feedback)
 
     fun onUserText(text: String) {
         if (text.isBlank()) return
@@ -156,7 +163,8 @@ private val SHEET_STEP1_JSON = """
       "feedback": {
         "action": "poll_next_step",
         "params": { "poll_id": "onboarding_survey", "step": "1" },
-        "label": "Experience: {{experience}}"
+        "label": "How was your experience?\n{{experience}}",
+        "terminal": false
       }
     }
   ]
@@ -204,7 +212,8 @@ private val SHEET_STEP2_JSON = """
       "feedback": {
         "action": "poll_next_step",
         "params": { "poll_id": "onboarding_survey", "step": "2" },
-        "label": "Wants improvement in: {{improvements}}"
+        "label": "What would you like to see improved?\n{{improvements}}",
+        "terminal": false
       }
     }
   ]
@@ -247,7 +256,7 @@ private val SHEET_STEP3_JSON = """
       "feedback": {
         "action": "poll_complete",
         "params": { "poll_id": "onboarding_survey" },
-        "label": "{{open_feedback}}"
+        "label": "Anything else?\n{{open_feedback}}"
       }
     }
   ]
