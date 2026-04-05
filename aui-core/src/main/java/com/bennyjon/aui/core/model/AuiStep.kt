@@ -11,7 +11,8 @@ import kotlinx.serialization.Serializable
  * by the library.
  *
  * @param blocks The content blocks to render for this step. Include a `button_primary` as
- *   the action trigger — its [AuiFeedback.label] is used as the resolved answer text.
+ *   the action trigger. The library derives the answer for this step from the first input
+ *   block's value in [AuiFeedback.params] — no label field is needed.
  * @param label Short label shown in the auto-rendered stepper indicator (e.g. "Experience").
  *   Defaults to the step number if absent.
  * @param question Full question text stored in [AuiEntry.question] when the user answers

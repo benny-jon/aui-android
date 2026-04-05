@@ -181,10 +181,7 @@ private fun DisplayRouterSheetFlowPreview() {
                             ),
                             AuiBlock.ButtonPrimary(
                                 data = ButtonPrimaryData(label = "Next"),
-                                feedback = AuiFeedback(
-                                    action = "poll_next_step",
-                                    label = "{{experience}}",
-                                ),
+                                feedback = AuiFeedback(action = "poll_next_step"),
                             ),
                         ),
                     ),

@@ -163,54 +163,52 @@ Rendered as a **bottom sheet overlay** on top of the chat. The chat is still vis
 
 Best for: booking flows, multi-field forms, confirmations with consequences, multi-step processes, detailed views.
 
+Sheet responses use a `steps` array instead of `blocks`. Each step is rendered inside the same persistent bottom sheet — the sheet stays open as the user advances. The library automatically renders a stepper indicator when there is more than one step.
+
 ```json
 {
   "display": "sheet",
-  "sheet_title": "Book Your Table",
-  "sheet_dismissable": true,
-  "blocks": [
+  "sheet_title": "Quick Survey",
+  "steps": [
     {
-      "type": "card_image_top",
-      "data": {
-        "image": "https://img.resto.co/nonnas.jpg",
-        "title": "Nonna's Kitchen",
-        "subtitle": "★ 4.8 · Italian · 1.1 mi"
-      }
-    },
-    { "type": "divider", "data": {} },
-    {
-      "type": "chip_select_single",
-      "data": {
-        "key": "time",
-        "label": "Select a time",
-        "options": [
-          { "label": "6:00 PM", "value": "18:00" },
-          { "label": "7:30 PM", "value": "19:30" },
-          { "label": "8:45 PM", "value": "20:45" }
-        ]
-      }
-    },
-    {
-      "type": "chip_select_single",
-      "data": {
-        "key": "party_size",
-        "label": "Party size",
-        "options": [
-          { "label": "1", "value": "1" },
-          { "label": "2", "value": "2" },
-          { "label": "3-4", "value": "4" },
-          { "label": "5+", "value": "5" }
-        ]
-      }
+      "label": "Experience",
+      "question": "How was your experience?",
+      "skippable": true,
+      "blocks": [
+        {
+          "type": "chip_select_single",
+          "data": {
+            "key": "experience",
+            "options": [
+              { "label": "😊 Great", "value": "great" },
+              { "label": "🙂 Good", "value": "good" },
+              { "label": "😐 Okay", "value": "okay" },
+              { "label": "😞 Poor", "value": "poor" }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "poll_next_step", "params": { "poll_id": "survey" } }
+        }
+      ]
     },
     {
-      "type": "button_primary",
-      "data": { "label": "Confirm Reservation" },
-      "feedback": {
-        "action": "confirm_booking",
-        "params": { "restaurant": "nonnas" },
-        "label": "Booked a table at Nonna's Kitchen"
-      }
+      "label": "Feedback",
+      "question": "Anything else you'd like to tell us?",
+      "skippable": true,
+      "blocks": [
+        {
+          "type": "input_text_single",
+          "data": { "key": "open_feedback", "label": "Your feedback", "placeholder": "Optional" }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit" },
+          "feedback": { "action": "poll_complete", "params": { "poll_id": "survey" } }
+        }
+      ]
     }
   ]
 }
@@ -218,10 +216,22 @@ Best for: booking flows, multi-field forms, confirmations with consequences, mul
 
 Sheet-specific fields:
 
-| Field               | Required | Description                                              |
-|---------------------|----------|----------------------------------------------------------|
-| `sheet_title`       | no       | Title shown in the sheet handle/header area              |
-| `sheet_dismissable` | no       | Can the user swipe down to dismiss? Default: `true`      |
+| Field               | Required | Description                                                                 |
+|---------------------|----------|-----------------------------------------------------------------------------|
+| `sheet_title`       | no       | Title shown in the sheet header area                                        |
+| `sheet_dismissable` | no       | Can the user swipe down to dismiss? Default: `true`                         |
+| `steps`             | yes      | Ordered list of steps. Each step has its own `blocks`, `label`, `question`, and `skippable` |
+
+Step fields:
+
+| Field       | Required | Description                                                                                    |
+|-------------|----------|------------------------------------------------------------------------------------------------|
+| `blocks`    | yes      | Blocks to render for this step. Include a `button_primary` as the advance/submit trigger.      |
+| `label`     | no       | Short label shown in the stepper indicator (e.g. `"Experience"`). Defaults to the step number. |
+| `question`  | no       | Full question text recorded in the `formattedEntries` summary when the user answers.           |
+| `skippable` | no       | When `true`, the library renders a "Skip" button. Skipped steps are excluded from entries.     |
+
+The library emits a single consolidated `AuiFeedback` when the last step is submitted or skipped. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all steps.
 
 When a sheet is dismissed without interaction, the client can optionally send a feedback event: `{ "action": "sheet_dismissed" }`.
 
@@ -255,7 +265,7 @@ This means the AI doesn't need to think about "what goes in the bubble vs outsid
 |------------|--------------------------------|--------------------------------------|
 | `inline`   | In the bubble                  | In the bubble                        |
 | `expanded` | In the bubble                  | Full-width below the bubble          |
-| `sheet`    | In the bubble (behind sheet)   | In the bottom sheet                  |
+| `sheet`    | Uses `steps` array (not `blocks`) — each step rendered in the persistent bottom sheet |
 
 ---
 
@@ -293,15 +303,25 @@ User interactions with components become conversation input.
 {
   "feedback": {
     "action": "machine_readable_action_name",
-    "params": { "key": "value" },
-    "label": "Human-readable text shown as user message bubble"
+    "params": { "key": "value" }
   }
 }
 ```
 
 - `action` — what happened (for the AI to understand)
 - `params` — structured data about the interaction
-- `label` — shown in the chat as the user's message bubble. Supports `{{value}}` and `{{label}}` placeholders filled from the user's selection.
+
+The AI does **not** set a display label. The library computes one automatically (`formattedEntries`) from the heading→input pairs it finds in the rendered blocks. For a multi-step sheet, this is built from each step's `question` and the user's answer, joined by blank lines:
+
+```
+How was your experience?
+😊 Great
+
+What would you like to see improved?
+Speed, Design
+```
+
+Consumers can use `feedback.formattedEntries` directly as the chat bubble text, or build a custom format from `feedback.entries` (a list of `{ question, answer }` pairs).
 
 ### Feedback in Conversation History
 
@@ -309,9 +329,9 @@ User interactions with components become conversation input.
 [
   { "role": "user", "content": "Book me a table tonight" },
   { "role": "assistant", "content": { "display": "expanded", "blocks": [ ... ] } },
-  { "role": "user", "content": { "feedback": { "action": "select_restaurant", "params": { "id": "nonnas" }, "label": "I'd like Nonna's Kitchen" } } },
-  { "role": "assistant", "content": { "display": "sheet", "blocks": [ ... ] } },
-  { "role": "user", "content": { "feedback": { "action": "confirm_booking", "params": { "restaurant": "nonnas", "time": "19:30", "party_size": "2" }, "label": "Booked a table at Nonna's Kitchen" } } },
+  { "role": "user", "content": { "feedback": { "action": "select_restaurant", "params": { "id": "nonnas" } } } },
+  { "role": "assistant", "content": { "display": "sheet", "steps": [ ... ] } },
+  { "role": "user", "content": { "feedback": { "action": "confirm_booking", "params": { "restaurant": "nonnas", "time": "19:30", "party_size": "2" } } } },
   { "role": "assistant", "content": { "display": "inline", "blocks": [ ... ] } }
 ]
 ```
@@ -333,8 +353,7 @@ List items and cards inside `horizontal_scroll_cards` each carry their own feedb
         "subtitle": "Departs 3:45 PM",
         "feedback": {
           "action": "view_flight",
-          "params": { "flight": "AA1234" },
-          "label": "Show me flight AA 1234"
+          "params": { "flight": "AA1234" }
         }
       },
       {
@@ -343,8 +362,7 @@ List items and cards inside `horizontal_scroll_cards` each carry their own feedb
         "subtitle": "Departs 5:20 PM",
         "feedback": {
           "action": "view_flight",
-          "params": { "flight": "UA5678" },
-          "label": "Show me flight UA 5678"
+          "params": { "flight": "UA5678" }
         }
       }
     ]
@@ -813,8 +831,7 @@ Optional: feedback (for the trailing action)
             },
             "feedback": {
               "action": "view_product",
-              "params": { "id": "nike_pegasus_41" },
-              "label": "Tell me more about the Nike Pegasus 41"
+              "params": { "id": "nike_pegasus_41" }
             }
           },
           {
@@ -827,8 +844,7 @@ Optional: feedback (for the trailing action)
             },
             "feedback": {
               "action": "view_product",
-              "params": { "id": "brooks_ghost_16" },
-              "label": "Tell me more about the Brooks Ghost 16"
+              "params": { "id": "brooks_ghost_16" }
             }
           },
           {
@@ -841,8 +857,7 @@ Optional: feedback (for the trailing action)
             },
             "feedback": {
               "action": "view_product",
-              "params": { "id": "asics_nimbus_26" },
-              "label": "Tell me more about the ASICS Gel-Nimbus 26"
+              "params": { "id": "asics_nimbus_26" }
             }
           }
         ]
@@ -885,8 +900,7 @@ Optional: feedback (for the trailing action)
       },
       "feedback": {
         "action": "select_restaurant",
-        "params": { "id": "lucias" },
-        "label": "I'd like Lucia's Trattoria"
+        "params": { "id": "lucias" }
       }
     },
     {
@@ -898,8 +912,7 @@ Optional: feedback (for the trailing action)
       },
       "feedback": {
         "action": "select_restaurant",
-        "params": { "id": "nonnas" },
-        "label": "I'd like Nonna's Kitchen"
+        "params": { "id": "nonnas" }
       }
     },
     {
@@ -911,8 +924,7 @@ Optional: feedback (for the trailing action)
       },
       "feedback": {
         "action": "select_restaurant",
-        "params": { "id": "vespa" },
-        "label": "I'd like Vespa Italian Bistro"
+        "params": { "id": "vespa" }
       }
     }
   ]
@@ -927,51 +939,53 @@ Optional: feedback (for the trailing action)
 {
   "display": "sheet",
   "sheet_title": "Book a Table",
-  "blocks": [
+  "steps": [
     {
-      "type": "card_image_top",
-      "data": {
-        "image": "https://img.resto.co/nonnas_hero.jpg",
-        "title": "Nonna's Kitchen",
-        "subtitle": "★ 4.8 · Italian · 1.1 mi away",
-        "caption": "Known for handmade pasta and tiramisu"
-      }
+      "label": "Time",
+      "question": "What time works for you?",
+      "blocks": [
+        {
+          "type": "chip_select_single",
+          "data": {
+            "key": "time",
+            "label": "Tonight's availability",
+            "options": [
+              { "label": "6:00 PM", "value": "18:00" },
+              { "label": "7:30 PM", "value": "19:30" },
+              { "label": "8:45 PM", "value": "20:45" }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "booking_step", "params": { "restaurant": "nonnas" } }
+        }
+      ]
     },
-    { "type": "divider", "data": {} },
     {
-      "type": "chip_select_single",
-      "data": {
-        "key": "time",
-        "label": "Tonight's availability",
-        "options": [
-          { "label": "6:00 PM", "value": "18:00" },
-          { "label": "7:30 PM", "value": "19:30" },
-          { "label": "8:45 PM", "value": "20:45" }
-        ]
-      }
-    },
-    {
-      "type": "chip_select_single",
-      "data": {
-        "key": "party_size",
-        "label": "Party size",
-        "options": [
-          { "label": "1", "value": "1" },
-          { "label": "2", "value": "2" },
-          { "label": "3-4", "value": "4" },
-          { "label": "5+", "value": "5" }
-        ]
-      }
-    },
-    { "type": "spacer", "data": {} },
-    {
-      "type": "button_primary",
-      "data": { "label": "Confirm Reservation" },
-      "feedback": {
-        "action": "confirm_booking",
-        "params": { "restaurant": "nonnas" },
-        "label": "Booked a table at Nonna's Kitchen"
-      }
+      "label": "Party size",
+      "question": "How many guests?",
+      "blocks": [
+        {
+          "type": "chip_select_single",
+          "data": {
+            "key": "party_size",
+            "label": "Party size",
+            "options": [
+              { "label": "1", "value": "1" },
+              { "label": "2", "value": "2" },
+              { "label": "3-4", "value": "4" },
+              { "label": "5+", "value": "5" }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Confirm Reservation" },
+          "feedback": { "action": "confirm_booking", "params": { "restaurant": "nonnas" } }
+        }
+      ]
     }
   ]
 }
@@ -1055,8 +1069,7 @@ Optional: feedback (for the trailing action)
       },
       "feedback": {
         "action": "submitted_issue_report",
-        "params": { "order_id": "4812" },
-        "label": "Submitted delivery issue report"
+        "params": { "order_id": "4812" }
       }
     }
   ]
@@ -1095,16 +1108,25 @@ Optional: feedback (for the trailing action)
 You are a helpful assistant. You respond with rich UI when it enhances
 the experience, and plain text when it doesn't.
 
-Response format:
+Response format (inline/expanded):
 {
-  "display": "inline" | "expanded" | "sheet",
+  "display": "inline" | "expanded",
   "blocks": [ ... ]
+}
+
+Response format (sheet — multi-step):
+{
+  "display": "sheet",
+  "sheet_title": "...",
+  "steps": [
+    { "label": "Step name", "question": "Full question text?", "skippable": true, "blocks": [ ... ] }
+  ]
 }
 
 DISPLAY LEVELS:
   inline   — inside chat bubble. Quick answers, confirmations, simple status.
   expanded — full-width in chat feed. Rich cards, carousels, media, lists.
-  sheet    — bottom sheet overlay. Forms, booking flows, multi-step, confirmations.
+  sheet    — bottom sheet overlay. Multi-step surveys, forms, focused input.
 
 Choose the LEAST prominent level that serves the content well.
 Use "sheet" only when user input is needed or focused attention is required.
@@ -1113,8 +1135,9 @@ BLOCK FORMAT:
   { "type": "<component>", "data": { ... }, "feedback": { ... } }
 
 FEEDBACK: (on interactive components)
-  { "action": "name", "params": { ... }, "label": "shown as user message" }
-  Use {{value}}, {{label}} in label for dynamic text from selections.
+  { "action": "name", "params": { ... } }
+  Do NOT set a "label" field. The library computes the display summary automatically
+  from the rendered inputs and the step "question" fields.
 
 AVAILABLE COMPONENTS:
 
@@ -1173,9 +1196,14 @@ Input:
 Utility:
   divider() · spacer() · loading(message?) · section_header(title, action_label?)
 
-Sheet-only fields:
+Sheet-only fields (top-level):
   sheet_title: string — title in the sheet header
   sheet_dismissable: boolean — can user swipe to dismiss (default true)
+  steps[]: array of steps (use instead of blocks for sheet)
+    step.label: string — short label for the stepper indicator
+    step.question: string — question recorded in the feedback summary
+    step.skippable: boolean — show a Skip button (default false)
+    step.blocks[]: blocks for this step
 
 GUIDELINES:
   - Start with text for context, then use components

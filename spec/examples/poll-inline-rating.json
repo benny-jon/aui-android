@@ -14,8 +14,7 @@
       "data": { "key": "rating", "label": "Tap to rate" },
       "feedback": {
         "action": "poll_answer",
-        "params": { "poll_id": "exp_rating" },
-        "label": "Rated {{value}} stars"
+        "params": { "poll_id": "exp_rating" }
       }
     }
   ]

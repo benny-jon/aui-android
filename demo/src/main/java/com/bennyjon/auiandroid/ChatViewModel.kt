@@ -28,9 +28,7 @@ class ChatViewModel : ViewModel() {
     }
 
     fun onFeedback(feedback: AuiFeedback) {
-        val label = feedback.entries
-            .joinToString("\n\n") { "${it.question}\n${it.answer}" }
-            .ifBlank { feedback.label?.takeIf { it.isNotBlank() } ?: feedback.action }
+        val label = feedback.formattedEntries?.takeIf { it.isNotBlank() } ?: feedback.action
         append(ChatMessage.UserFeedback(label = label))
         loadNextResponse()
     }
@@ -87,7 +85,9 @@ private val EXPANDED_SURVEY_JSON = """
         ]
       }
     },
+    { "type": "spacer", "data": {} },
     { "type": "divider", "data": {} },
+    { "type": "spacer", "data": {} },
     {
       "type": "heading",
       "data": { "text": "How likely are you to recommend us?" }
@@ -109,8 +109,7 @@ private val EXPANDED_SURVEY_JSON = """
       "data": { "label": "Submit Feedback" },
       "feedback": {
         "action": "poll_submit",
-        "params": { "poll_id": "feature_survey" },
-        "label": "Features: {{features}} — NPS: {{nps}}/10"
+        "params": { "poll_id": "feature_survey" }
       }
     }
   ]
@@ -144,8 +143,7 @@ private val SHEET_JSON = """
           "data": { "label": "Next" },
           "feedback": {
             "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" },
-            "label": "{{experience}}"
+            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]
@@ -173,8 +171,7 @@ private val SHEET_JSON = """
           "data": { "label": "Next" },
           "feedback": {
             "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" },
-            "label": "{{improvements}}"
+            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]
@@ -197,8 +194,7 @@ private val SHEET_JSON = """
           "data": { "label": "Submit" },
           "feedback": {
             "action": "poll_complete",
-            "params": { "poll_id": "onboarding_survey" },
-            "label": "{{open_feedback}}"
+            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]

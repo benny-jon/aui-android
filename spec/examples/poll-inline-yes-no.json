@@ -13,16 +13,14 @@
             "label": "👍 Yes",
             "feedback": {
               "action": "poll_answer",
-              "params": { "poll_id": "helpful", "value": "yes" },
-              "label": "Yes, this was helpful"
+              "params": { "poll_id": "helpful", "value": "yes" }
             }
           },
           {
             "label": "👎 No",
             "feedback": {
               "action": "poll_answer",
-              "params": { "poll_id": "helpful", "value": "no" },
-              "label": "No, this wasn't helpful"
+              "params": { "poll_id": "helpful", "value": "no" }
             }
           }
         ]

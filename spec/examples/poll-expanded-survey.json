@@ -44,8 +44,7 @@
       "data": { "label": "Submit Feedback" },
       "feedback": {
         "action": "poll_submit",
-        "params": { "poll_id": "feature_survey" },
-        "label": "Submitted feedback"
+        "params": { "poll_id": "feature_survey" }
       }
     }
   ]

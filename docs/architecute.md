@@ -159,7 +159,16 @@ sealed class AuiBlock {
 data class AuiFeedback(
     val action: String,
     val params: Map<String, String> = emptyMap(),
-    val label: String? = null
+    // Library-computed — never set by the AI.
+    // Joined "Question\nAnswer" pairs separated by blank lines, ready to send back to the AI.
+    val formattedEntries: String? = null,
+    // Structured Q+A pairs. Use to build a custom summary instead of formattedEntries.
+    val entries: List<AuiEntry> = emptyList(),
+)
+
+data class AuiEntry(
+    val question: String,
+    val answer: String,
 )
 
 // ── Component Data ───────────────────────────────────────
@@ -347,7 +356,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
         items(messages) { message ->
             when (message) {
                 is ChatMessage.UserText -> UserBubble(message.text)
-                is ChatMessage.UserFeedback -> UserBubble(message.feedback.label ?: message.feedback.action)
+                is ChatMessage.UserFeedback -> UserBubble(message.feedback.formattedEntries ?: message.feedback.action)
                 is ChatMessage.AiResponse -> {
                     AuiRenderer(
                         response = message.auiResponse,
@@ -527,9 +536,9 @@ aui/
 │       │   │       └── AuiLoading.kt
 │       │   │
 │       │   └── internal/              # Not public API
-│       │       ├── BlockRenderer.kt   # type → composable routing
-│       │       ├── FeedbackModifier.kt # clickable + ripple for feedback
-│       │       └── PlaceholderResolver.kt # {{value}} substitution
+│       │       ├── BlockRenderer.kt   # type → composable routing; builds AuiEntry list from heading→input pairs
+│       │       ├── AuiValueRegistry.kt # shared input value state across a BlockRenderer
+│       │       └── FeedbackModifier.kt # clickable + ripple for feedback
 │       │
 │       └── test/kotlin/com/bennyjon/aui/compose/
 │           ├── AuiRendererTest.kt

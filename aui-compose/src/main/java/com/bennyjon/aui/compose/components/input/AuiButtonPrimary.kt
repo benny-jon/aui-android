@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -36,10 +35,7 @@ fun AuiButtonPrimary(
                 // Merge registry values into params so the AI receives all user inputs.
                 // Explicit feedback.params (poll_id, step, etc.) take priority over registry.
                 val allParams = registry.value + feedback.params
-                val resolvedLabel = feedback.label?.let {
-                    resolvePlaceholders(it, allParams)
-                }
-                onFeedback(feedback.copy(params = allParams, label = resolvedLabel))
+                onFeedback(feedback.copy(params = allParams))
             }
         },
         modifier = modifier.fillMaxWidth(),

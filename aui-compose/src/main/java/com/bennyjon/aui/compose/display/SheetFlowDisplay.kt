@@ -63,9 +63,14 @@ internal fun SheetFlowDisplay(
     var showSheet by remember { mutableStateOf(true) }
 
     fun finalize(terminalFeedback: AuiFeedback) {
+        val entries = accumulatedEntries.toList()
+        val formattedEntries = entries
+            .joinToString("\n\n") { "${it.question}\n${it.answer}" }
+            .ifBlank { null }
         val finalFeedback = terminalFeedback.copy(
             params = accumulatedParams.toMap() + terminalFeedback.params,
-            entries = accumulatedEntries.toList(),
+            entries = entries,
+            formattedEntries = formattedEntries,
         )
         scope.launch { sheetState.hide() }.invokeOnCompletion {
             showSheet = false
@@ -77,8 +82,8 @@ internal fun SheetFlowDisplay(
         val step = steps[stepIndex]
         if (!isSkip) {
             accumulatedParams.putAll(feedback.params)
-            val answer = feedback.label?.takeIf { it.isNotBlank() }
             val question = step.question
+            val answer = getStepAnswer(step, feedback.params)
             if (question != null && answer != null) {
                 accumulatedEntries.add(AuiEntry(question = question, answer = answer))
             }
@@ -151,4 +156,22 @@ internal fun SheetFlowDisplay(
             Spacer(modifier = Modifier.height(theme.spacing.large))
         }
     }
+}
+
+/**
+ * Finds the first input block in [step] and returns its human-readable answer from [params].
+ * The registry stores display labels (e.g. "😊 Great") under the input's key, so [params]
+ * already contains the correct display value after the button merges the registry into params.
+ */
+private fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
+    return step.blocks.firstNotNullOfOrNull { block ->
+        when (block) {
+            is AuiBlock.ChipSelectSingle -> params[block.data.key]
+            is AuiBlock.ChipSelectMulti -> params[block.data.key]
+            is AuiBlock.InputSlider -> params[block.data.key]
+            is AuiBlock.InputRatingStars -> params[block.data.key]
+            is AuiBlock.InputTextSingle -> params[block.data.key]
+            else -> null
+        }
+    }?.takeIf { it.isNotBlank() }
 }

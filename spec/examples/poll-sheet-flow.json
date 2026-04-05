@@ -24,8 +24,7 @@
           "data": { "label": "Next" },
           "feedback": {
             "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" },
-            "label": "{{experience}}"
+            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]
@@ -53,8 +52,7 @@
           "data": { "label": "Next" },
           "feedback": {
             "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" },
-            "label": "{{improvements}}"
+            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]
@@ -77,8 +75,7 @@
           "data": { "label": "Submit" },
           "feedback": {
             "action": "poll_complete",
-            "params": { "poll_id": "onboarding_survey" },
-            "label": "{{open_feedback}}"
+            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]

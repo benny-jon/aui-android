@@ -13,9 +13,3 @@ internal val LocalAuiValueRegistry = compositionLocalOf<MutableState<Map<String,
     mutableStateOf(emptyMap())
 }
 
-/**
- * Replaces every `{{key}}` token in [label] with the corresponding value from [values].
- * Tokens with no matching key are left as-is.
- */
-internal fun resolvePlaceholders(label: String, values: Map<String, String>): String =
-    values.entries.fold(label) { acc, (key, value) -> acc.replace("{{$key}}", value) }

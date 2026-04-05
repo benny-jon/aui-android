@@ -25,9 +25,41 @@ import com.bennyjon.aui.compose.components.text.AuiCaption
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.components.text.AuiText
 import com.bennyjon.aui.core.model.AuiBlock
+import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
 
 private const val TAG = "BlockRenderer"
+
+/**
+ * Scans [blocks] for heading→input pairs and maps them to [AuiEntry] instances using the
+ * current [registry] values. Each [AuiBlock.Heading] sets the current question; the next
+ * input block whose key has a value in the registry produces an entry.
+ */
+internal fun buildEntriesFromBlocks(blocks: List<AuiBlock>, registry: Map<String, String>): List<AuiEntry> {
+    val entries = mutableListOf<AuiEntry>()
+    var currentQuestion: String? = null
+    for (block in blocks) {
+        if (block is AuiBlock.Heading) {
+            currentQuestion = block.data.text
+            continue
+        }
+        val key = block.inputKey() ?: continue
+        val question = currentQuestion ?: continue
+        val answer = registry[key]?.takeIf { it.isNotBlank() } ?: continue
+        entries.add(AuiEntry(question = question, answer = answer))
+        currentQuestion = null
+    }
+    return entries
+}
+
+private fun AuiBlock.inputKey(): String? = when (this) {
+    is AuiBlock.ChipSelectSingle -> data.key
+    is AuiBlock.ChipSelectMulti -> data.key
+    is AuiBlock.InputSlider -> data.key
+    is AuiBlock.InputRatingStars -> data.key
+    is AuiBlock.InputTextSingle -> data.key
+    else -> null
+}
 
 /**
  * Maps each [AuiBlock] to its composable via an exhaustive `when` expression.
@@ -42,6 +74,13 @@ internal fun BlockRenderer(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val registry = remember { mutableStateOf(emptyMap<String, String>()) }
+    val wrappedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
+        val entries = buildEntriesFromBlocks(blocks, registry.value)
+        val formattedEntries = entries
+            .joinToString("\n\n") { "${it.question}\n${it.answer}" }
+            .ifBlank { null }
+        onFeedback(feedback.copy(entries = entries, formattedEntries = formattedEntries))
+    }
     CompositionLocalProvider(LocalAuiValueRegistry provides registry) {
     Column(modifier = modifier) {
         blocks.forEach { block ->
@@ -49,14 +88,14 @@ internal fun BlockRenderer(
                 is AuiBlock.Text -> AuiText(block = block)
                 is AuiBlock.Heading -> AuiHeading(block = block)
                 is AuiBlock.Caption -> AuiCaption(block = block)
-                is AuiBlock.ChipSelectSingle -> AuiChipSelectSingle(block = block, onFeedback = onFeedback)
-                is AuiBlock.ChipSelectMulti -> AuiChipSelectMulti(block = block, onFeedback = onFeedback)
-                is AuiBlock.ButtonPrimary -> AuiButtonPrimary(block = block, onFeedback = onFeedback)
-                is AuiBlock.ButtonSecondary -> AuiButtonSecondary(block = block, onFeedback = onFeedback)
-                is AuiBlock.QuickReplies -> AuiQuickReplies(block = block, onFeedback = onFeedback)
-                is AuiBlock.InputRatingStars -> AuiInputRatingStars(block = block, onFeedback = onFeedback)
-                is AuiBlock.InputTextSingle -> AuiInputTextSingle(block = block, onFeedback = onFeedback)
-                is AuiBlock.InputSlider -> AuiInputSlider(block = block, onFeedback = onFeedback)
+                is AuiBlock.ChipSelectSingle -> AuiChipSelectSingle(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.ChipSelectMulti -> AuiChipSelectMulti(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.ButtonPrimary -> AuiButtonPrimary(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.ButtonSecondary -> AuiButtonSecondary(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.QuickReplies -> AuiQuickReplies(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.InputRatingStars -> AuiInputRatingStars(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.InputTextSingle -> AuiInputTextSingle(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.InputSlider -> AuiInputSlider(block = block, onFeedback = wrappedOnFeedback)
                 is AuiBlock.Divider -> AuiDivider()
                 is AuiBlock.Spacer -> AuiSpacer()
                 is AuiBlock.StepperHorizontal -> AuiStepperHorizontal(block = block)

@@ -16,7 +16,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -85,10 +84,7 @@ fun AuiInputSlider(
                 registry.value = registry.value + mapOf(data.key to displayValue, "value" to displayValue)
                 block.feedback?.let { feedback ->
                     val updatedParams = feedback.params + mapOf(data.key to displayValue, "value" to displayValue)
-                    val resolvedLabel = feedback.label?.let {
-                        resolvePlaceholders(it, registry.value + updatedParams)
-                    }
-                    onFeedback(feedback.copy(params = updatedParams, label = resolvedLabel))
+                    onFeedback(feedback.copy(params = updatedParams))
                 }
             },
             colors = SliderDefaults.colors(

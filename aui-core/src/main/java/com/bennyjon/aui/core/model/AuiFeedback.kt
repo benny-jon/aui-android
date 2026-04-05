@@ -22,19 +22,28 @@ data class AuiFeedback(
     val params: Map<String, String> = emptyMap(),
 
     /**
-     * Resolved answer text used internally by [AuiDisplay.SHEET] to populate [entries].
-     * Supports `{{key}}` placeholder substitution from the value registry.
+     * Library-computed summary of all question–answer pairs, separated by blank lines.
+     *
+     * Ready to send directly to the AI as the user's reply, e.g.:
+     * ```
+     * How was your experience?
+     * 😊 Great
+     *
+     * What would you like improved?
+     * Speed, Design
+     * ```
+     *
+     * `null` when no question–answer pairs were collected (e.g. a simple button tap with no inputs).
      */
-    val label: String? = null,
+    val formattedEntries: String? = null,
 
     /**
-     * Ordered list of question–answer pairs captured across all steps.
-     * Populated by the library for [AuiDisplay.SHEET]; empty for all other display types.
+     * Ordered list of question–answer pairs captured from user input.
      *
-     * The host app can format these for the chat bubble:
-     * ```kotlin
-     * feedback.entries.joinToString("\n\n") { "${it.question}\n${it.answer}" }
-     * ```
+     * For [AuiDisplay.SHEET], one entry per step that had both a question and a non-empty answer.
+     * For [AuiDisplay.INLINE] and [AuiDisplay.EXPANDED], one entry per heading→input pair.
+     *
+     * Use this when you want to build a custom summary instead of using [formattedEntries].
      */
     val entries: List<AuiEntry> = emptyList(),
 )

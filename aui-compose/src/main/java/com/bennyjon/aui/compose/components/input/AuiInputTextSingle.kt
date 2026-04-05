@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.internal.resolvePlaceholders
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -77,10 +76,7 @@ fun AuiInputTextSingle(
                 Button(
                     onClick = {
                         val updatedParams = blockFeedback.params + mapOf(block.data.key to text)
-                        val resolvedLabel = blockFeedback.label?.let {
-                            resolvePlaceholders(it, registry.value + updatedParams)
-                        }
-                        onFeedback(blockFeedback.copy(params = updatedParams, label = resolvedLabel))
+                        onFeedback(blockFeedback.copy(params = updatedParams))
                     },
                     shape = theme.shapes.button,
                     colors = ButtonDefaults.buttonColors(
