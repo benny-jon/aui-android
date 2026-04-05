@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -66,16 +67,26 @@ private fun AuiBlock.inputKey(): String? = when (this) {
  *
  * Unknown block types are skipped with a warning log — the renderer never crashes on
  * unrecognized input.
+ *
+ * @param registryOverride If provided, this registry is shared with sibling renderers (e.g. the
+ *   two split renderers in EXPANDED display). If null, a fresh local registry is created.
+ * @param allBlocksForEntries If provided, [buildEntriesFromBlocks] scans this list instead of
+ *   [blocks] when building Q+A entries on feedback. Use this when the heading that precedes an
+ *   input lives in a sibling renderer (EXPANDED split).
  */
 @Composable
 internal fun BlockRenderer(
     blocks: List<AuiBlock>,
     modifier: Modifier = Modifier,
     onFeedback: (AuiFeedback) -> Unit = {},
+    registryOverride: MutableState<Map<String, String>>? = null,
+    allBlocksForEntries: List<AuiBlock>? = null,
 ) {
-    val registry = remember { mutableStateOf(emptyMap<String, String>()) }
+    val localRegistry = remember { mutableStateOf(emptyMap<String, String>()) }
+    val registry = registryOverride ?: localRegistry
+    val entryBlocks = allBlocksForEntries ?: blocks
     val wrappedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
-        val entries = buildEntriesFromBlocks(blocks, registry.value)
+        val entries = buildEntriesFromBlocks(entryBlocks, registry.value)
         val formattedEntries = entries
             .joinToString("\n\n") { "${it.question}\n${it.answer}" }
             .ifBlank { null }

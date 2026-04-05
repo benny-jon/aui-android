@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
@@ -56,11 +58,17 @@ fun DisplayRouter(
 
         AuiDisplay.EXPANDED -> {
             val (bubbleBlocks, contentBlocks) = splitBlocks(response.blocks)
+            // Shared registry so all inputs across both split renderers are visible to
+            // buildEntriesFromBlocks. allBlocksForEntries = response.blocks ensures headings in
+            // bubbleBlocks are correctly associated with inputs in contentBlocks.
+            val sharedRegistry = remember { mutableStateOf(emptyMap<String, String>()) }
             Column(modifier = modifier.fillMaxWidth()) {
                 if (bubbleBlocks.isNotEmpty()) {
                     BlockRenderer(
                         blocks = bubbleBlocks,
                         onFeedback = onFeedback,
+                        registryOverride = sharedRegistry,
+                        allBlocksForEntries = response.blocks,
                     )
                 }
                 if (contentBlocks.isNotEmpty()) {
@@ -68,6 +76,8 @@ fun DisplayRouter(
                         blocks = contentBlocks,
                         modifier = Modifier.fillMaxWidth(),
                         onFeedback = onFeedback,
+                        registryOverride = sharedRegistry,
+                        allBlocksForEntries = response.blocks,
                     )
                 }
             }

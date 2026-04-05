@@ -103,15 +103,21 @@ Sheet steps system with auto-generated formattedEntries.
 Phase 2: Polls Polish — Fix feedback bugs + add radio_list and checkbox_list.
 
 Three goals:
-1. Fix: expanded polls must capture ALL input values (not just the last one)
-2. Fix: skipping all steps in a sheet must show "Survey skipped" (not raw action ID)
+1. ✅ Fix: expanded polls must capture ALL input values (not just the last one)
+2. ✅ Fix: skipping all steps in a sheet must show "Survey skipped" (not raw action ID)
 3. Add: radio_list (single-select with descriptions) and checkbox_list (multi-select with descriptions)
 
 Detailed plan: `.planning/phase2-polls-polish.md`
 
+## Key Design Decisions (Phase 2 additions)
+- EXPANDED display uses a shared registry (`registryOverride`) between bubble and content BlockRenderers, and both pass `allBlocksForEntries = response.blocks` so heading→input pairing works across the split.
+- `BlockRenderer` accepts optional `registryOverride: MutableState<Map<String,String>>?` and `allBlocksForEntries: List<AuiBlock>?` parameters. Default behavior (null) is unchanged.
+- Sheet tracks `skippedCount` separately. `buildSheetFormattedEntries()` (internal, testable) produces the display string with fallbacks: "Survey skipped" / "Survey submitted" / partial Q&A + "(N questions skipped)".
+- Sheet `feedback.params` always includes `steps_total` and `steps_skipped` so the AI has full skip context.
+
 ## Known Issues
-- Expanded polls with multiple inputs only capture the last input's value in feedback (fixing in Phase 2, Session 8)
-- Skipping all steps in a sheet shows raw action ID instead of "Survey skipped" (fixing in Phase 2, Session 9)
+(none — both Phase 2 bugs are fixed)
 
 ## Session Log
 - Sessions 1-7: Phase 1 complete. Parser, 17 components, 3 display levels, sheet multi-step, formattedEntries, demo app.
+- Session 8 (2026-04-05): Fixed Bug 1 (expanded polls missing inputs via shared registry + allBlocksForEntries) and Bug 2 (sheet skip-all showing raw action ID via buildSheetFormattedEntries fallback). 13 new unit tests, all passing.

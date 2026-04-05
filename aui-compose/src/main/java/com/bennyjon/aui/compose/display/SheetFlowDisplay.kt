@@ -58,17 +58,20 @@ internal fun SheetFlowDisplay(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var stepIndex by remember { mutableIntStateOf(0) }
+    var skippedCount by remember { mutableIntStateOf(0) }
     val accumulatedParams = remember { mutableMapOf<String, String>() }
     val accumulatedEntries = remember { mutableListOf<AuiEntry>() }
     var showSheet by remember { mutableStateOf(true) }
 
     fun finalize(terminalFeedback: AuiFeedback) {
         val entries = accumulatedEntries.toList()
-        val formattedEntries = entries
-            .joinToString("\n\n") { "${it.question}\n${it.answer}" }
-            .ifBlank { null }
+        val formattedEntries = buildSheetFormattedEntries(entries, skippedCount)
+        val additionalParams = mapOf(
+            "steps_total" to steps.size.toString(),
+            "steps_skipped" to skippedCount.toString(),
+        )
         val finalFeedback = terminalFeedback.copy(
-            params = accumulatedParams.toMap() + terminalFeedback.params,
+            params = accumulatedParams.toMap() + additionalParams + terminalFeedback.params,
             entries = entries,
             formattedEntries = formattedEntries,
         )
@@ -80,7 +83,9 @@ internal fun SheetFlowDisplay(
 
     fun advance(feedback: AuiFeedback, isSkip: Boolean) {
         val step = steps[stepIndex]
-        if (!isSkip) {
+        if (isSkip) {
+            skippedCount++
+        } else {
             accumulatedParams.putAll(feedback.params)
             val question = step.question
             val answer = getStepAnswer(step, feedback.params)
@@ -174,4 +179,25 @@ private fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
             else -> null
         }
     }?.takeIf { it.isNotBlank() }
+}
+
+/**
+ * Builds the human-readable summary string for the feedback bubble after a sheet survey completes.
+ *
+ * - All steps answered → Q+A pairs joined by blank lines
+ * - Some answered, some skipped → Q+A pairs followed by "(N questions skipped)"
+ * - All steps skipped → "Survey skipped"
+ * - Submitted with no input answered → "Survey submitted"
+ */
+internal fun buildSheetFormattedEntries(entries: List<AuiEntry>, skippedCount: Int): String {
+    return when {
+        entries.isEmpty() && skippedCount > 0 -> "Survey skipped"
+        entries.isEmpty() -> "Survey submitted"
+        skippedCount > 0 -> {
+            val answered = entries.joinToString("\n\n") { "${it.question}\n${it.answer}" }
+            val note = if (skippedCount == 1) "(1 question skipped)" else "($skippedCount questions skipped)"
+            "$answered\n\n$note"
+        }
+        else -> entries.joinToString("\n\n") { "${it.question}\n${it.answer}" }
+    }
 }
