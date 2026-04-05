@@ -1,0 +1,82 @@
+{
+  "display": "expanded",
+  "blocks": [
+    {
+      "type": "text",
+      "data": { "text": "We'd love your feedback! Just a few quick questions:" }
+    },
+    {
+      "type": "heading",
+      "data": { "text": "How satisfied are you with our service?" }
+    },
+    {
+      "type": "radio_list",
+      "data": {
+        "key": "satisfaction",
+        "options": [
+          {
+            "label": "Very satisfied",
+            "description": "Everything works great, I'm happy",
+            "value": "very_satisfied"
+          },
+          {
+            "label": "Somewhat satisfied",
+            "description": "It's good but there's room for improvement",
+            "value": "somewhat_satisfied"
+          },
+          {
+            "label": "Neutral",
+            "value": "neutral"
+          },
+          {
+            "label": "Not satisfied",
+            "description": "I've had significant issues",
+            "value": "not_satisfied"
+          }
+        ]
+      }
+    },
+    { "type": "divider", "data": {} },
+    {
+      "type": "heading",
+      "data": { "text": "Which features have you used? (select all that apply)" }
+    },
+    {
+      "type": "checkbox_list",
+      "data": {
+        "key": "used_features",
+        "options": [
+          {
+            "label": "Chat assistant",
+            "description": "Ask questions and get help",
+            "value": "chat"
+          },
+          {
+            "label": "Product search",
+            "description": "Find and compare products",
+            "value": "search"
+          },
+          {
+            "label": "Order tracking",
+            "description": "Track deliveries and returns",
+            "value": "tracking"
+          },
+          {
+            "label": "Recommendations",
+            "description": "Personalized suggestions",
+            "value": "recs"
+          }
+        ]
+      }
+    },
+    { "type": "spacer", "data": {} },
+    {
+      "type": "button_primary",
+      "data": { "label": "Submit Feedback" },
+      "feedback": {
+        "action": "poll_submit",
+        "params": { "poll_id": "feature_survey_v2" }
+      }
+    }
+  ]
+}

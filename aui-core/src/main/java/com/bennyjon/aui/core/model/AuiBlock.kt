@@ -4,6 +4,7 @@ import com.bennyjon.aui.core.model.data.BadgeSuccessData
 import com.bennyjon.aui.core.model.data.ButtonPrimaryData
 import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 import com.bennyjon.aui.core.model.data.CaptionData
+import com.bennyjon.aui.core.model.data.CheckboxListData
 import com.bennyjon.aui.core.model.data.ChipSelectMultiData
 import com.bennyjon.aui.core.model.data.ChipSelectSingleData
 import com.bennyjon.aui.core.model.data.DividerData
@@ -13,6 +14,7 @@ import com.bennyjon.aui.core.model.data.InputSliderData
 import com.bennyjon.aui.core.model.data.InputTextSingleData
 import com.bennyjon.aui.core.model.data.ProgressBarData
 import com.bennyjon.aui.core.model.data.QuickRepliesData
+import com.bennyjon.aui.core.model.data.RadioListData
 import com.bennyjon.aui.core.model.data.SpacerData
 import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
@@ -118,6 +120,20 @@ sealed class AuiBlock {
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
+    /** Vertical single-select list with radio buttons and optional descriptions. */
+    @Serializable
+    data class RadioList(
+        val data: RadioListData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Vertical multi-select list with checkboxes and optional descriptions. */
+    @Serializable
+    data class CheckboxList(
+        val data: CheckboxListData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
     // ── Layout ───────────────────────────────────────────────────────────────
 
     /** Visual separator line. */
@@ -201,6 +217,8 @@ internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(
             "input_rating_stars" -> AuiBlock.InputRatingStars.serializer()
             "input_text_single" -> AuiBlock.InputTextSingle.serializer()
             "input_slider" -> AuiBlock.InputSlider.serializer()
+            "radio_list" -> AuiBlock.RadioList.serializer()
+            "checkbox_list" -> AuiBlock.CheckboxList.serializer()
             "divider" -> AuiBlock.Divider.serializer()
             "spacer" -> AuiBlock.Spacer.serializer()
             "stepper_horizontal" -> AuiBlock.StepperHorizontal.serializer()

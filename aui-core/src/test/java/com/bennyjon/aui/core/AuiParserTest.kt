@@ -132,6 +132,74 @@ class AuiParserTest {
         assertEquals("3 of 3 completed", badge.data.text)
     }
 
+    // ── Expanded survey v2 (radio_list + checkbox_list) ──────────────────────
+
+    @Test
+    fun `parse poll-expanded-survey-v2`() {
+        val json = loadResource("examples/poll-expanded-survey-v2.json")
+        val response = parser.parse(json)
+
+        assertEquals(AuiDisplay.EXPANDED, response.display)
+        assertEquals(8, response.blocks.size)
+
+        val radioList = response.blocks[2] as AuiBlock.RadioList
+        assertEquals("satisfaction", radioList.data.key)
+        assertEquals(4, radioList.data.options.size)
+        assertEquals("Very satisfied", radioList.data.options[0].label)
+        assertEquals("Everything works great, I'm happy", radioList.data.options[0].description)
+        assertEquals("very_satisfied", radioList.data.options[0].value)
+        assertNull(radioList.data.options[2].description)
+        assertNull(radioList.data.selected)
+
+        val checkboxList = response.blocks[5] as AuiBlock.CheckboxList
+        assertEquals("used_features", checkboxList.data.key)
+        assertEquals(4, checkboxList.data.options.size)
+        assertEquals("Chat assistant", checkboxList.data.options[0].label)
+        assertEquals("chat", checkboxList.data.options[0].value)
+        assertEquals(emptyList<String>(), checkboxList.data.selected)
+
+        val button = response.blocks[7] as AuiBlock.ButtonPrimary
+        assertEquals("Submit Feedback", button.data.label)
+        assertEquals("poll_submit", button.feedback?.action)
+        assertEquals("feature_survey_v2", button.feedback?.params?.get("poll_id"))
+    }
+
+    // ── Sheet flow v2 (radio_list + checkbox_list in steps) ──────────────────
+
+    @Test
+    fun `parse poll-sheet-radio-v2`() {
+        val json = loadResource("examples/poll-sheet-radio-v2.json")
+        val response = parser.parse(json)
+
+        assertEquals(AuiDisplay.SHEET, response.display)
+        assertEquals("Quick Survey", response.sheetTitle)
+        assertEquals(3, response.steps.size)
+
+        val step1 = response.steps[0]
+        assertEquals("Experience", step1.label)
+        assertEquals("How was your overall experience?", step1.question)
+        assertTrue(step1.skippable)
+        val radioList = step1.blocks[0] as AuiBlock.RadioList
+        assertEquals("experience", radioList.data.key)
+        assertEquals(5, radioList.data.options.size)
+        assertEquals("Excellent", radioList.data.options[0].label)
+        assertEquals("excellent", radioList.data.options[0].value)
+
+        val step2 = response.steps[1]
+        assertEquals("Improvements", step2.label)
+        val checkboxList = step2.blocks[0] as AuiBlock.CheckboxList
+        assertEquals("improvements", checkboxList.data.key)
+        assertEquals(4, checkboxList.data.options.size)
+        assertEquals("Response speed", checkboxList.data.options[0].label)
+
+        val step3 = response.steps[2]
+        assertEquals("Comments", step3.label)
+        assertTrue(step3.blocks[0] is AuiBlock.InputTextSingle)
+        val submit = step3.blocks[1] as AuiBlock.ButtonPrimary
+        assertEquals("poll_complete", submit.feedback?.action)
+        assertEquals("radio_survey", submit.feedback?.params?.get("poll_id"))
+    }
+
     // ── Unknown type handling ─────────────────────────────────────────────────
 
     @Test

@@ -168,7 +168,7 @@ internal fun SheetFlowDisplay(
  * The registry stores display labels (e.g. "😊 Great") under the input's key, so [params]
  * already contains the correct display value after the button merges the registry into params.
  */
-private fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
+internal fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
     return step.blocks.firstNotNullOfOrNull { block ->
         when (block) {
             is AuiBlock.ChipSelectSingle -> params[block.data.key]
@@ -176,6 +176,8 @@ private fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
             is AuiBlock.InputSlider -> params[block.data.key]
             is AuiBlock.InputRatingStars -> params[block.data.key]
             is AuiBlock.InputTextSingle -> params[block.data.key]
+            is AuiBlock.RadioList -> params[block.data.key]
+            is AuiBlock.CheckboxList -> params[block.data.key]
             else -> null
         }
     }?.takeIf { it.isNotBlank() }

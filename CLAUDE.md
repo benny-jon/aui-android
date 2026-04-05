@@ -92,6 +92,9 @@ Two library modules + one demo app:
 
 ## Completed Phases
 
+### Phase 2 ✅ — Polls Polish
+Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries), sheet skip-all fallback text ("Survey skipped"). Added: radio_list and checkbox_list components with SelectionRow shared composable. 2 new parser tests, full build clean.
+
 ### Phase 1 ✅ — Polls & Feedback Collection
 Implemented: text, heading, caption, chip_select_single, chip_select_multi, quick_replies,
 input_rating_stars, input_text_single, input_slider, button_primary, button_secondary,
@@ -100,20 +103,21 @@ All 3 display levels working (inline, expanded, sheet with multi-step).
 Sheet steps system with auto-generated formattedEntries.
 
 ## Current Phase
-Phase 2: Polls Polish — Fix feedback bugs + add radio_list and checkbox_list.
+Phase 2 ✅ complete — starting Phase 3.
 
-Three goals:
+Phase 2 goals:
 1. ✅ Fix: expanded polls must capture ALL input values (not just the last one)
 2. ✅ Fix: skipping all steps in a sheet must show "Survey skipped" (not raw action ID)
-3. Add: radio_list (single-select with descriptions) and checkbox_list (multi-select with descriptions)
+3. ✅ Add: radio_list (single-select with descriptions) and checkbox_list (multi-select with descriptions)
 
-Detailed plan: `.planning/phase2-polls-polish.md`
+Phase 3: TBD — poll/survey system is now complete.
 
-## Key Design Decisions (Phase 2 additions)
+## Key Design Decisions (Phase 2 additions — Sessions 8–10)
 - EXPANDED display uses a shared registry (`registryOverride`) between bubble and content BlockRenderers, and both pass `allBlocksForEntries = response.blocks` so heading→input pairing works across the split.
 - `BlockRenderer` accepts optional `registryOverride: MutableState<Map<String,String>>?` and `allBlocksForEntries: List<AuiBlock>?` parameters. Default behavior (null) is unchanged.
 - Sheet tracks `skippedCount` separately. `buildSheetFormattedEntries()` (internal, testable) produces the display string with fallbacks: "Survey skipped" / "Survey submitted" / partial Q&A + "(N questions skipped)".
 - Sheet `feedback.params` always includes `steps_total` and `steps_skipped` so the AI has full skip context.
+- `radio_list` and `checkbox_list` share `SelectionOption` (label, description?, value) and an internal `SelectionRow` composable. The container is a bordered `Column` clipped to `theme.shapes.card` with `HorizontalDivider` between rows and a primary-tint (8% alpha) background on selected rows.
 
 ## Known Issues
 (none — both Phase 2 bugs are fixed)
@@ -121,3 +125,4 @@ Detailed plan: `.planning/phase2-polls-polish.md`
 ## Session Log
 - Sessions 1-7: Phase 1 complete. Parser, 17 components, 3 display levels, sheet multi-step, formattedEntries, demo app.
 - Session 8 (2026-04-05): Fixed Bug 1 (expanded polls missing inputs via shared registry + allBlocksForEntries) and Bug 2 (sheet skip-all showing raw action ID via buildSheetFormattedEntries fallback). 13 new unit tests, all passing.
+- Session 10 (2026-04-05): Added radio_list and checkbox_list. SelectionListData.kt, SelectionRow composable, AuiRadioList, AuiCheckboxList, BlockRenderer wired up. 2 parser tests. Demo updated to v2 JSON. Full build clean.

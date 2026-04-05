@@ -667,6 +667,18 @@ Multi-select chip group.
 data: { key: string, label?: string, options: [{ label: string, value: string }], selected?: [string] }
 ```
 
+#### `radio_list`
+Vertical single-select list with radio buttons. Each option has a label and optional description.
+```
+data: { key: string, label?: string, options: [{ label: string, description?: string, value: string }], selected?: string }
+```
+
+#### `checkbox_list`
+Vertical multi-select list with checkboxes. Each option has a label and optional description.
+```
+data: { key: string, label?: string, options: [{ label: string, description?: string, value: string }], selected?: [string] }
+```
+
 #### `input_text_single`
 Single text input with submit.
 ```
@@ -1181,6 +1193,8 @@ Input:
   quick_replies(options[]{label})
   chip_select_single(key, options[]{label, value}, label?, selected?)
   chip_select_multi(key, options[]{label, value}, label?, selected?)
+  radio_list(key, options[]{label, description?, value}, label?, selected?)
+  checkbox_list(key, options[]{label, description?, value}, label?, selected?)
   input_text_single(key, label, placeholder?, submit_label?)
   input_text_multi(key, label, placeholder?, rows?, submit_label?)
   input_email(key, label, placeholder?)

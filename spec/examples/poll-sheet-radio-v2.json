@@ -1,0 +1,120 @@
+{
+  "display": "sheet",
+  "sheet_title": "Quick Survey",
+  "steps": [
+    {
+      "label": "Experience",
+      "question": "How was your overall experience?",
+      "skippable": true,
+      "blocks": [
+        {
+          "type": "radio_list",
+          "data": {
+            "key": "experience",
+            "options": [
+              {
+                "label": "Excellent",
+                "description": "Exceeded my expectations in every way",
+                "value": "excellent"
+              },
+              {
+                "label": "Good",
+                "description": "Met my expectations, worked well",
+                "value": "good"
+              },
+              {
+                "label": "Average",
+                "description": "Nothing special, gets the job done",
+                "value": "average"
+              },
+              {
+                "label": "Below average",
+                "description": "Had some frustrating moments",
+                "value": "below_average"
+              },
+              {
+                "label": "Poor",
+                "description": "Significantly below what I expected",
+                "value": "poor"
+              }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": {
+            "action": "poll_next_step",
+            "params": { "poll_id": "radio_survey" }
+          }
+        }
+      ]
+    },
+    {
+      "label": "Improvements",
+      "question": "What should we focus on improving?",
+      "skippable": true,
+      "blocks": [
+        {
+          "type": "checkbox_list",
+          "data": {
+            "key": "improvements",
+            "options": [
+              {
+                "label": "Response speed",
+                "description": "Faster answers and loading times",
+                "value": "speed"
+              },
+              {
+                "label": "Answer accuracy",
+                "description": "More precise and reliable responses",
+                "value": "accuracy"
+              },
+              {
+                "label": "Visual design",
+                "description": "Cleaner, more modern interface",
+                "value": "design"
+              },
+              {
+                "label": "More features",
+                "description": "Additional capabilities and tools",
+                "value": "features"
+              }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": {
+            "action": "poll_next_step",
+            "params": { "poll_id": "radio_survey" }
+          }
+        }
+      ]
+    },
+    {
+      "label": "Comments",
+      "question": "Anything else you'd like to tell us?",
+      "skippable": true,
+      "blocks": [
+        {
+          "type": "input_text_single",
+          "data": {
+            "key": "comments",
+            "label": "Your feedback",
+            "placeholder": "Optional — type anything here..."
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit" },
+          "feedback": {
+            "action": "poll_complete",
+            "params": { "poll_id": "radio_survey" }
+          }
+        }
+      ]
+    }
+  ]
+}

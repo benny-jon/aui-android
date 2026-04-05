@@ -10,12 +10,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.bennyjon.aui.compose.components.input.AuiButtonPrimary
 import com.bennyjon.aui.compose.components.input.AuiButtonSecondary
+import com.bennyjon.aui.compose.components.input.AuiCheckboxList
 import com.bennyjon.aui.compose.components.input.AuiChipSelectMulti
 import com.bennyjon.aui.compose.components.input.AuiChipSelectSingle
 import com.bennyjon.aui.compose.components.input.AuiInputRatingStars
 import com.bennyjon.aui.compose.components.input.AuiInputSlider
 import com.bennyjon.aui.compose.components.input.AuiInputTextSingle
 import com.bennyjon.aui.compose.components.input.AuiQuickReplies
+import com.bennyjon.aui.compose.components.input.AuiRadioList
 import com.bennyjon.aui.compose.components.layout.AuiDivider
 import com.bennyjon.aui.compose.components.layout.AuiProgressBar
 import com.bennyjon.aui.compose.components.layout.AuiSpacer
@@ -59,6 +61,8 @@ private fun AuiBlock.inputKey(): String? = when (this) {
     is AuiBlock.InputSlider -> data.key
     is AuiBlock.InputRatingStars -> data.key
     is AuiBlock.InputTextSingle -> data.key
+    is AuiBlock.RadioList -> data.key
+    is AuiBlock.CheckboxList -> data.key
     else -> null
 }
 
@@ -107,6 +111,8 @@ internal fun BlockRenderer(
                 is AuiBlock.InputRatingStars -> AuiInputRatingStars(block = block, onFeedback = wrappedOnFeedback)
                 is AuiBlock.InputTextSingle -> AuiInputTextSingle(block = block, onFeedback = wrappedOnFeedback)
                 is AuiBlock.InputSlider -> AuiInputSlider(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.RadioList -> AuiRadioList(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.CheckboxList -> AuiCheckboxList(block = block, onFeedback = wrappedOnFeedback)
                 is AuiBlock.Divider -> AuiDivider()
                 is AuiBlock.Spacer -> AuiSpacer()
                 is AuiBlock.StepperHorizontal -> AuiStepperHorizontal(block = block)

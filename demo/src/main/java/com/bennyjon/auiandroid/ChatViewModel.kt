@@ -66,41 +66,39 @@ private val EXPANDED_SURVEY_JSON = """
   "blocks": [
     {
       "type": "text",
-      "data": { "text": "Help us improve! A few quick questions:" }
+      "data": { "text": "We'd love your feedback! Just a few quick questions:" }
     },
     {
       "type": "heading",
-      "data": { "text": "What features do you use most?" }
+      "data": { "text": "How satisfied are you with our service?" }
     },
     {
-      "type": "chip_select_multi",
+      "type": "radio_list",
       "data": {
-        "key": "features",
+        "key": "satisfaction",
         "options": [
-          { "label": "Chat", "value": "chat" },
-          { "label": "Search", "value": "search" },
-          { "label": "Recommendations", "value": "recs" },
-          { "label": "Order tracking", "value": "tracking" },
-          { "label": "Account settings", "value": "settings" }
+          { "label": "Very satisfied", "description": "Everything works great, I'm happy", "value": "very_satisfied" },
+          { "label": "Somewhat satisfied", "description": "It's good but there's room for improvement", "value": "somewhat_satisfied" },
+          { "label": "Neutral", "value": "neutral" },
+          { "label": "Not satisfied", "description": "I've had significant issues", "value": "not_satisfied" }
         ]
       }
     },
-    { "type": "spacer", "data": {} },
     { "type": "divider", "data": {} },
-    { "type": "spacer", "data": {} },
     {
       "type": "heading",
-      "data": { "text": "How likely are you to recommend us?" }
+      "data": { "text": "Which features have you used? (select all that apply)" }
     },
     {
-      "type": "input_slider",
+      "type": "checkbox_list",
       "data": {
-        "key": "nps",
-        "label": "0 = Not likely, 10 = Very likely",
-        "min": 0,
-        "max": 10,
-        "value": 5,
-        "step": 1
+        "key": "used_features",
+        "options": [
+          { "label": "Chat assistant", "description": "Ask questions and get help", "value": "chat" },
+          { "label": "Product search", "description": "Find and compare products", "value": "search" },
+          { "label": "Order tracking", "description": "Track deliveries and returns", "value": "tracking" },
+          { "label": "Recommendations", "description": "Personalized suggestions", "value": "recs" }
+        ]
       }
     },
     { "type": "spacer", "data": {} },
@@ -109,7 +107,7 @@ private val EXPANDED_SURVEY_JSON = """
       "data": { "label": "Submit Feedback" },
       "feedback": {
         "action": "poll_submit",
-        "params": { "poll_id": "feature_survey" }
+        "params": { "poll_id": "feature_survey_v2" }
       }
     }
   ]
@@ -123,18 +121,19 @@ private val SHEET_JSON = """
   "steps": [
     {
       "label": "Experience",
-      "question": "How was your experience?",
+      "question": "How was your overall experience?",
       "skippable": true,
       "blocks": [
         {
-          "type": "chip_select_single",
+          "type": "radio_list",
           "data": {
             "key": "experience",
             "options": [
-              { "label": "😊 Great", "value": "great" },
-              { "label": "🙂 Good", "value": "good" },
-              { "label": "😐 Okay", "value": "okay" },
-              { "label": "😞 Poor", "value": "poor" }
+              { "label": "Excellent", "description": "Exceeded my expectations in every way", "value": "excellent" },
+              { "label": "Good", "description": "Met my expectations, worked well", "value": "good" },
+              { "label": "Average", "description": "Nothing special, gets the job done", "value": "average" },
+              { "label": "Below average", "description": "Had some frustrating moments", "value": "below_average" },
+              { "label": "Poor", "description": "Significantly below what I expected", "value": "poor" }
             ]
           }
         },
@@ -143,26 +142,25 @@ private val SHEET_JSON = """
           "data": { "label": "Next" },
           "feedback": {
             "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" }
+            "params": { "poll_id": "radio_survey" }
           }
         }
       ]
     },
     {
-      "label": "Features",
-      "question": "What would you like to see improved?",
+      "label": "Improvements",
+      "question": "What should we focus on improving?",
       "skippable": true,
       "blocks": [
         {
-          "type": "chip_select_multi",
+          "type": "checkbox_list",
           "data": {
             "key": "improvements",
             "options": [
-              { "label": "Speed", "value": "speed" },
-              { "label": "Design", "value": "design" },
-              { "label": "Features", "value": "features" },
-              { "label": "Accuracy", "value": "accuracy" },
-              { "label": "Pricing", "value": "pricing" }
+              { "label": "Response speed", "description": "Faster answers and loading times", "value": "speed" },
+              { "label": "Answer accuracy", "description": "More precise and reliable responses", "value": "accuracy" },
+              { "label": "Visual design", "description": "Cleaner, more modern interface", "value": "design" },
+              { "label": "More features", "description": "Additional capabilities and tools", "value": "features" }
             ]
           }
         },
@@ -171,20 +169,20 @@ private val SHEET_JSON = """
           "data": { "label": "Next" },
           "feedback": {
             "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" }
+            "params": { "poll_id": "radio_survey" }
           }
         }
       ]
     },
     {
-      "label": "Feedback",
+      "label": "Comments",
       "question": "Anything else you'd like to tell us?",
       "skippable": true,
       "blocks": [
         {
           "type": "input_text_single",
           "data": {
-            "key": "open_feedback",
+            "key": "comments",
             "label": "Your feedback",
             "placeholder": "Optional — type anything here..."
           }
@@ -194,7 +192,7 @@ private val SHEET_JSON = """
           "data": { "label": "Submit" },
           "feedback": {
             "action": "poll_complete",
-            "params": { "poll_id": "onboarding_survey" }
+            "params": { "poll_id": "radio_survey" }
           }
         }
       ]
