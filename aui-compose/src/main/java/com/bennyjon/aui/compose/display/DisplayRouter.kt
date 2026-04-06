@@ -40,12 +40,14 @@ import com.bennyjon.aui.core.model.data.TextData
  * @param response The parsed [AuiResponse] to route and render.
  * @param modifier Modifier applied to the outermost layout.
  * @param onFeedback Called when the user interacts with a block that has feedback configured.
+ * @param onUnknownBlock If provided, called for each unrecognized block type encountered during rendering.
  */
 @Composable
 fun DisplayRouter(
     response: AuiResponse,
     modifier: Modifier = Modifier,
     onFeedback: (AuiFeedback) -> Unit = {},
+    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     when (response.display) {
         AuiDisplay.INLINE -> {
@@ -53,6 +55,7 @@ fun DisplayRouter(
                 blocks = response.blocks,
                 modifier = modifier,
                 onFeedback = onFeedback,
+                onUnknownBlock = onUnknownBlock,
             )
         }
 
@@ -69,6 +72,7 @@ fun DisplayRouter(
                         onFeedback = onFeedback,
                         registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
+                        onUnknownBlock = onUnknownBlock,
                     )
                 }
                 if (contentBlocks.isNotEmpty()) {
@@ -78,6 +82,7 @@ fun DisplayRouter(
                         onFeedback = onFeedback,
                         registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
+                        onUnknownBlock = onUnknownBlock,
                     )
                 }
             }
@@ -88,6 +93,7 @@ fun DisplayRouter(
                 steps = response.steps,
                 sheetTitle = response.sheetTitle,
                 onFeedback = onFeedback,
+                onUnknownBlock = onUnknownBlock,
             )
         }
     }

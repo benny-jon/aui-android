@@ -35,7 +35,11 @@ Two library modules + one demo app:
 - EXPANDED display uses a shared registry (`registryOverride`) between bubble and content BlockRenderers, and both pass `allBlocksForEntries = response.blocks` so heading→input pairing works across the split.
 - `BlockRenderer` accepts optional `registryOverride: MutableState<Map<String,String>>?` and `allBlocksForEntries: List<AuiBlock>?` parameters. Default behavior (null) is unchanged.
 - Sheet tracks `skippedCount` separately. `buildSheetFormattedEntries()` (internal, testable) produces display string with fallbacks: "Survey skipped" / "Survey submitted" / partial Q&A + "(N questions skipped)".
-- Sheet `feedback.params` always includes `steps_total` and `steps_skipped`.
+- Sheet `feedback.params` always includes `steps_total` and `steps_skipped` (string keys). `AuiFeedback.stepsTotal` and `AuiFeedback.stepsSkipped` are also set as typed `Int?` fields.
+- Sheet dismiss (`onDismissRequest`) calls `onFeedback(action="sheet_dismissed", stepsTotal=N)`. `stepsSkipped` is null on dismiss (skip buttons weren't used).
+- `SheetFlowDisplay` uses `rememberSaveable` for the `showSheet` flag so the sheet stays closed if the composable leaves and re-enters the composition (scroll away + back), provided the host uses stable `LazyColumn` keys.
+- `AuiRenderer` has two overloads: `(json: String, ..., onParseError, onUnknownBlock)` and `(response: AuiResponse, ..., onUnknownBlock)`. The JSON overload parses internally and calls the response overload.
+- `onUnknownBlock: ((AuiBlock.Unknown) -> Unit)?` is threaded from `AuiRenderer` → `DisplayRouter` → `BlockRenderer` / `SheetFlowDisplay`.
 - `radio_list` and `checkbox_list` share `SelectionOption` (label, description?, value) and internal `SelectionRow` composable. Bordered `Column` clipped to `theme.shapes.card` with `HorizontalDivider` between rows, primary-tint (8% alpha) background on selected rows.
 - **Library is a pure renderer with callback. It does NOT manage chat history, conversation state, or message models. Host apps own all of that.**
 
@@ -96,9 +100,9 @@ Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries)
 Phase 3: Clean Library Boundary — Library is a pure renderer with callback. No chat management.
 
 Goals:
-1. Delete AuiChatManager/AuiChatMessage if they exist — not the library's job
-2. AuiRenderer handles sheets internally (open, step, close, callback). Inert on re-render.
-3. AuiFeedback gets structured `entries: List<FeedbackEntry>` alongside `formattedEntries`
+1. ✅ Delete AuiChatManager/AuiChatMessage if they exist — not the library's job (didn't exist)
+2. ✅ AuiRenderer handles sheets internally (open, step, close, callback). Inert on re-render.
+3. ✅ AuiFeedback gets `stepsSkipped: Int?` and `stepsTotal: Int?` typed fields
 4. AuiCatalogPrompt generates AI system prompt schema from the component catalog
 5. Demo app uses its own message model, shows sheet consumption pattern (set auiJson=null)
 
@@ -106,11 +110,11 @@ Sessions: 11 (clean API), 12 (CatalogPrompt), 13 (demo rewrite), 14 (review + do
 Detailed plan: `.planning/phase3-host-integration.md`
 
 ## Known Issues
-- Sheet AuiRenderer must be inert on re-render (prevent re-open if host forgets to clear JSON)
-- AuiFeedback needs structured entries field alongside formattedEntries
 - No AuiCatalogPrompt yet
+- Demo app still uses AuiResponse directly (Session 13 will rewrite to use raw JSON + own message model)
 
 ## Session Log
 - Sessions 1-7: Phase 1 complete. Parser, 17 components, 3 display levels, sheet multi-step, formattedEntries, demo app.
 - Session 8 (2026-04-05): Fixed expanded polls missing inputs (shared registry + allBlocksForEntries) and sheet skip-all (buildSheetFormattedEntries fallback). 13 new unit tests.
 - Session 10 (2026-04-05): Added radio_list and checkbox_list. SelectionRow composable, parser tests, demo updated to v2 JSON. Full build clean.
+- Session 11 (2026-04-05): Clean API. Added JSON string overload to AuiRenderer (onParseError, onUnknownBlock). Threaded onUnknownBlock through DisplayRouter/BlockRenderer/SheetFlowDisplay. Added stepsSkipped/stepsTotal typed fields to AuiFeedback. Sheet dismiss now calls onFeedback(action="sheet_dismissed"). SheetFlowDisplay uses rememberSaveable for inert-on-re-entry behavior. 3 new tests.

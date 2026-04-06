@@ -77,6 +77,8 @@ private fun AuiBlock.inputKey(): String? = when (this) {
  * @param allBlocksForEntries If provided, [buildEntriesFromBlocks] scans this list instead of
  *   [blocks] when building Q+A entries on feedback. Use this when the heading that precedes an
  *   input lives in a sibling renderer (EXPANDED split).
+ * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] instead of (or in
+ *   addition to) the default warning log.
  */
 @Composable
 internal fun BlockRenderer(
@@ -85,6 +87,7 @@ internal fun BlockRenderer(
     onFeedback: (AuiFeedback) -> Unit = {},
     registryOverride: MutableState<Map<String, String>>? = null,
     allBlocksForEntries: List<AuiBlock>? = null,
+    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     val localRegistry = remember { mutableStateOf(emptyMap<String, String>()) }
     val registry = registryOverride ?: localRegistry
@@ -119,7 +122,10 @@ internal fun BlockRenderer(
                 is AuiBlock.ProgressBar -> AuiProgressBar(block = block)
                 is AuiBlock.BadgeSuccess -> AuiBadgeSuccess(block = block)
                 is AuiBlock.StatusBannerSuccess -> AuiStatusBannerSuccess(block = block)
-                is AuiBlock.Unknown -> Log.w(TAG, "Skipping unknown block type: ${block.type}")
+                is AuiBlock.Unknown -> {
+                    Log.w(TAG, "Skipping unknown block type: ${block.type}")
+                    onUnknownBlock?.invoke(block)
+                }
             }
         }
     }

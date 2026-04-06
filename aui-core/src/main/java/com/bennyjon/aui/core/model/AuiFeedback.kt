@@ -46,4 +46,16 @@ data class AuiFeedback(
      * Use this when you want to build a custom summary instead of using [formattedEntries].
      */
     val entries: List<AuiEntry> = emptyList(),
+
+    /**
+     * Number of steps the user skipped in a [AuiDisplay.SHEET] interaction.
+     * `null` for non-sheet interactions.
+     */
+    val stepsSkipped: Int? = null,
+
+    /**
+     * Total number of steps in a [AuiDisplay.SHEET] interaction.
+     * `null` for non-sheet interactions.
+     */
+    val stepsTotal: Int? = null,
 )

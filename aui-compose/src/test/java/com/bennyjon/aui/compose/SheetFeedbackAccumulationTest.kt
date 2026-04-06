@@ -225,4 +225,40 @@ class SheetFeedbackAccumulationTest {
             formattedEntries,
         )
     }
+
+    // ── stepsSkipped / stepsTotal typed fields ────────────────────────────────
+
+    @Test
+    fun `finalized feedback includes stepsTotal equal to step count`() {
+        val entries = listOf(
+            AuiEntry(question = "How was your overall experience?", answer = "Good"),
+        )
+        val feedback = AuiFeedback(
+            action = "poll_complete",
+            entries = entries,
+            formattedEntries = buildSheetFormattedEntries(entries, skippedCount = 2),
+            stepsSkipped = 2,
+            stepsTotal = 3,
+        )
+        assertEquals(3, feedback.stepsTotal)
+        assertEquals(2, feedback.stepsSkipped)
+    }
+
+    @Test
+    fun `all steps answered produces stepsSkipped of zero`() {
+        val feedback = AuiFeedback(
+            action = "poll_complete",
+            stepsSkipped = 0,
+            stepsTotal = 3,
+        )
+        assertEquals(0, feedback.stepsSkipped)
+        assertEquals(3, feedback.stepsTotal)
+    }
+
+    @Test
+    fun `non-sheet feedback has null stepsSkipped and stepsTotal`() {
+        val feedback = AuiFeedback(action = "button_tap")
+        assertEquals(null, feedback.stepsSkipped)
+        assertEquals(null, feedback.stepsTotal)
+    }
 }

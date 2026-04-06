@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +44,10 @@ import kotlinx.coroutines.launch
  * - Accumulation of [AuiEntry] Q+A pairs across steps
  * - A single consolidated [AuiFeedback] emitted to [onFeedback] at the end, with
  *   merged [AuiFeedback.params] and the full [AuiFeedback.entries] list
+ *
+ * The composable is inert once the sheet has been completed or dismissed. If the host app
+ * does not clear its JSON after receiving [onFeedback], scrolling back to the message will not
+ * reopen the sheet (provided the composable uses a stable key in [LazyColumn]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +55,7 @@ internal fun SheetFlowDisplay(
     steps: List<AuiStep>,
     sheetTitle: String?,
     onFeedback: (AuiFeedback) -> Unit,
+    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     if (steps.isEmpty()) return
 
@@ -61,7 +67,7 @@ internal fun SheetFlowDisplay(
     var skippedCount by remember { mutableIntStateOf(0) }
     val accumulatedParams = remember { mutableMapOf<String, String>() }
     val accumulatedEntries = remember { mutableListOf<AuiEntry>() }
-    var showSheet by remember { mutableStateOf(true) }
+    var showSheet by rememberSaveable { mutableStateOf(true) }
 
     fun finalize(terminalFeedback: AuiFeedback) {
         val entries = accumulatedEntries.toList()
@@ -74,6 +80,8 @@ internal fun SheetFlowDisplay(
             params = accumulatedParams.toMap() + additionalParams + terminalFeedback.params,
             entries = entries,
             formattedEntries = formattedEntries,
+            stepsSkipped = skippedCount,
+            stepsTotal = steps.size,
         )
         scope.launch { sheetState.hide() }.invokeOnCompletion {
             showSheet = false
@@ -103,7 +111,10 @@ internal fun SheetFlowDisplay(
     if (!showSheet) return
 
     ModalBottomSheet(
-        onDismissRequest = { showSheet = false },
+        onDismissRequest = {
+            showSheet = false
+            onFeedback(AuiFeedback(action = "sheet_dismissed", stepsTotal = steps.size))
+        },
         sheetState = sheetState,
     ) {
         Column(
@@ -141,6 +152,7 @@ internal fun SheetFlowDisplay(
                 BlockRenderer(
                     blocks = step.blocks,
                     onFeedback = { feedback -> advance(feedback, isSkip = false) },
+                    onUnknownBlock = onUnknownBlock,
                 )
             }
 
