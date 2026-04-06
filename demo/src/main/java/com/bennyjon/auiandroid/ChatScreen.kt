@@ -1,5 +1,6 @@
 package com.bennyjon.auiandroid
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -8,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -34,20 +35,19 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.theme.AuiTheme
-import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.AuiResponse
 
 /**
- * Full-screen chat UI that demonstrates the AUI poll flow.
+ * Full-screen chat UI demonstrating AUI library integration.
  *
- * Renders a scrollable list of [ChatMessage]s. AI responses are displayed via [AuiRenderer].
- * User interactions trigger [ChatViewModel.onFeedback], which appends a feedback bubble and
- * loads the next response in the pre-loaded sequence.
+ * Renders a scrollable list of [DemoMessage]s. AI messages with `auiJson` are rendered via
+ * [AuiRenderer] using the raw JSON overload — the library parses JSON internally. User
+ * interactions trigger [DemoViewModel.onAuiFeedback], which handles sheet consumption
+ * (setting `auiJson = null`) and appending the feedback as a user bubble.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(viewModel: ChatViewModel) {
+fun ChatScreen(viewModel: DemoViewModel) {
     val messages by viewModel.messages.collectAsState()
     val listState = rememberLazyListState()
     val auiTheme = AuiTheme.fromMaterialTheme()
@@ -74,63 +74,80 @@ fun ChatScreen(viewModel: ChatViewModel) {
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            itemsIndexed(
+            items(
                 items = messages,
-                key = { index, _ -> index },
-            ) { _, message ->
+                key = { message ->
+                    when (message) {
+                        is DemoMessage.Ai -> message.id
+                        is DemoMessage.User -> message.id
+                    }
+                },
+            ) { message ->
                 when (message) {
-                    is ChatMessage.UserText -> UserBubble(text = message.text)
-                    is ChatMessage.UserFeedback -> UserBubble(text = message.label)
-                    is ChatMessage.AiResponse -> AiResponseItem(
-                        response = message.response,
+                    is DemoMessage.Ai -> AiMessageItem(
+                        message = message,
                         theme = auiTheme,
-                        onFeedback = viewModel::onFeedback,
+                        onFeedback = { feedback ->
+                            viewModel.onAuiFeedback(message.id, feedback)
+                        },
                     )
+                    is DemoMessage.User -> UserBubble(text = message.text)
                 }
             }
         }
     }
 }
 
+/**
+ * Renders an AI message: optional text bubble followed by AUI content.
+ *
+ * When [DemoMessage.Ai.auiJson] is `null` (consumed sheet or no AUI), only the text is shown.
+ * When present, the raw JSON is passed to [AuiRenderer] which handles parsing and display
+ * mode routing internally.
+ */
 @Composable
-private fun AiResponseItem(
-    response: AuiResponse,
+private fun AiMessageItem(
+    message: DemoMessage.Ai,
     theme: AuiTheme,
     onFeedback: (AuiFeedback) -> Unit,
 ) {
-    when (response.display) {
-        AuiDisplay.INLINE -> {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
+    // Text portion (if any)
+    message.text?.let { text ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+        ) {
+            Surface(
+                shape = RoundedCornerShape(
+                    topStart = 4.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp,
+                ),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.widthIn(max = 300.dp),
             ) {
-                Surface(
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp,
-                        topEnd = 16.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp,
-                    ),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.widthIn(max = 300.dp),
-                ) {
-                    AuiRenderer(
-                        response = response,
-                        modifier = Modifier.padding(12.dp),
-                        theme = theme,
-                        onFeedback = onFeedback,
-                    )
-                }
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                )
             }
         }
-        AuiDisplay.EXPANDED, AuiDisplay.SHEET -> {
-            AuiRenderer(
-                response = response,
-                modifier = Modifier.fillMaxWidth(),
-                theme = theme,
-                onFeedback = onFeedback,
-            )
-        }
+    }
+
+    // AUI portion (if any — null after sheet consumption)
+    message.auiJson?.let { json ->
+        AuiRenderer(
+            json = json,
+            modifier = Modifier.fillMaxWidth(),
+            theme = theme,
+            onFeedback = onFeedback,
+            onParseError = { error ->
+                Log.w("AuiDemo", "AUI parse error: $error")
+            },
+        )
     }
 }
 

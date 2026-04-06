@@ -105,13 +105,13 @@ Goals:
 2. ✅ AuiRenderer handles sheets internally (open, step, close, callback). Inert on re-render.
 3. ✅ AuiFeedback gets `stepsSkipped: Int?` and `stepsTotal: Int?` typed fields
 4. ✅ AuiCatalogPrompt generates AI system prompt schema from the component catalog
-5. Demo app uses its own message model, shows sheet consumption pattern (set auiJson=null)
+5. ✅ Demo app uses its own message model, shows sheet consumption pattern (set auiJson=null)
 
 Sessions: 11 (clean API), 12 (CatalogPrompt), 13 (demo rewrite), 14 (review + docs)
 Detailed plan: `.planning/phase3-host-integration.md`
 
 ## Known Issues
-- Demo app still uses AuiResponse directly (Session 13 will rewrite to use raw JSON + own message model)
+- None
 
 ## Session Log
 - Sessions 1-7: Phase 1 complete. Parser, 17 components, 3 display levels, sheet multi-step, formattedEntries, demo app.
@@ -119,3 +119,4 @@ Detailed plan: `.planning/phase3-host-integration.md`
 - Session 10 (2026-04-05): Added radio_list and checkbox_list. SelectionRow composable, parser tests, demo updated to v2 JSON. Full build clean.
 - Session 11 (2026-04-05): Clean API. Added JSON string overload to AuiRenderer (onParseError, onUnknownBlock). Threaded onUnknownBlock through DisplayRouter/BlockRenderer/SheetFlowDisplay. Added stepsSkipped/stepsTotal typed fields to AuiFeedback. Sheet dismiss now calls onFeedback(action="sheet_dismissed"). SheetFlowDisplay uses rememberSaveable for inert-on-re-entry behavior. 3 new tests.
 - Session 12 (2026-04-05): Created AuiCatalogPrompt. Object with generate(availableActions?) returning AI system prompt text. Covers response format, display levels, all 19 component types with data fields, feedback format, sheet fields, and guidelines. 15 new tests verifying component coverage, structural sections, and availableActions parameter.
+- Session 13 (2026-04-05): Rewrote demo app. Replaced ChatMessage/ChatViewModel with DemoMessage/DemoViewModel. Demo now uses its own message model (not library types), passes raw JSON to AuiRenderer, and demonstrates sheet consumption pattern (set auiJson=null after feedback). Stable LazyColumn keys via DemoMessage.Ai.id.

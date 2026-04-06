@@ -9,7 +9,7 @@ import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: ChatViewModel by viewModels()
+    private val viewModel: DemoViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
