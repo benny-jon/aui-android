@@ -72,7 +72,7 @@ Two library modules + one demo app:
 
 ## Important References
 - Full AUI spec: `spec/aui-spec-v1.md`
-- Library architecture doc: `docs/architecture.md`
+- Library architecture doc: `docs/architecture.md` (was `architecute.md`, renamed in Session 14)
 - JSON examples: `spec/examples/`
 
 ## Keeping This File Up To Date
@@ -91,6 +91,9 @@ Rules: Never delete existing sections unless factually wrong. Keep under ~120 li
 
 ## Completed Phases
 
+### Phase 3 ✅ — Clean Library Boundary
+Library is a pure renderer with callback. No chat management. AuiRenderer handles sheets internally (inert on re-render). AuiFeedback has stepsSkipped/stepsTotal typed fields. AuiCatalogPrompt generates AI system prompt. Demo uses own message model. All public API has KDoc. README with quick-start guide. Architecture doc renamed from typo.
+
 ### Phase 2 ✅ — Polls Polish
 Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries), sheet skip-all fallback text. Added: radio_list and checkbox_list with SelectionRow shared composable.
 
@@ -98,16 +101,8 @@ Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries)
 17 components, 3 display levels, sheet multi-step with formattedEntries, demo app.
 
 ## Current Phase
-Phase 3: Clean Library Boundary — Library is a pure renderer with callback. No chat management.
+Phase 3 is complete. All goals delivered. Ready for next phase.
 
-Goals:
-1. ✅ Delete AuiChatManager/AuiChatMessage if they exist — not the library's job (didn't exist)
-2. ✅ AuiRenderer handles sheets internally (open, step, close, callback). Inert on re-render.
-3. ✅ AuiFeedback gets `stepsSkipped: Int?` and `stepsTotal: Int?` typed fields
-4. ✅ AuiCatalogPrompt generates AI system prompt schema from the component catalog
-5. ✅ Demo app uses its own message model, shows sheet consumption pattern (set auiJson=null)
-
-Sessions: 11 (clean API), 12 (CatalogPrompt), 13 (demo rewrite), 14 (review + docs)
 Detailed plan: `.planning/phase3-host-integration.md`
 
 ## Known Issues
@@ -120,3 +115,4 @@ Detailed plan: `.planning/phase3-host-integration.md`
 - Session 11 (2026-04-05): Clean API. Added JSON string overload to AuiRenderer (onParseError, onUnknownBlock). Threaded onUnknownBlock through DisplayRouter/BlockRenderer/SheetFlowDisplay. Added stepsSkipped/stepsTotal typed fields to AuiFeedback. Sheet dismiss now calls onFeedback(action="sheet_dismissed"). SheetFlowDisplay uses rememberSaveable for inert-on-re-entry behavior. 3 new tests.
 - Session 12 (2026-04-05): Created AuiCatalogPrompt. Object with generate(availableActions?) returning AI system prompt text. Covers response format, display levels, all 19 component types with data fields, feedback format, sheet fields, and guidelines. 15 new tests verifying component coverage, structural sections, and availableActions parameter.
 - Session 13 (2026-04-05): Rewrote demo app. Replaced ChatMessage/ChatViewModel with DemoMessage/DemoViewModel. Demo now uses its own message model (not library types), passes raw JSON to AuiRenderer, and demonstrates sheet consumption pattern (set auiJson=null after feedback). Stable LazyColumn keys via DemoMessage.Ai.id.
+- Session 14 (2026-04-05): Review + docs. Audited all public API — 100% KDoc coverage confirmed. Verified sheet safety (rememberSaveable prevents re-open). Created README.md with quick-start integration guide. Renamed docs/architecute.md → docs/architecture.md. Phase 3 complete.
