@@ -41,13 +41,14 @@ Two library modules + one demo app:
 - `AuiRenderer` has two overloads: `(json: String, ..., onParseError, onUnknownBlock)` and `(response: AuiResponse, ..., onUnknownBlock)`. The JSON overload parses internally and calls the response overload.
 - `onUnknownBlock: ((AuiBlock.Unknown) -> Unit)?` is threaded from `AuiRenderer` → `DisplayRouter` → `BlockRenderer` / `SheetFlowDisplay`.
 - `radio_list` and `checkbox_list` share `SelectionOption` (label, description?, value) and internal `SelectionRow` composable. Bordered `Column` clipped to `theme.shapes.card` with `HorizontalDivider` between rows, primary-tint (8% alpha) background on selected rows.
+- `AuiCatalogPrompt.generate()` returns the AI system prompt text. `ALL_COMPONENT_TYPES` list ensures compile-time sync — tests fail if a new `AuiBlock` type is added without updating the catalog. Optional `availableActions` parameter restricts which feedback actions the AI should use.
 - **Library is a pure renderer with callback. It does NOT manage chat history, conversation state, or message models. Host apps own all of that.**
 
 ## Package Structure
-- `com.bennyjon.aui.core` — Parser, models, validation
+- `com.bennyjon.aui.core` — Parser, models, validation, AuiCatalogPrompt
 - `com.bennyjon.aui.core.model` — AuiResponse, AuiBlock, AuiFeedback
 - `com.bennyjon.aui.core.model.data` — Component data classes (TextData, CardBasicData, etc.)
-- `com.bennyjon.aui.compose` — AuiRenderer, AuiComponentRegistry, AuiCatalogPrompt
+- `com.bennyjon.aui.compose` — AuiRenderer, AuiComponentRegistry
 - `com.bennyjon.aui.compose.theme` — AuiTheme, AuiColors, AuiTypography, AuiSpacing, AuiShapes
 - `com.bennyjon.aui.compose.display` — DisplayRouter, InlineDisplay, ExpandedDisplay, SheetDisplay
 - `com.bennyjon.aui.compose.components.*` — One file per component (text/, cards/, lists/, input/, status/, media/, layout/)
@@ -103,14 +104,13 @@ Goals:
 1. ✅ Delete AuiChatManager/AuiChatMessage if they exist — not the library's job (didn't exist)
 2. ✅ AuiRenderer handles sheets internally (open, step, close, callback). Inert on re-render.
 3. ✅ AuiFeedback gets `stepsSkipped: Int?` and `stepsTotal: Int?` typed fields
-4. AuiCatalogPrompt generates AI system prompt schema from the component catalog
+4. ✅ AuiCatalogPrompt generates AI system prompt schema from the component catalog
 5. Demo app uses its own message model, shows sheet consumption pattern (set auiJson=null)
 
 Sessions: 11 (clean API), 12 (CatalogPrompt), 13 (demo rewrite), 14 (review + docs)
 Detailed plan: `.planning/phase3-host-integration.md`
 
 ## Known Issues
-- No AuiCatalogPrompt yet
 - Demo app still uses AuiResponse directly (Session 13 will rewrite to use raw JSON + own message model)
 
 ## Session Log
@@ -118,3 +118,4 @@ Detailed plan: `.planning/phase3-host-integration.md`
 - Session 8 (2026-04-05): Fixed expanded polls missing inputs (shared registry + allBlocksForEntries) and sheet skip-all (buildSheetFormattedEntries fallback). 13 new unit tests.
 - Session 10 (2026-04-05): Added radio_list and checkbox_list. SelectionRow composable, parser tests, demo updated to v2 JSON. Full build clean.
 - Session 11 (2026-04-05): Clean API. Added JSON string overload to AuiRenderer (onParseError, onUnknownBlock). Threaded onUnknownBlock through DisplayRouter/BlockRenderer/SheetFlowDisplay. Added stepsSkipped/stepsTotal typed fields to AuiFeedback. Sheet dismiss now calls onFeedback(action="sheet_dismissed"). SheetFlowDisplay uses rememberSaveable for inert-on-re-entry behavior. 3 new tests.
+- Session 12 (2026-04-05): Created AuiCatalogPrompt. Object with generate(availableActions?) returning AI system prompt text. Covers response format, display levels, all 19 component types with data fields, feedback format, sheet fields, and guidelines. 15 new tests verifying component coverage, structural sections, and availableActions parameter.
