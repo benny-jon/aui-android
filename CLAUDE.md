@@ -21,28 +21,14 @@ Two library modules + one demo app:
 - Min SDK: 26, Target SDK: 35
 
 ## Key Design Decisions
-- Every AUI component type is a case in a Kotlin sealed class (`AuiBlock`). Use exhaustive `when` — never reflection.
-- Unknown JSON `type` values → `AuiBlock.Unknown`. Never crash. Skip in rendering, log a warning.
-- Unknown JSON fields in known types → ignored (Kotlinx Serialization `ignoreUnknownKeys = true`).
-- Theme via `CompositionLocalProvider`. Components NEVER hardcode colors, fonts, spacing, or dimensions.
-- No variants. Each visual variant is a separate component type (e.g., `button_primary` and `button_secondary` are separate sealed class cases).
+- Component types form a sealed hierarchy. Use exhaustive `when` — never reflection.
+- Unknown JSON types are preserved, never crash. Unknown fields are silently ignored.
+- Theme via composition locals. Components never hardcode colors, fonts, spacing, or dimensions.
+- No variants. Each visual variant is a separate component type.
 - The library never launches coroutines. All async work is the host app's responsibility.
-- Feedback is a callback: `onFeedback: (AuiFeedback) -> Unit`. The renderer reports taps. The host app handles them.
-- Sheet display uses `steps` array (not `blocks`). The sheet stays open across steps — no close/reopen.
-- The library auto-generates feedback display label (`formattedEntries`) from question→answer pairs. The AI does NOT set a label.
-- Each step has `question` (recorded in feedback summary), `label` (shown in stepper), and `skippable` (shows Skip button).
-- For expanded/inline, the library pairs each input with the nearest preceding heading/text block as its question.
-- EXPANDED display uses a shared registry (`registryOverride`) between bubble and content BlockRenderers, and both pass `allBlocksForEntries = response.blocks` so heading→input pairing works across the split.
-- `BlockRenderer` accepts optional `registryOverride: MutableState<Map<String,String>>?` and `allBlocksForEntries: List<AuiBlock>?` parameters. Default behavior (null) is unchanged.
-- Sheet tracks `skippedCount` separately. `buildSheetFormattedEntries()` (internal, testable) produces display string with fallbacks: "Survey skipped" / "Survey submitted" / partial Q&A + "(N questions skipped)".
-- Sheet `feedback.params` always includes `steps_total` and `steps_skipped` (string keys). `AuiFeedback.stepsTotal` and `AuiFeedback.stepsSkipped` are also set as typed `Int?` fields.
-- Sheet dismiss (`onDismissRequest`) calls `onFeedback(action="sheet_dismissed", stepsTotal=N)`. `stepsSkipped` is null on dismiss (skip buttons weren't used).
-- `SheetFlowDisplay` uses `rememberSaveable` for the `showSheet` flag so the sheet stays closed if the composable leaves and re-enters the composition (scroll away + back), provided the host uses stable `LazyColumn` keys.
-- `AuiRenderer` has two overloads: `(json: String, ..., onParseError, onUnknownBlock)` and `(response: AuiResponse, ..., onUnknownBlock)`. The JSON overload parses internally and calls the response overload.
-- `onUnknownBlock: ((AuiBlock.Unknown) -> Unit)?` is threaded from `AuiRenderer` → `DisplayRouter` → `BlockRenderer` / `SheetFlowDisplay`.
-- `radio_list` and `checkbox_list` share `SelectionOption` (label, description?, value) and internal `SelectionRow` composable. Bordered `Column` clipped to `theme.shapes.card` with `HorizontalDivider` between rows, primary-tint (8% alpha) background on selected rows.
-- `AuiCatalogPrompt.generate()` returns the AI system prompt text. `ALL_COMPONENT_TYPES` list ensures compile-time sync — tests fail if a new `AuiBlock` type is added without updating the catalog. Optional `availableActions` parameter restricts which feedback actions the AI should use.
-- **Library is a pure renderer with callback. It does NOT manage chat history, conversation state, or message models. Host apps own all of that.**
+- Feedback is a callback. The renderer reports interactions; the host app handles them.
+- The library auto-generates feedback display labels from question→answer pairs. The AI does not set a label.
+- Library is a pure renderer with callback. It does not manage chat history, conversation state, or message models. Host apps own all of that.
 
 ## Package Structure
 - `com.bennyjon.aui.core` — Parser, models, validation, AuiCatalogPrompt
@@ -116,3 +102,4 @@ Detailed plan: `.planning/phase3-host-integration.md`
 - Session 12 (2026-04-05): Created AuiCatalogPrompt. Object with generate(availableActions?) returning AI system prompt text. Covers response format, display levels, all 19 component types with data fields, feedback format, sheet fields, and guidelines. 15 new tests verifying component coverage, structural sections, and availableActions parameter.
 - Session 13 (2026-04-05): Rewrote demo app. Replaced ChatMessage/ChatViewModel with DemoMessage/DemoViewModel. Demo now uses its own message model (not library types), passes raw JSON to AuiRenderer, and demonstrates sheet consumption pattern (set auiJson=null after feedback). Stable LazyColumn keys via DemoMessage.Ai.id.
 - Session 14 (2026-04-05): Review + docs. Audited all public API — 100% KDoc coverage confirmed. Verified sheet safety (rememberSaveable prevents re-open). Created README.md with quick-start integration guide. Renamed docs/architecute.md → docs/architecture.md. Phase 3 complete.
+- Cleanup (2026-04-07): Redistributed Key Design Decisions to KDoc and spec. Implementation details moved to SheetFlowDisplay KDoc; format details moved to aui-spec-v1.md. CLAUDE.md trimmed from 22 to 8 principles.

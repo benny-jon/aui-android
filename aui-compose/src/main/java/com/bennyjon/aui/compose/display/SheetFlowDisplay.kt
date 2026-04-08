@@ -45,9 +45,20 @@ import kotlinx.coroutines.launch
  * - A single consolidated [AuiFeedback] emitted to [onFeedback] at the end, with
  *   merged [AuiFeedback.params] and the full [AuiFeedback.entries] list
  *
+ * **Skip tracking:** Skipped steps are counted separately (`skippedCount`). The internal
+ * [buildSheetFormattedEntries] function produces the display string with fallbacks:
+ * "Survey skipped" (all skipped), "Survey submitted" (no input answered),
+ * or partial Q&A followed by "(N questions skipped)".
+ *
+ * **Dismiss behavior:** When the user dismisses the sheet via swipe-down (`onDismissRequest`),
+ * the composable emits `onFeedback(action = "sheet_dismissed", stepsTotal = N)`.
+ * [AuiFeedback.stepsSkipped] is `null` on dismiss because skip buttons were not used.
+ *
  * The composable is inert once the sheet has been completed or dismissed. If the host app
  * does not clear its JSON after receiving [onFeedback], scrolling back to the message will not
  * reopen the sheet (provided the composable uses a stable key in [LazyColumn]).
+ *
+ * @see buildSheetFormattedEntries
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

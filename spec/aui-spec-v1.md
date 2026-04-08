@@ -231,9 +231,14 @@ Step fields:
 | `question`  | no       | Full question text recorded in the `formattedEntries` summary when the user answers.           |
 | `skippable` | no       | When `true`, the library renders a "Skip" button. Skipped steps are excluded from entries.     |
 
-The library emits a single consolidated `AuiFeedback` when the last step is submitted or skipped. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all steps.
+The library emits a single consolidated `AuiFeedback` when the last step is submitted or skipped. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all steps, plus two additional keys:
 
-When a sheet is dismissed without interaction, the client can optionally send a feedback event: `{ "action": "sheet_dismissed" }`.
+| Key              | Type   | Description                                                  |
+|------------------|--------|--------------------------------------------------------------|
+| `steps_total`    | string | Total number of steps in the sheet (e.g. `"3"`)              |
+| `steps_skipped`  | string | Number of steps the user skipped (e.g. `"1"`)                |
+
+When a sheet is dismissed without interaction, the client sends a feedback event: `{ "action": "sheet_dismissed" }`. The `steps_total` key is included but `steps_skipped` is not (skip buttons were not used).
 
 When a sheet interaction triggers feedback, the sheet closes automatically and the feedback appears as the next user message.
 
