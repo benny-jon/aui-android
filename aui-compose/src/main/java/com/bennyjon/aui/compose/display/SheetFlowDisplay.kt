@@ -55,6 +55,19 @@ import kotlinx.coroutines.launch
  * the composable emits `onFeedback(action = "sheet_dismissed", stepsTotal = N)`.
  * [AuiFeedback.stepsSkipped] is `null` on dismiss because skip buttons were not used.
  *
+ * **Terminal action name:** The action on the consolidated terminal feedback comes from whichever
+ * [AuiBlock.ButtonPrimary] feedback finalized the flow — typically the final step's button.
+ * `SheetFlowDisplay` itself does not interpret action names; intermediate button actions are
+ * consumed internally and never reach the host's `onFeedback`. This means if the AI places
+ * `action: "submit"` on intermediate buttons, those `submit` events are not routed to any
+ * plugin — only the final step's action escapes.
+ *
+ * **Structural completion signal:** Hosts that want to handle sheet flow completions uniformly
+ * (regardless of what action name the AI chose) should branch on [AuiFeedback.stepsTotal]
+ * `!= null` in their `onFeedback` callback. This is the reliable structural signal that a
+ * feedback came from a finalized sheet flow. Action-name dispatch via `AuiActionPlugin` is best
+ * suited to single-component interactions, not multi-step flows.
+ *
  * The composable is inert once the sheet has been completed or dismissed. If the host app
  * does not clear its JSON after receiving [onFeedback], scrolling back to the message will not
  * reopen the sheet (provided the composable uses a stable key in [LazyColumn]).

@@ -22,6 +22,16 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * callback via the standard chain-of-responsibility routing. Hosts can handle `submit` in one
  * of two ways:
  *
+ * **Sheet flow caveat**: Multi-step sheet flows (`SheetFlowDisplay`) consolidate all step
+ * interactions into a single terminal [AuiFeedback]. The action name on that terminal feedback
+ * comes from the final step's button, which means a host plugin registered for `submit` will
+ * only catch sheet completions if the AI places `submit` on the final step's button.
+ *
+ * For reliable handling of sheet flow completions regardless of action name, hosts should branch
+ * on the structural signal [AuiFeedback.stepsTotal] `!= null` inside their `onFeedback` callback,
+ * rather than relying solely on action-name dispatch via plugins. See `SheetFlowDisplay` for
+ * details on the consolidated feedback shape.
+ *
  * 1. **Default**: handle `submit` payloads inside the `onFeedback` callback. No plugin needed.
  * 2. **Override**: register an [AuiActionPlugin] with `action = "submit"` to customize handling,
  *    provide a richer schema to the AI, or short-circuit `onFeedback`.
@@ -175,6 +185,8 @@ Status:
     internal const val BUILTIN_SUBMIT_SCHEMA =
         """  submit(payload) — Finalize the user's interaction and send collected input to the host.
                     Used by polls, forms, and any component that collects user input.
+                    For multi-step sheet flows, place submit on the final step's button
+                    to mark the flow as complete.
                     The payload shape depends on the component (e.g., poll_single sends
                     the selected option id; poll_multi sends a list of option ids)."""
 
