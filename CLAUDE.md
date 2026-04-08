@@ -65,7 +65,7 @@ Two library modules + one demo app:
 
 **Claude: you MUST update this file at the end of every session.** Follow these rules:
 
-1. **Session Log** — Add: `- Session N (YYYY-MM-DD): [what was done]`. Be specific.
+1. **Session Log** — Keep it minimal. One line per phase (e.g., "Sessions 1-7: Phase 1 complete"), plus a "Next:" line pointing to what comes next. Details about what was built go in Completed Phases and Key Design Decisions, NOT the session log.
 2. **Completed Phases** — When done, move from Current to Completed with ✅.
 3. **Current Phase** — Keep accurate. Check off completed goals.
 4. **Key Design Decisions** — Add new patterns/conventions discovered during the session.
@@ -87,19 +87,26 @@ Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries)
 17 components, 3 display levels, sheet multi-step with formattedEntries, demo app.
 
 ## Current Phase
-Phase 3 is complete. All goals delivered. Ready for next phase.
+Phase 4: Plugin System & Customization — Turn AUI into an extensible library.
 
-Detailed plan: `.planning/phase3-host-integration.md`
+Goals:
+1. AuiComponentPlugin<T> for rendering (new types + overrides of built-ins). Uses Kotlinx Serialization — plugin declares a `dataSerializer: KSerializer<T>`.
+2. AuiActionPlugin for named actions with handler + promptSchema (so the AI knows about them).
+3. AuiPluginRegistry — single source of truth. Host app builds once, passes to both ViewModel (for prompt generation) and Composable (for rendering + action handling).
+4. BlockRenderer resolution order: pluginRegistry → built-ins → skip unknown. Overrides are just plugins sharing a built-in's componentType.
+5. Feedback routing: onFeedback always fires (AI/logging) + actionPlugin.handle fires for registered actions.
+6. AuiCatalogPrompt.generate(pluginRegistry) includes plugin schemas automatically.
+7. Demo app: DemoHomeScreen with 3 theme buttons (Default, Dark Neon, Warm Organic) + Plugin Showcase button with FunFact component + Navigate/OpenUrl actions.
+
+Sessions: 15 (plugin interfaces + registry), 16 (BlockRenderer wiring + feedback routing), 17 (AuiCatalogPrompt update), 18 (theme showcase), 19 (plugin showcase), 20 (review + docs)
+Detailed plan: `.planning/phase4-customization.md`
 
 ## Known Issues
 - None
 
 ## Session Log
-- Sessions 1-7: Phase 1 complete. Parser, 17 components, 3 display levels, sheet multi-step, formattedEntries, demo app.
-- Session 8 (2026-04-05): Fixed expanded polls missing inputs (shared registry + allBlocksForEntries) and sheet skip-all (buildSheetFormattedEntries fallback). 13 new unit tests.
-- Session 10 (2026-04-05): Added radio_list and checkbox_list. SelectionRow composable, parser tests, demo updated to v2 JSON. Full build clean.
-- Session 11 (2026-04-05): Clean API. Added JSON string overload to AuiRenderer (onParseError, onUnknownBlock). Threaded onUnknownBlock through DisplayRouter/BlockRenderer/SheetFlowDisplay. Added stepsSkipped/stepsTotal typed fields to AuiFeedback. Sheet dismiss now calls onFeedback(action="sheet_dismissed"). SheetFlowDisplay uses rememberSaveable for inert-on-re-entry behavior. 3 new tests.
-- Session 12 (2026-04-05): Created AuiCatalogPrompt. Object with generate(availableActions?) returning AI system prompt text. Covers response format, display levels, all 19 component types with data fields, feedback format, sheet fields, and guidelines. 15 new tests verifying component coverage, structural sections, and availableActions parameter.
-- Session 13 (2026-04-05): Rewrote demo app. Replaced ChatMessage/ChatViewModel with DemoMessage/DemoViewModel. Demo now uses its own message model (not library types), passes raw JSON to AuiRenderer, and demonstrates sheet consumption pattern (set auiJson=null after feedback). Stable LazyColumn keys via DemoMessage.Ai.id.
-- Session 14 (2026-04-05): Review + docs. Audited all public API — 100% KDoc coverage confirmed. Verified sheet safety (rememberSaveable prevents re-open). Created README.md with quick-start integration guide. Renamed docs/architecute.md → docs/architecture.md. Phase 3 complete.
-- Cleanup (2026-04-07): Redistributed Key Design Decisions to KDoc and spec. Implementation details moved to SheetFlowDisplay KDoc; format details moved to aui-spec-v1.md. CLAUDE.md trimmed from 22 to 8 principles.
+- Sessions 1-7: Phase 1 complete.
+- Sessions 8-10: Phase 2 complete.
+- Sessions 11-14: Phase 3 complete.
+- Cleanup (2026-04-07): Redistributed Key Design Decisions to KDoc and spec.
+- Next: Session 15 (Phase 4 start).
