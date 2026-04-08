@@ -27,9 +27,14 @@ import com.bennyjon.aui.compose.components.status.AuiStatusBannerSuccess
 import com.bennyjon.aui.compose.components.text.AuiCaption
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.components.text.AuiText
+import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
+import com.bennyjon.aui.compose.plugin.componentPlugin
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 private const val TAG = "BlockRenderer"
 
@@ -66,24 +71,33 @@ private fun AuiBlock.inputKey(): String? = when (this) {
     else -> null
 }
 
+/** Lenient JSON instance for decoding plugin component data. */
+private val pluginJson = Json { ignoreUnknownKeys = true }
+
 /**
  * Maps each [AuiBlock] to its composable via an exhaustive `when` expression.
  *
- * Unknown block types are skipped with a warning log — the renderer never crashes on
- * unrecognized input.
+ * Resolution order for [AuiBlock.Unknown]:
+ * 1. Check [pluginRegistry] for a component plugin matching the block's type.
+ *    If found, parse [AuiBlock.Unknown.rawData] via the plugin's serializer and render.
+ * 2. Otherwise, skip with a warning log.
  *
+ * @param pluginRegistry Registry of component plugins checked before built-ins for unknown block
+ *   types. Action plugin routing is handled upstream by
+ *   [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer].
  * @param registryOverride If provided, this registry is shared with sibling renderers (e.g. the
  *   two split renderers in EXPANDED display). If null, a fresh local registry is created.
  * @param allBlocksForEntries If provided, [buildEntriesFromBlocks] scans this list instead of
  *   [blocks] when building Q+A entries on feedback. Use this when the heading that precedes an
  *   input lives in a sibling renderer (EXPANDED split).
- * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] instead of (or in
- *   addition to) the default warning log.
+ * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] that has no matching
+ *   plugin, in addition to the default warning log.
  */
 @Composable
 internal fun BlockRenderer(
     blocks: List<AuiBlock>,
     modifier: Modifier = Modifier,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
     registryOverride: MutableState<Map<String, String>>? = null,
     allBlocksForEntries: List<AuiBlock>? = null,
@@ -123,11 +137,58 @@ internal fun BlockRenderer(
                 is AuiBlock.BadgeSuccess -> AuiBadgeSuccess(block = block)
                 is AuiBlock.StatusBannerSuccess -> AuiStatusBannerSuccess(block = block)
                 is AuiBlock.Unknown -> {
-                    Log.w(TAG, "Skipping unknown block type: ${block.type}")
-                    onUnknownBlock?.invoke(block)
+                    val plugin = pluginRegistry.componentPlugin(block.type)
+                    if (plugin != null) {
+                        RenderPluginBlock(
+                            plugin = plugin,
+                            block = block,
+                            registry = registry,
+                            onFeedback = wrappedOnFeedback,
+                        )
+                    } else {
+                        Log.w(TAG, "Skipping unknown block type: ${block.type}")
+                        onUnknownBlock?.invoke(block)
+                    }
                 }
             }
         }
     }
     }
+}
+
+/**
+ * Parses [AuiBlock.Unknown.rawData] via the plugin's [AuiComponentPlugin.dataSerializer]
+ * and delegates to [AuiComponentPlugin.Render]. On parse failure, logs a warning and
+ * renders nothing — the renderer never crashes on bad plugin data.
+ */
+@Composable
+private fun RenderPluginBlock(
+    plugin: AuiComponentPlugin<*>,
+    block: AuiBlock.Unknown,
+    registry: MutableState<Map<String, String>>,
+    onFeedback: (AuiFeedback) -> Unit,
+) {
+    val rawData = block.rawData
+    if (rawData == null) {
+        Log.w(TAG, "Plugin block '${block.type}' has no data field — skipping")
+        return
+    }
+    val data = try {
+        pluginJson.decodeFromJsonElement(plugin.dataSerializer, rawData)
+    } catch (e: Exception) {
+        Log.w(TAG, "Failed to parse data for plugin block '${block.type}': ${e.message}")
+        return
+    }
+    val pluginOnFeedback: (() -> Unit)? = block.feedback?.let { feedback ->
+        {
+            val allParams = registry.value + feedback.params
+            onFeedback(feedback.copy(params = allParams))
+        }
+    }
+    @Suppress("UNCHECKED_CAST")
+    (plugin as AuiComponentPlugin<Any>).Render(
+        data = data,
+        onFeedback = pluginOnFeedback,
+        modifier = Modifier,
+    )
 }

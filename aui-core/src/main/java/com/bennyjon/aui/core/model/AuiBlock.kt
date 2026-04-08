@@ -20,6 +20,7 @@ import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.TextData
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
@@ -187,12 +188,15 @@ sealed class AuiBlock {
     /**
      * Fallback for any unrecognized `type` value.
      *
-     * The renderer should skip this block and log a warning. Never crash on unknown types.
+     * The renderer checks the [AuiPluginRegistry][com.bennyjon.aui.core.plugin.AuiPluginRegistry]
+     * for a component plugin matching [type] before skipping. [rawData] preserves the block's
+     * `data` field as a raw [JsonElement] so plugin components can deserialize it.
      */
     @Serializable
     data class Unknown(
         val type: String = "unknown",
         override val feedback: AuiFeedback? = null,
+        @SerialName("data") val rawData: JsonElement? = null,
     ) : AuiBlock()
 }
 

@@ -17,6 +17,7 @@ import com.bennyjon.aui.core.model.data.BadgeSuccessData
 import com.bennyjon.aui.core.model.data.HeadingData
 import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
 import com.bennyjon.aui.core.model.data.TextData
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 
 /**
  * Renders an AUI JSON string as native Compose UI.
@@ -34,6 +35,7 @@ import com.bennyjon.aui.core.model.data.TextData
  * ```kotlin
  * AuiRenderer(
  *     json = aiResponseJson,
+ *     pluginRegistry = myAppRegistry,
  *     onFeedback = { feedback -> viewModel.handleFeedback(feedback) },
  * )
  * ```
@@ -41,7 +43,14 @@ import com.bennyjon.aui.core.model.data.TextData
  * @param json Raw AUI JSON string from the AI response.
  * @param modifier Modifier applied to the root layout.
  * @param theme The [AuiTheme] to apply. Defaults to [AuiTheme.Default].
- * @param onFeedback Called when the user interacts with a block that has feedback configured.
+ * @param pluginRegistry Registry of component and action plugins. Component plugins are
+ *   checked before built-ins; action plugins participate in chain-of-responsibility
+ *   routing with [onFeedback].
+ * @param onFeedback Called when the user interacts with a block whose feedback was not
+ *   claimed by an action plugin. If a registered [AuiActionPlugin][com.bennyjon.aui.core.plugin.AuiActionPlugin]
+ *   matches the feedback's action and returns `true` from `handle`, this callback is
+ *   **not** called. If no plugin matches, or the plugin returns `false`, this callback
+ *   **is** called. Hosts using no plugins receive every feedback event (the common case).
  *   For sheets: called once on submit/dismiss with consolidated feedback.
  * @param onParseError Called if the JSON cannot be parsed. The error message is passed as the argument.
  * @param onUnknownBlock Called for each unrecognized block type encountered during rendering.
@@ -51,6 +60,7 @@ fun AuiRenderer(
     json: String,
     modifier: Modifier = Modifier,
     theme: AuiTheme = AuiTheme.Default,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
     onParseError: ((String) -> Unit)? = null,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
@@ -59,11 +69,17 @@ fun AuiRenderer(
         .onFailure { onParseError?.invoke(it.message ?: "Failed to parse AUI JSON") }
         .getOrNull() ?: return
 
+    val routedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
+        val claimed = pluginRegistry.actionPlugin(feedback.action)?.handle(feedback) ?: false
+        if (!claimed) onFeedback(feedback)
+    }
+
     AuiThemeProvider(theme = theme) {
         DisplayRouter(
             response = response,
             modifier = modifier,
-            onFeedback = onFeedback,
+            pluginRegistry = pluginRegistry,
+            onFeedback = routedOnFeedback,
             onUnknownBlock = onUnknownBlock,
         )
     }
@@ -80,6 +96,7 @@ fun AuiRenderer(
  * ```kotlin
  * AuiRenderer(
  *     response = parsedResponse,
+ *     pluginRegistry = myAppRegistry,
  *     onFeedback = { feedback -> viewModel.handleFeedback(feedback) },
  * )
  * ```
@@ -87,20 +104,34 @@ fun AuiRenderer(
  * @param response The parsed [AuiResponse] to render.
  * @param modifier Modifier applied to the root layout.
  * @param theme The [AuiTheme] to apply. Defaults to [AuiTheme.Default].
- * @param onFeedback Called when the user interacts with a block that has feedback configured.
+ * @param pluginRegistry Registry of component and action plugins. Component plugins are
+ *   checked before built-ins; action plugins participate in chain-of-responsibility
+ *   routing with [onFeedback].
+ * @param onFeedback Called when the user interacts with a block whose feedback was not
+ *   claimed by an action plugin. If a registered [AuiActionPlugin][com.bennyjon.aui.core.plugin.AuiActionPlugin]
+ *   matches the feedback's action and returns `true` from `handle`, this callback is
+ *   **not** called. If no plugin matches, or the plugin returns `false`, this callback
+ *   **is** called. Hosts using no plugins receive every feedback event (the common case).
  */
 @Composable
 fun AuiRenderer(
     response: AuiResponse,
     modifier: Modifier = Modifier,
     theme: AuiTheme = AuiTheme.Default,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
+    val routedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
+        val claimed = pluginRegistry.actionPlugin(feedback.action)?.handle(feedback) ?: false
+        if (!claimed) onFeedback(feedback)
+    }
+
     AuiThemeProvider(theme = theme) {
         DisplayRouter(
             response = response,
             modifier = modifier,
-            onFeedback = onFeedback,
+            pluginRegistry = pluginRegistry,
+            onFeedback = routedOnFeedback,
         )
     }
 }

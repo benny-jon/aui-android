@@ -31,6 +31,7 @@ import com.bennyjon.aui.core.model.AuiStep
 import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.StepperStep
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.coroutines.launch
 
 /**
@@ -58,6 +59,15 @@ import kotlinx.coroutines.launch
  * does not clear its JSON after receiving [onFeedback], scrolling back to the message will not
  * reopen the sheet (provided the composable uses a stable key in [LazyColumn]).
  *
+ * @param steps The list of survey steps to render, each containing its own blocks.
+ * @param sheetTitle Optional title displayed at the top of the sheet.
+ * @param pluginRegistry Registry of component plugins, passed through to [BlockRenderer]
+ *   for rendering custom or overridden block types within each step.
+ * @param onFeedback Called once when the sheet flow completes (submit or dismiss) with a
+ *   consolidated [AuiFeedback]. Action plugin routing is handled upstream by
+ *   [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer].
+ * @param onUnknownBlock If provided, called for each unrecognized block type that has no
+ *   matching component plugin.
  * @see buildSheetFormattedEntries
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +75,7 @@ import kotlinx.coroutines.launch
 internal fun SheetFlowDisplay(
     steps: List<AuiStep>,
     sheetTitle: String?,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
@@ -162,6 +173,7 @@ internal fun SheetFlowDisplay(
             key(stepIndex) {
                 BlockRenderer(
                     blocks = step.blocks,
+                    pluginRegistry = pluginRegistry,
                     onFeedback = { feedback -> advance(feedback, isSkip = false) },
                     onUnknownBlock = onUnknownBlock,
                 )

@@ -40,7 +40,7 @@ class AuiComponentPluginTest {
         override val id = id
         override val action = action
         override val promptSchema = ""
-        override fun handle(feedback: AuiFeedback) = Unit
+        override fun handle(feedback: AuiFeedback) = true
     }
 
     // ── Component plugin lookup via extension functions ──────────────────────

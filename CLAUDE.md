@@ -97,7 +97,7 @@ Goals:
 2. AuiActionPlugin for named actions with handler + promptSchema (so the AI knows about them).
 3. AuiPluginRegistry — single source of truth. Host app builds once, passes to both ViewModel (for prompt generation) and Composable (for rendering + action handling).
 4. BlockRenderer resolution order: pluginRegistry → built-ins → skip unknown. Overrides are just plugins sharing a built-in's componentType.
-5. Feedback routing: onFeedback always fires (AI/logging) + actionPlugin.handle fires for registered actions.
+5. Feedback routing: chain-of-responsibility. actionPlugin.handle runs first — returns true to claim (onFeedback skipped), false to pass through (onFeedback called). No plugin = onFeedback called.
 6. AuiCatalogPrompt.generate(pluginRegistry) includes plugin schemas automatically.
 7. Demo app: DemoHomeScreen with 3 theme buttons (Default, Dark Neon, Warm Organic) + Plugin Showcase button with FunFact component + Navigate/OpenUrl actions.
 
@@ -115,4 +115,5 @@ Detailed plan: `.planning/phase4-customization.md`
 - Sessions 11-14: Phase 3 complete.
 - Cleanup (2026-04-07): Redistributed Key Design Decisions to KDoc and spec.
 - Session 15: Plugin interfaces + registry. AuiPlugin (interface, not sealed — cross-module), AuiActionPlugin, AuiPluginRegistry in aui-core. AuiComponentPlugin<T> + extension functions in aui-compose. 21 new tests.
-- Next: Session 16 (wire plugins into BlockRenderer + feedback routing).
+- Session 16: Wired plugins into BlockRenderer + feedback routing. AuiBlock.Unknown now carries rawData (JsonElement) for plugin deserialization. AuiRenderer accepts pluginRegistry, chain-of-responsibility feedback routing (plugin.handle returns Boolean to claim/pass). BlockRenderer resolution: plugin → built-in → skip. 18 new tests.
+- Next: Session 17 (update AuiCatalogPrompt to include plugin schemas).

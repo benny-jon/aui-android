@@ -2,6 +2,8 @@ package com.bennyjon.aui.core
 
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -219,6 +221,67 @@ class AuiParserTest {
         assertTrue(response.blocks[0] is AuiBlock.Text)
         val unknown = response.blocks[1] as AuiBlock.Unknown
         assertEquals("future_component_v9", unknown.type)
+    }
+
+    @Test
+    fun `unknown block preserves rawData for plugin parsing`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                { "type": "custom_widget", "data": { "title": "Hello", "count": 42 } }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+
+        val unknown = response.blocks[0] as AuiBlock.Unknown
+        assertEquals("custom_widget", unknown.type)
+        assertNotNull(unknown.rawData)
+        assertEquals("Hello", unknown.rawData!!.jsonObject["title"]?.jsonPrimitive?.content)
+        assertEquals("42", unknown.rawData!!.jsonObject["count"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `unknown block without data field has null rawData`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                { "type": "no_data_block" }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+
+        val unknown = response.blocks[0] as AuiBlock.Unknown
+        assertEquals("no_data_block", unknown.type)
+        assertNull(unknown.rawData)
+    }
+
+    @Test
+    fun `unknown block preserves feedback alongside rawData`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                {
+                  "type": "plugin_button",
+                  "data": { "label": "Click me" },
+                  "feedback": { "action": "open_url", "params": { "url": "https://example.com" } }
+                }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+
+        val unknown = response.blocks[0] as AuiBlock.Unknown
+        assertEquals("plugin_button", unknown.type)
+        assertNotNull(unknown.rawData)
+        assertEquals("Click me", unknown.rawData!!.jsonObject["label"]?.jsonPrimitive?.content)
+        assertNotNull(unknown.feedback)
+        assertEquals("open_url", unknown.feedback!!.action)
+        assertEquals("https://example.com", unknown.feedback!!.params["url"])
     }
 
     // ── Extra JSON fields ignored ─────────────────────────────────────────────

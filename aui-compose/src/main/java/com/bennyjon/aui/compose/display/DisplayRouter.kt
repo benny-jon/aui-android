@@ -22,6 +22,7 @@ import com.bennyjon.aui.core.model.data.ChipOption
 import com.bennyjon.aui.core.model.data.ChipSelectSingleData
 import com.bennyjon.aui.core.model.data.HeadingData
 import com.bennyjon.aui.core.model.data.TextData
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 
 /**
  * Routes an [AuiResponse] to the appropriate display mode.
@@ -39,13 +40,20 @@ import com.bennyjon.aui.core.model.data.TextData
  *
  * @param response The parsed [AuiResponse] to route and render.
  * @param modifier Modifier applied to the outermost layout.
+ * @param pluginRegistry Registry of component and action plugins. Component plugins are checked
+ *   before built-ins when rendering unknown block types. Passed through to [BlockRenderer].
+ *   Action plugin routing is handled upstream by [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer].
  * @param onFeedback Called when the user interacts with a block that has feedback configured.
- * @param onUnknownBlock If provided, called for each unrecognized block type encountered during rendering.
+ *   By the time this is called, [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer] has already
+ *   applied chain-of-responsibility routing with action plugins.
+ * @param onUnknownBlock If provided, called for each unrecognized block type that has no matching
+ *   component plugin, in addition to the default warning log.
  */
 @Composable
 fun DisplayRouter(
     response: AuiResponse,
     modifier: Modifier = Modifier,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
@@ -54,6 +62,7 @@ fun DisplayRouter(
             BlockRenderer(
                 blocks = response.blocks,
                 modifier = modifier,
+                pluginRegistry = pluginRegistry,
                 onFeedback = onFeedback,
                 onUnknownBlock = onUnknownBlock,
             )
@@ -69,6 +78,7 @@ fun DisplayRouter(
                 if (bubbleBlocks.isNotEmpty()) {
                     BlockRenderer(
                         blocks = bubbleBlocks,
+                        pluginRegistry = pluginRegistry,
                         onFeedback = onFeedback,
                         registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
@@ -79,6 +89,7 @@ fun DisplayRouter(
                     BlockRenderer(
                         blocks = contentBlocks,
                         modifier = Modifier.fillMaxWidth(),
+                        pluginRegistry = pluginRegistry,
                         onFeedback = onFeedback,
                         registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
@@ -92,6 +103,7 @@ fun DisplayRouter(
             SheetFlowDisplay(
                 steps = response.steps,
                 sheetTitle = response.sheetTitle,
+                pluginRegistry = pluginRegistry,
                 onFeedback = onFeedback,
                 onUnknownBlock = onUnknownBlock,
             )

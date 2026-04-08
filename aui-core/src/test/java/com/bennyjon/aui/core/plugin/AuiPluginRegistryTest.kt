@@ -18,7 +18,7 @@ class AuiPluginRegistryTest {
         override val id = id
         override val action = action
         override val promptSchema = schema
-        override fun handle(feedback: AuiFeedback) = Unit
+        override fun handle(feedback: AuiFeedback) = true
     }
 
     // ── Action plugin registration ──────────────────────────────────────────
