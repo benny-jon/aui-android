@@ -14,7 +14,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -44,13 +48,22 @@ import com.bennyjon.aui.core.model.AuiFeedback
  * [AuiRenderer] using the raw JSON overload — the library parses JSON internally. User
  * interactions trigger [DemoViewModel.onAuiFeedback], which handles sheet consumption
  * (setting `auiJson = null`) and appending the feedback as a user bubble.
+ *
+ * @param viewModel Drives the demo chat sequence.
+ * @param title Text shown in the top app bar.
+ * @param auiTheme The AUI theme applied to all rendered components.
+ * @param onBack Called when the user taps the back arrow. Pass `null` to hide the arrow.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(viewModel: DemoViewModel) {
+fun ChatScreen(
+    viewModel: DemoViewModel,
+    title: String = "AUI Demo",
+    auiTheme: AuiTheme = AuiTheme.Default,
+    onBack: (() -> Unit)? = null,
+) {
     val messages by viewModel.messages.collectAsState()
     val listState = rememberLazyListState()
-    val auiTheme = AuiTheme.fromMaterialTheme()
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -60,7 +73,19 @@ fun ChatScreen(viewModel: DemoViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("AUI Demo") })
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                            )
+                        }
+                    }
+                },
+            )
         },
         bottomBar = {
             ChatInput(onSend = viewModel::onUserText)
@@ -86,7 +111,7 @@ fun ChatScreen(viewModel: DemoViewModel) {
                 when (message) {
                     is DemoMessage.Ai -> AiMessageItem(
                         message = message,
-                        theme = auiTheme,
+                        auiTheme = auiTheme,
                         onFeedback = { feedback ->
                             viewModel.onAuiFeedback(message.id, feedback)
                         },
@@ -108,7 +133,7 @@ fun ChatScreen(viewModel: DemoViewModel) {
 @Composable
 private fun AiMessageItem(
     message: DemoMessage.Ai,
-    theme: AuiTheme,
+    auiTheme: AuiTheme,
     onFeedback: (AuiFeedback) -> Unit,
 ) {
     // Text portion (if any)
@@ -142,7 +167,7 @@ private fun AiMessageItem(
         AuiRenderer(
             json = json,
             modifier = Modifier.fillMaxWidth(),
-            theme = theme,
+            theme = auiTheme,
             onFeedback = onFeedback,
             onParseError = { error ->
                 Log.w("AuiDemo", "AUI parse error: $error")

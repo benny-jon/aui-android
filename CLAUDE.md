@@ -118,4 +118,5 @@ Detailed plan: `.planning/phase4-customization.md`
 - Session 15: Plugin interfaces + registry. AuiPlugin (interface, not sealed — cross-module), AuiActionPlugin, AuiPluginRegistry in aui-core. AuiComponentPlugin<T> + extension functions in aui-compose. 21 new tests.
 - Session 16: Wired plugins into BlockRenderer + feedback routing. AuiBlock.Unknown now carries rawData (JsonElement) for plugin deserialization. AuiRenderer accepts pluginRegistry, chain-of-responsibility feedback routing (plugin.handle returns Boolean to claim/pass). BlockRenderer resolution: plugin → built-in → skip. 18 new tests.
 - Session 17: Updated AuiCatalogPrompt.generate() to accept pluginRegistry. Replaced old availableActions param. Plugin component schemas and action schemas auto-included in output. Empty schemas skipped. 14 new plugin-aware tests.
-- Next: Session 18 (demo app — theme showcase with Default/Dark Neon/Warm Organic themes).
+- Session 18: Demo app theme showcase. DemoHomeScreen with 3 themed cards (Default/Dark Neon/Warm Organic). NavController routing between home and chat screens. ChatScreen accepts AuiTheme param + back button. DemoThemes.kt in demo module. Added navigation-compose dependency.
+- Next: Session 19 (demo app — plugin showcase with FunFact component + Navigate/OpenUrl actions).

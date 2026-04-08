@@ -10,6 +10,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,7 +47,7 @@ import kotlinx.coroutines.launch
  * - A single consolidated [AuiFeedback] emitted to [onFeedback] at the end, with
  *   merged [AuiFeedback.params] and the full [AuiFeedback.entries] list
  *
- * **Skip tracking:** Skipped steps are counted separately (`skippedCount`). The internal
+ * **Skip tracking:** Skipped steps are counted separately. The internal
  * [buildSheetFormattedEntries] function produces the display string with fallbacks:
  * "Survey skipped" (all skipped), "Survey submitted" (no input answered),
  * or partial Q&A followed by "(N questions skipped)".
@@ -94,37 +95,64 @@ internal fun SheetFlowDisplay(
 ) {
     if (steps.isEmpty()) return
 
-    val theme = LocalAuiTheme.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    var stepIndex by remember { mutableIntStateOf(0) }
-    var skippedCount by remember { mutableIntStateOf(0) }
-    val accumulatedParams = remember { mutableMapOf<String, String>() }
-    val accumulatedEntries = remember { mutableListOf<AuiEntry>() }
     var showSheet by rememberSaveable { mutableStateOf(true) }
+    val flowState = remember { SheetFlowState(steps) }
 
-    fun finalize(terminalFeedback: AuiFeedback) {
-        val entries = accumulatedEntries.toList()
-        val formattedEntries = buildSheetFormattedEntries(entries, skippedCount)
-        val additionalParams = mapOf(
-            "steps_total" to steps.size.toString(),
-            "steps_skipped" to skippedCount.toString(),
-        )
-        val finalFeedback = terminalFeedback.copy(
-            params = accumulatedParams.toMap() + additionalParams + terminalFeedback.params,
-            entries = entries,
-            formattedEntries = formattedEntries,
-            stepsSkipped = skippedCount,
-            stepsTotal = steps.size,
-        )
-        scope.launch { sheetState.hide() }.invokeOnCompletion {
+    if (!showSheet) return
+
+    ModalBottomSheet(
+        onDismissRequest = {
             showSheet = false
-            onFeedback(finalFeedback)
-        }
+            onFeedback(AuiFeedback(action = "sheet_dismissed", stepsTotal = steps.size))
+        },
+        sheetState = sheetState,
+    ) {
+        SheetFlowContent(
+            steps = steps,
+            flowState = flowState,
+            sheetTitle = sheetTitle,
+            pluginRegistry = pluginRegistry,
+            onStepCompleted = { feedback, isSkip ->
+                val finalFeedback = flowState.advance(feedback, isSkip)
+                if (finalFeedback != null) {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        showSheet = false
+                        onFeedback(finalFeedback)
+                    }
+                }
+            },
+            onUnknownBlock = onUnknownBlock,
+        )
     }
+}
 
-    fun advance(feedback: AuiFeedback, isSkip: Boolean) {
+// ── State holder ─────────────────────────────────────────────────────────────
+
+/**
+ * Mutable state holder for a multi-step sheet flow.
+ *
+ * Tracks the current step index, accumulated Q+A entries, merged params, and skip count.
+ * Call [advance] after each step to record the answer (or skip) and move forward.
+ * On the last step, [advance] returns the consolidated [AuiFeedback]; otherwise it returns `null`.
+ */
+@Stable
+internal class SheetFlowState(private val steps: List<AuiStep>) {
+
+    var stepIndex by mutableIntStateOf(0)
+        private set
+
+    private var skippedCount = 0
+    private val accumulatedParams = mutableMapOf<String, String>()
+    private val accumulatedEntries = mutableListOf<AuiEntry>()
+
+    /**
+     * Records the current step's answer (or skip) and advances to the next step.
+     *
+     * @return The consolidated [AuiFeedback] if the flow is now complete, or `null` to continue.
+     */
+    fun advance(feedback: AuiFeedback, isSkip: Boolean): AuiFeedback? {
         val step = steps[stepIndex]
         if (isSkip) {
             skippedCount++
@@ -136,84 +164,109 @@ internal fun SheetFlowDisplay(
                 accumulatedEntries.add(AuiEntry(question = question, answer = answer))
             }
         }
-        if (stepIndex == steps.lastIndex) {
-            finalize(feedback)
+        return if (stepIndex == steps.lastIndex) {
+            buildFinalFeedback(feedback)
         } else {
             stepIndex++
+            null
         }
     }
 
-    if (!showSheet) return
-
-    ModalBottomSheet(
-        onDismissRequest = {
-            showSheet = false
-            onFeedback(AuiFeedback(action = "sheet_dismissed", stepsTotal = steps.size))
-        },
-        sheetState = sheetState,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = theme.spacing.medium),
-        ) {
-            if (sheetTitle != null) {
-                Text(
-                    text = sheetTitle,
-                    style = theme.typography.heading.copy(fontWeight = FontWeight.SemiBold),
-                    color = theme.colors.onSurface,
-                )
-                Spacer(modifier = Modifier.height(theme.spacing.medium))
-            }
-
-            if (steps.size > 1) {
-                AuiStepperHorizontal(
-                    block = AuiBlock.StepperHorizontal(
-                        data = StepperHorizontalData(
-                            steps = steps.mapIndexed { i, s ->
-                                StepperStep(label = s.label ?: (i + 1).toString())
-                            },
-                            current = stepIndex,
-                        ),
-                    ),
-                )
-                Spacer(modifier = Modifier.height(theme.spacing.medium))
-            }
-
-            val step = steps[stepIndex]
-
-            // key() forces a fresh BlockRenderer (and registry) each time the step changes.
-            key(stepIndex) {
-                BlockRenderer(
-                    blocks = step.blocks,
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = { feedback -> advance(feedback, isSkip = false) },
-                    onUnknownBlock = onUnknownBlock,
-                )
-            }
-
-            if (step.skippable) {
-                val skipAction = step.blocks
-                    .filterIsInstance<AuiBlock.ButtonPrimary>()
-                    .firstOrNull()?.feedback?.action ?: "step_skipped"
-                Spacer(modifier = Modifier.height(theme.spacing.small))
-                AuiButtonSecondary(
-                    block = AuiBlock.ButtonSecondary(
-                        data = ButtonSecondaryData(label = "Skip"),
-                        feedback = AuiFeedback(action = skipAction),
-                    ),
-                    onFeedback = { feedback -> advance(feedback, isSkip = true) },
-                )
-            }
-
-            Spacer(modifier = Modifier.height(theme.spacing.large))
-        }
+    private fun buildFinalFeedback(terminalFeedback: AuiFeedback): AuiFeedback {
+        val entries = accumulatedEntries.toList()
+        val additionalParams = mapOf(
+            "steps_total" to steps.size.toString(),
+            "steps_skipped" to skippedCount.toString(),
+        )
+        return terminalFeedback.copy(
+            params = accumulatedParams.toMap() + additionalParams + terminalFeedback.params,
+            entries = entries,
+            formattedEntries = buildSheetFormattedEntries(entries, skippedCount),
+            stepsSkipped = skippedCount,
+            stepsTotal = steps.size,
+        )
     }
 }
 
+// ── Sheet body ───────────────────────────────────────────────────────────────
+
+/**
+ * The content rendered inside the [ModalBottomSheet]: title, stepper, current step blocks,
+ * and optional skip button.
+ */
+@Composable
+private fun SheetFlowContent(
+    steps: List<AuiStep>,
+    flowState: SheetFlowState,
+    sheetTitle: String?,
+    pluginRegistry: AuiPluginRegistry,
+    onStepCompleted: (feedback: AuiFeedback, isSkip: Boolean) -> Unit,
+    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)?,
+) {
+    val theme = LocalAuiTheme.current
+    val step = steps[flowState.stepIndex]
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = theme.spacing.medium),
+    ) {
+        if (sheetTitle != null) {
+            Text(
+                text = sheetTitle,
+                style = theme.typography.heading.copy(fontWeight = FontWeight.SemiBold),
+                color = theme.colors.onSurface,
+            )
+            Spacer(modifier = Modifier.height(theme.spacing.medium))
+        }
+
+        if (steps.size > 1) {
+            AuiStepperHorizontal(
+                block = AuiBlock.StepperHorizontal(
+                    data = StepperHorizontalData(
+                        steps = steps.mapIndexed { i, s ->
+                            StepperStep(label = s.label ?: (i + 1).toString())
+                        },
+                        current = flowState.stepIndex,
+                    ),
+                ),
+            )
+            Spacer(modifier = Modifier.height(theme.spacing.medium))
+        }
+
+        // key() forces a fresh BlockRenderer (and registry) each time the step changes.
+        key(flowState.stepIndex) {
+            BlockRenderer(
+                blocks = step.blocks,
+                pluginRegistry = pluginRegistry,
+                onFeedback = { feedback -> onStepCompleted(feedback, false) },
+                onUnknownBlock = onUnknownBlock,
+            )
+        }
+
+        if (step.skippable) {
+            val skipAction = step.blocks
+                .filterIsInstance<AuiBlock.ButtonPrimary>()
+                .firstOrNull()?.feedback?.action ?: "step_skipped"
+            Spacer(modifier = Modifier.height(theme.spacing.small))
+            AuiButtonSecondary(
+                block = AuiBlock.ButtonSecondary(
+                    data = ButtonSecondaryData(label = "Skip"),
+                    feedback = AuiFeedback(action = skipAction),
+                ),
+                onFeedback = { feedback -> onStepCompleted(feedback, true) },
+            )
+        }
+
+        Spacer(modifier = Modifier.height(theme.spacing.large))
+    }
+}
+
+// ── Helper functions ─────────────────────────────────────────────────────────
+
 /**
  * Finds the first input block in [step] and returns its human-readable answer from [params].
- * The registry stores display labels (e.g. "😊 Great") under the input's key, so [params]
+ * The registry stores display labels (e.g. "Great") under the input's key, so [params]
  * already contains the correct display value after the button merges the registry into params.
  */
 internal fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
@@ -234,10 +287,10 @@ internal fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? 
 /**
  * Builds the human-readable summary string for the feedback bubble after a sheet survey completes.
  *
- * - All steps answered → Q+A pairs joined by blank lines
- * - Some answered, some skipped → Q+A pairs followed by "(N questions skipped)"
- * - All steps skipped → "Survey skipped"
- * - Submitted with no input answered → "Survey submitted"
+ * - All steps answered -> Q+A pairs joined by blank lines
+ * - Some answered, some skipped -> Q+A pairs followed by "(N questions skipped)"
+ * - All steps skipped -> "Survey skipped"
+ * - Submitted with no input answered -> "Survey submitted"
  */
 internal fun buildSheetFormattedEntries(entries: List<AuiEntry>, skippedCount: Int): String {
     return when {
