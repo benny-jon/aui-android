@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.bennyjon.auiandroid.ui.theme.DemoThemes
 
 /**
  * Demo landing screen with themed chat entry points.
@@ -56,19 +57,21 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 onClick = { onThemeSelected("default") },
             )
 
+            val darkNeonColors = DemoThemes.darkNeon().colors
             ThemeCard(
                 title = "Dark Neon",
-                subtitle = "Dark backgrounds with electric cyan & magenta accents",
-                containerColor = Color(0xFF1A1A2E),
-                contentColor = Color(0xFF00E5FF),
+                subtitle = "Electric cyan accents with bold shapes",
+                containerColor = darkNeonColors.primaryContainer,
+                contentColor = darkNeonColors.onPrimaryContainer,
                 onClick = { onThemeSelected("dark_neon") },
             )
 
+            val warmOrganicColors = DemoThemes.warmOrganic().colors
             ThemeCard(
                 title = "Warm Organic",
                 subtitle = "Earthy tones, serif headings, rounded corners",
-                containerColor = Color(0xFFFFF8E1),
-                contentColor = Color(0xFF3E2723),
+                containerColor = warmOrganicColors.primaryContainer,
+                contentColor = warmOrganicColors.onPrimaryContainer,
                 onClick = { onThemeSelected("warm_organic") },
             )
         }
