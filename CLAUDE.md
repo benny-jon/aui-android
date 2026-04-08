@@ -29,15 +29,18 @@ Two library modules + one demo app:
 - Feedback is a callback. The renderer reports interactions; the host app handles them.
 - The library auto-generates feedback display labels from question→answer pairs. The AI does not set a label.
 - Library is a pure renderer with callback. It does not manage chat history, conversation state, or message models. Host apps own all of that.
+- AuiPlugin is a regular interface (not sealed) because AuiComponentPlugin extends it from a different module (aui-compose). Dedup uses AuiPlugin.slotKey — action plugins key on action name, component plugins key on componentType.
 
 ## Package Structure
 - `com.bennyjon.aui.core` — Parser, models, validation, AuiCatalogPrompt
 - `com.bennyjon.aui.core.model` — AuiResponse, AuiBlock, AuiFeedback
 - `com.bennyjon.aui.core.model.data` — Component data classes (TextData, CardBasicData, etc.)
+- `com.bennyjon.aui.core.plugin` — AuiPlugin, AuiActionPlugin, AuiPluginRegistry
 - `com.bennyjon.aui.compose` — AuiRenderer, AuiComponentRegistry
 - `com.bennyjon.aui.compose.theme` — AuiTheme, AuiColors, AuiTypography, AuiSpacing, AuiShapes
 - `com.bennyjon.aui.compose.display` — DisplayRouter, InlineDisplay, ExpandedDisplay, SheetDisplay
 - `com.bennyjon.aui.compose.components.*` — One file per component (text/, cards/, lists/, input/, status/, media/, layout/)
+- `com.bennyjon.aui.compose.plugin` — AuiComponentPlugin, AuiPluginRegistry extension functions
 - `com.bennyjon.aui.compose.internal` — BlockRenderer, FeedbackModifier, PlaceholderResolver
 
 ## Coding Conventions
@@ -98,6 +101,8 @@ Goals:
 6. AuiCatalogPrompt.generate(pluginRegistry) includes plugin schemas automatically.
 7. Demo app: DemoHomeScreen with 3 theme buttons (Default, Dark Neon, Warm Organic) + Plugin Showcase button with FunFact component + Navigate/OpenUrl actions.
 
+**Module split:** AuiPlugin (marker), AuiActionPlugin, AuiPluginRegistry, and AuiCatalogPrompt live in `aui-core` (pure Kotlin). AuiComponentPlugin<T> lives in `aui-compose` because it has `@Composable Render()`. Component plugin lookup on the registry uses extension functions in compose. This keeps core free of Compose dependencies so AuiCatalogPrompt can read plugin schemas. Shared base via AuiPlugin.slotKey (open val) for dedup.
+
 Sessions: 15 (plugin interfaces + registry), 16 (BlockRenderer wiring + feedback routing), 17 (AuiCatalogPrompt update), 18 (theme showcase), 19 (plugin showcase), 20 (review + docs)
 Detailed plan: `.planning/phase4-customization.md`
 
@@ -109,4 +114,5 @@ Detailed plan: `.planning/phase4-customization.md`
 - Sessions 8-10: Phase 2 complete.
 - Sessions 11-14: Phase 3 complete.
 - Cleanup (2026-04-07): Redistributed Key Design Decisions to KDoc and spec.
-- Next: Session 15 (Phase 4 start).
+- Session 15: Plugin interfaces + registry. AuiPlugin (interface, not sealed — cross-module), AuiActionPlugin, AuiPluginRegistry in aui-core. AuiComponentPlugin<T> + extension functions in aui-compose. 21 new tests.
+- Next: Session 16 (wire plugins into BlockRenderer + feedback routing).
