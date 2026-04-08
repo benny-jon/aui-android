@@ -1,5 +1,8 @@
 package com.bennyjon.aui.core
 
+import com.bennyjon.aui.core.plugin.AuiActionPlugin
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
+
 /**
  * Generates the AI system prompt text describing the AUI response format and available components.
  *
@@ -7,13 +10,20 @@ package com.bennyjon.aui.core
  * produce valid AUI JSON responses. The generated text describes the response structure, all
  * supported component types with their data fields, feedback format, and usage guidelines.
  *
+ * When a [AuiPluginRegistry] is provided, plugin component schemas and action schemas are
+ * automatically included in the output so the AI knows about custom types and actions.
+ *
  * Example:
  * ```kotlin
+ * val registry = AuiPluginRegistry().registerAll(
+ *     ProductReviewPlugin,
+ *     NavigateActionPlugin(navController),
+ *     OpenUrlActionPlugin(context),
+ * )
+ *
  * val systemPrompt = buildString {
  *     append("You are a helpful assistant for our shopping app.\n\n")
- *     append(AuiCatalogPrompt.generate(
- *         availableActions = listOf("navigate", "add_to_cart", "open_url")
- *     ))
+ *     append(AuiCatalogPrompt.generate(pluginRegistry = registry))
  *     append("\n\nAdditional app-specific instructions here...")
  * }
  * ```
@@ -26,11 +36,12 @@ object AuiCatalogPrompt {
     /**
      * Returns the full catalog prompt text to include in the AI's system prompt.
      *
-     * @param availableActions Optional list of action IDs the host app supports.
-     *   If provided, the prompt tells the AI which actions are valid for feedback.
+     * @param pluginRegistry The plugin registry containing component and action plugins.
+     *   Plugin schemas are automatically included in the generated prompt so the AI
+     *   knows about custom component types and available actions.
      * @return A multi-line string describing the AUI format, components, and guidelines.
      */
-    fun generate(availableActions: List<String>? = null): String = buildString {
+    fun generate(pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty): String = buildString {
         appendLine(RESPONSE_FORMAT)
         appendLine()
         appendLine(DISPLAY_LEVELS)
@@ -40,18 +51,36 @@ object AuiCatalogPrompt {
         appendLine(FEEDBACK_FORMAT)
         appendLine()
         appendLine(COMPONENTS)
+
+        val componentSchemas = pluginRegistry.allPlugins()
+            .filter { it !is AuiActionPlugin && it.promptSchema.isNotBlank() }
+        if (componentSchemas.isNotEmpty()) {
+            appendLine()
+            appendLine("PLUGIN COMPONENTS:")
+            componentSchemas.forEach { plugin ->
+                appendLine("  ${plugin.promptSchema}")
+            }
+        }
+
         appendLine()
         appendLine(SHEET_FIELDS)
-        appendLine()
-        if (availableActions != null) {
-            appendLine("AVAILABLE ACTIONS:")
-            appendLine("  The host app supports these action identifiers in feedback:")
-            availableActions.forEach { action ->
-                appendLine("  - $action")
+
+        val actionPlugins = pluginRegistry.allActionPlugins()
+        if (actionPlugins.isNotEmpty()) {
+            appendLine()
+            appendLine("PLUGIN ACTIONS:")
+            appendLine("  The host app supports these actions in feedback:")
+            actionPlugins.forEach { plugin ->
+                if (plugin.promptSchema.isNotBlank()) {
+                    appendLine("  ${plugin.promptSchema}")
+                } else {
+                    appendLine("  - ${plugin.action}")
+                }
             }
             appendLine("  Use only these action values in feedback objects.")
-            appendLine()
         }
+
+        appendLine()
         append(GUIDELINES)
     }
 

@@ -43,15 +43,14 @@ That's it. Three lines: dependency, `AuiRenderer`, `onFeedback` callback.
 ```kotlin
 val systemPrompt = buildString {
     append("You are a helpful assistant.\n\n")
-    append(AuiCatalogPrompt.generate(
-        availableActions = listOf("navigate", "submit", "open_url")
-    ))
+    append(AuiCatalogPrompt.generate(pluginRegistry = myPluginRegistry))
 }
 ```
 
 `AuiCatalogPrompt.generate()` returns the full component catalog so your AI knows
-what components are available and how to format responses. It stays in sync with the
-library automatically.
+what components are available and how to format responses. When you pass a
+`pluginRegistry`, plugin component schemas and action schemas are included
+automatically. It stays in sync with the library automatically.
 
 ## How It Works
 

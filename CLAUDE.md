@@ -116,4 +116,5 @@ Detailed plan: `.planning/phase4-customization.md`
 - Cleanup (2026-04-07): Redistributed Key Design Decisions to KDoc and spec.
 - Session 15: Plugin interfaces + registry. AuiPlugin (interface, not sealed — cross-module), AuiActionPlugin, AuiPluginRegistry in aui-core. AuiComponentPlugin<T> + extension functions in aui-compose. 21 new tests.
 - Session 16: Wired plugins into BlockRenderer + feedback routing. AuiBlock.Unknown now carries rawData (JsonElement) for plugin deserialization. AuiRenderer accepts pluginRegistry, chain-of-responsibility feedback routing (plugin.handle returns Boolean to claim/pass). BlockRenderer resolution: plugin → built-in → skip. 18 new tests.
-- Next: Session 17 (update AuiCatalogPrompt to include plugin schemas).
+- Session 17: Updated AuiCatalogPrompt.generate() to accept pluginRegistry. Replaced old availableActions param. Plugin component schemas and action schemas auto-included in output. Empty schemas skipped. 14 new plugin-aware tests.
+- Next: Session 18 (demo app — theme showcase with Default/Dark Neon/Warm Organic themes).

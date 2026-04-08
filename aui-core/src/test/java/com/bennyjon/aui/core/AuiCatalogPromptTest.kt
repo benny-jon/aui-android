@@ -1,5 +1,9 @@
 package com.bennyjon.aui.core
 
+import com.bennyjon.aui.core.model.AuiFeedback
+import com.bennyjon.aui.core.plugin.AuiActionPlugin
+import com.bennyjon.aui.core.plugin.AuiPlugin
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -7,7 +11,7 @@ import org.junit.Test
 
 /**
  * Verifies that [AuiCatalogPrompt.generate] produces a complete and correct prompt
- * that stays in sync with the actual component catalog.
+ * that stays in sync with the actual component catalog and includes plugin schemas.
  */
 class AuiCatalogPromptTest {
 
@@ -91,35 +95,6 @@ class AuiCatalogPromptTest {
         assertTrue(output.contains("feedback"))
     }
 
-    // ── availableActions parameter ───────────────────────────────────────────
-
-    @Test
-    fun `generate without availableActions omits actions section`() {
-        assertFalse(output.contains("AVAILABLE ACTIONS:"))
-    }
-
-    @Test
-    fun `generate with availableActions includes action list`() {
-        val actions = listOf("navigate", "add_to_cart", "open_url")
-        val result = AuiCatalogPrompt.generate(availableActions = actions)
-
-        assertTrue(result.contains("AVAILABLE ACTIONS:"))
-        for (action in actions) {
-            assertTrue(
-                "Missing action '$action' in generated prompt",
-                result.contains("- $action"),
-            )
-        }
-        assertTrue(result.contains("Use only these action values"))
-    }
-
-    @Test
-    fun `generate with empty availableActions includes empty actions section`() {
-        val result = AuiCatalogPrompt.generate(availableActions = emptyList())
-        assertTrue(result.contains("AVAILABLE ACTIONS:"))
-        assertTrue(result.contains("Use only these action values"))
-    }
-
     // ── Component data fields ────────────────────────────────────────────────
 
     @Test
@@ -142,5 +117,222 @@ class AuiCatalogPromptTest {
     @Test
     fun `input_rating_stars documents key field`() {
         assertTrue(output.contains("input_rating_stars(key"))
+    }
+
+    // ── Empty registry (default) ─────────────────────────────────────────────
+
+    @Test
+    fun `generate with empty registry omits plugin sections`() {
+        assertFalse(output.contains("PLUGIN COMPONENTS:"))
+        assertFalse(output.contains("PLUGIN ACTIONS:"))
+    }
+
+    @Test
+    fun `generate with Empty companion omits plugin sections`() {
+        val result = AuiCatalogPrompt.generate(pluginRegistry = AuiPluginRegistry.Empty)
+        assertFalse(result.contains("PLUGIN COMPONENTS:"))
+        assertFalse(result.contains("PLUGIN ACTIONS:"))
+    }
+
+    // ── Plugin component schemas ─────────────────────────────────────────────
+
+    @Test
+    fun `generate with component plugin includes its schema`() {
+        val plugin = fakeComponentPlugin(
+            id = "fun_fact",
+            promptSchema = "demo_fun_fact(title, fact, source?) — A colorful fun-fact card.",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("PLUGIN COMPONENTS:"))
+        assertTrue(result.contains("demo_fun_fact(title, fact, source?) — A colorful fun-fact card."))
+    }
+
+    @Test
+    fun `generate with multiple component plugins includes all schemas`() {
+        val plugin1 = fakeComponentPlugin(
+            id = "fun_fact",
+            promptSchema = "demo_fun_fact(title, fact) — Fun fact card.",
+        )
+        val plugin2 = fakeComponentPlugin(
+            id = "product_review",
+            promptSchema = "card_product_review(title, rating, text) — Product review.",
+        )
+        val registry = AuiPluginRegistry().registerAll(plugin1, plugin2)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("demo_fun_fact(title, fact) — Fun fact card."))
+        assertTrue(result.contains("card_product_review(title, rating, text) — Product review."))
+    }
+
+    @Test
+    fun `generate skips component plugin with empty promptSchema`() {
+        val overridePlugin = fakeComponentPlugin(
+            id = "my_card_basic",
+            promptSchema = "",
+        )
+        val registry = AuiPluginRegistry().register(overridePlugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertFalse(result.contains("PLUGIN COMPONENTS:"))
+    }
+
+    @Test
+    fun `generate skips component plugin with blank promptSchema`() {
+        val plugin = fakeComponentPlugin(
+            id = "my_card_basic",
+            promptSchema = "   ",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertFalse(result.contains("PLUGIN COMPONENTS:"))
+    }
+
+    // ── Plugin action schemas ────────────────────────────────────────────────
+
+    @Test
+    fun `generate with action plugin includes its schema`() {
+        val plugin = fakeActionPlugin(
+            action = "navigate",
+            promptSchema = "navigate(screen) — Navigate to a named screen",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
+        assertTrue(result.contains("Use only these action values"))
+    }
+
+    @Test
+    fun `generate with multiple action plugins includes all schemas`() {
+        val plugin1 = fakeActionPlugin(
+            action = "navigate",
+            promptSchema = "navigate(screen) — Navigate to a named screen",
+        )
+        val plugin2 = fakeActionPlugin(
+            action = "open_url",
+            promptSchema = "open_url(url) — Open URL in browser",
+        )
+        val registry = AuiPluginRegistry().registerAll(plugin1, plugin2)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
+        assertTrue(result.contains("open_url(url) — Open URL in browser"))
+    }
+
+    @Test
+    fun `generate with action plugin with empty schema falls back to action name`() {
+        val plugin = fakeActionPlugin(
+            action = "share_text",
+            promptSchema = "",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("- share_text"))
+    }
+
+    // ── Mixed registry ───────────────────────────────────────────────────────
+
+    @Test
+    fun `generate with mixed registry includes both plugin sections`() {
+        val componentPlugin = fakeComponentPlugin(
+            id = "fun_fact",
+            promptSchema = "demo_fun_fact(title, fact) — Fun fact card.",
+        )
+        val actionPlugin = fakeActionPlugin(
+            action = "open_url",
+            promptSchema = "open_url(url) — Open URL in browser",
+        )
+        val registry = AuiPluginRegistry().registerAll(componentPlugin, actionPlugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("PLUGIN COMPONENTS:"))
+        assertTrue(result.contains("demo_fun_fact(title, fact) — Fun fact card."))
+        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("open_url(url) — Open URL in browser"))
+    }
+
+    @Test
+    fun `generate with only action plugins omits component plugin section`() {
+        val plugin = fakeActionPlugin(
+            action = "navigate",
+            promptSchema = "navigate(screen) — Navigate",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertFalse(result.contains("PLUGIN COMPONENTS:"))
+        assertTrue(result.contains("PLUGIN ACTIONS:"))
+    }
+
+    @Test
+    fun `generate with only component plugins omits action plugin section`() {
+        val plugin = fakeComponentPlugin(
+            id = "fun_fact",
+            promptSchema = "demo_fun_fact(title, fact) — Fun fact card.",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("PLUGIN COMPONENTS:"))
+        assertFalse(result.contains("PLUGIN ACTIONS:"))
+    }
+
+    @Test
+    fun `plugin sections appear in correct order relative to built-in sections`() {
+        val componentPlugin = fakeComponentPlugin(
+            id = "fun_fact",
+            promptSchema = "demo_fun_fact(title, fact) — Fun fact card.",
+        )
+        val actionPlugin = fakeActionPlugin(
+            action = "open_url",
+            promptSchema = "open_url(url) — Open URL in browser",
+        )
+        val registry = AuiPluginRegistry().registerAll(componentPlugin, actionPlugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        val componentsIndex = result.indexOf("AVAILABLE COMPONENTS:")
+        val pluginComponentsIndex = result.indexOf("PLUGIN COMPONENTS:")
+        val sheetFieldsIndex = result.indexOf("SHEET-ONLY FIELDS")
+        val pluginActionsIndex = result.indexOf("PLUGIN ACTIONS:")
+        val guidelinesIndex = result.indexOf("GUIDELINES:")
+
+        // Plugin components appear after built-in components but before sheet fields
+        assertTrue(pluginComponentsIndex > componentsIndex)
+        assertTrue(pluginComponentsIndex < sheetFieldsIndex)
+
+        // Plugin actions appear after sheet fields but before guidelines
+        assertTrue(pluginActionsIndex > sheetFieldsIndex)
+        assertTrue(pluginActionsIndex < guidelinesIndex)
+    }
+
+    // ── Test helpers ─────────────────────────────────────────────────────────
+
+    /**
+     * Creates a fake non-action plugin to simulate component plugins in aui-core tests.
+     * (Real AuiComponentPlugin lives in aui-compose and can't be used here.)
+     */
+    private fun fakeComponentPlugin(
+        id: String,
+        promptSchema: String,
+    ): AuiPlugin = object : AuiPlugin {
+        override val id = id
+        override val promptSchema = promptSchema
+        override val slotKey = id
+    }
+
+    private fun fakeActionPlugin(
+        action: String,
+        promptSchema: String,
+    ): AuiActionPlugin = object : AuiActionPlugin() {
+        override val id = action
+        override val action = action
+        override val promptSchema = promptSchema
+        override fun handle(feedback: AuiFeedback) = true
     }
 }
