@@ -201,7 +201,7 @@ class AuiCatalogPromptTest {
         val registry = AuiPluginRegistry().register(plugin)
         val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
 
-        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("AVAILABLE ACTIONS:"))
         assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
         assertTrue(result.contains("Use only these action values"))
     }
@@ -232,7 +232,7 @@ class AuiCatalogPromptTest {
         val registry = AuiPluginRegistry().register(plugin)
         val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
 
-        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("AVAILABLE ACTIONS:"))
         assertTrue(result.contains("- share_text"))
     }
 
@@ -253,7 +253,7 @@ class AuiCatalogPromptTest {
 
         assertTrue(result.contains("PLUGIN COMPONENTS:"))
         assertTrue(result.contains("demo_fun_fact(title, fact) — Fun fact card."))
-        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("AVAILABLE ACTIONS:"))
         assertTrue(result.contains("open_url(url) — Open URL in browser"))
     }
 
@@ -267,11 +267,11 @@ class AuiCatalogPromptTest {
         val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
 
         assertFalse(result.contains("PLUGIN COMPONENTS:"))
-        assertTrue(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("AVAILABLE ACTIONS:"))
     }
 
     @Test
-    fun `generate with only component plugins omits action plugin section`() {
+    fun `generate with only component plugins includes available actions with built-in submit`() {
         val plugin = fakeComponentPlugin(
             id = "fun_fact",
             promptSchema = "demo_fun_fact(title, fact) — Fun fact card.",
@@ -280,7 +280,8 @@ class AuiCatalogPromptTest {
         val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
 
         assertTrue(result.contains("PLUGIN COMPONENTS:"))
-        assertFalse(result.contains("PLUGIN ACTIONS:"))
+        assertTrue(result.contains("AVAILABLE ACTIONS:"))
+        assertTrue(result.contains("submit(payload)"))
     }
 
     @Test
@@ -299,16 +300,70 @@ class AuiCatalogPromptTest {
         val componentsIndex = result.indexOf("AVAILABLE COMPONENTS:")
         val pluginComponentsIndex = result.indexOf("PLUGIN COMPONENTS:")
         val sheetFieldsIndex = result.indexOf("SHEET-ONLY FIELDS")
-        val pluginActionsIndex = result.indexOf("PLUGIN ACTIONS:")
+        val availableActionsIndex = result.indexOf("AVAILABLE ACTIONS:")
         val guidelinesIndex = result.indexOf("GUIDELINES:")
 
         // Plugin components appear after built-in components but before sheet fields
         assertTrue(pluginComponentsIndex > componentsIndex)
         assertTrue(pluginComponentsIndex < sheetFieldsIndex)
 
-        // Plugin actions appear after sheet fields but before guidelines
-        assertTrue(pluginActionsIndex > sheetFieldsIndex)
-        assertTrue(pluginActionsIndex < guidelinesIndex)
+        // Available actions appear after sheet fields but before guidelines
+        assertTrue(availableActionsIndex > sheetFieldsIndex)
+        assertTrue(availableActionsIndex < guidelinesIndex)
+    }
+
+    // ── Built-in submit action ──────────────────────────────────────────────
+
+    @Test
+    fun `empty registry lists built-in submit in available actions`() {
+        assertTrue(output.contains("AVAILABLE ACTIONS:"))
+        assertTrue(output.contains("submit(payload)"))
+        assertTrue(output.contains("Finalize the user's interaction"))
+    }
+
+    @Test
+    fun `action plugins without submit still list built-in submit`() {
+        val plugin = fakeActionPlugin(
+            action = "navigate",
+            promptSchema = "navigate(screen) — Navigate to a named screen",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("submit(payload)"))
+        assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
+    }
+
+    @Test
+    fun `action plugin claiming submit suppresses built-in submit`() {
+        val plugin = fakeActionPlugin(
+            action = "submit",
+            promptSchema = "submit(data, validate?) — Custom submit with validation",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("AVAILABLE ACTIONS:"))
+        assertTrue(result.contains("submit(data, validate?) — Custom submit with validation"))
+        assertFalse(result.contains("Finalize the user's interaction"))
+    }
+
+    @Test
+    fun `multiple action plugins with one claiming submit suppresses built-in`() {
+        val navigatePlugin = fakeActionPlugin(
+            action = "navigate",
+            promptSchema = "navigate(screen) — Navigate to a named screen",
+        )
+        val submitPlugin = fakeActionPlugin(
+            action = "submit",
+            promptSchema = "submit(payload, source) — Enhanced submit",
+        )
+        val registry = AuiPluginRegistry().registerAll(navigatePlugin, submitPlugin)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
+        assertTrue(result.contains("submit(payload, source) — Enhanced submit"))
+        assertFalse(result.contains("Finalize the user's interaction"))
     }
 
     // ── Test helpers ─────────────────────────────────────────────────────────

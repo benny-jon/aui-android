@@ -30,6 +30,7 @@ Two library modules + one demo app:
 - The library auto-generates feedback display labels from question→answer pairs. The AI does not set a label.
 - Library is a pure renderer with callback. It does not manage chat history, conversation state, or message models. Host apps own all of that.
 - AuiPlugin is a regular interface (not sealed) because AuiComponentPlugin extends it from a different module (aui-compose). Dedup uses AuiPlugin.slotKey — action plugins key on action name, component plugins key on componentType.
+- `submit` is the one built-in action, listed in `AuiCatalogPrompt` output unless a host plugin claims it. Default behavior is pass-through to `onFeedback`.
 
 ## Package Structure
 - `com.bennyjon.aui.core` — Parser, models, validation, AuiCatalogPrompt

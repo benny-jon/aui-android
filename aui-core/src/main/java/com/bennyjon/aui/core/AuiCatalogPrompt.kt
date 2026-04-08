@@ -13,6 +13,19 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * When a [AuiPluginRegistry] is provided, plugin component schemas and action schemas are
  * automatically included in the output so the AI knows about custom types and actions.
  *
+ * The `submit` action is built into AUI as the universal "finalize interaction" action. It is
+ * always advertised to the AI in the generated prompt **unless** a host has registered an
+ * [AuiActionPlugin] with `action = "submit"`, in which case the host's plugin schema replaces
+ * the built-in description (so the AI sees only one source of truth for what `submit` means).
+ *
+ * At runtime, if no plugin claims `submit`, the action falls through to the host's `onFeedback`
+ * callback via the standard chain-of-responsibility routing. Hosts can handle `submit` in one
+ * of two ways:
+ *
+ * 1. **Default**: handle `submit` payloads inside the `onFeedback` callback. No plugin needed.
+ * 2. **Override**: register an [AuiActionPlugin] with `action = "submit"` to customize handling,
+ *    provide a richer schema to the AI, or short-circuit `onFeedback`.
+ *
  * Example:
  * ```kotlin
  * val registry = AuiPluginRegistry().registerAll(
@@ -66,19 +79,21 @@ object AuiCatalogPrompt {
         appendLine(SHEET_FIELDS)
 
         val actionPlugins = pluginRegistry.allActionPlugins()
-        if (actionPlugins.isNotEmpty()) {
-            appendLine()
-            appendLine("PLUGIN ACTIONS:")
-            appendLine("  The host app supports these actions in feedback:")
-            actionPlugins.forEach { plugin ->
-                if (plugin.promptSchema.isNotBlank()) {
-                    appendLine("  ${plugin.promptSchema}")
-                } else {
-                    appendLine("  - ${plugin.action}")
-                }
-            }
-            appendLine("  Use only these action values in feedback objects.")
+        val hostHasSubmit = actionPlugins.any { it.action == "submit" }
+
+        appendLine()
+        appendLine("AVAILABLE ACTIONS:")
+        if (!hostHasSubmit) {
+            appendLine(BUILTIN_SUBMIT_SCHEMA)
         }
+        actionPlugins.forEach { plugin ->
+            if (plugin.promptSchema.isNotBlank()) {
+                appendLine("  ${plugin.promptSchema}")
+            } else {
+                appendLine("  - ${plugin.action}")
+            }
+        }
+        appendLine("  Use only these action values in feedback objects.")
 
         appendLine()
         append(GUIDELINES)
@@ -156,6 +171,12 @@ Status:
     step.question: string — question recorded in the feedback summary
     step.skippable: boolean — show a Skip button (default false)
     step.blocks[]: blocks for this step"""
+
+    internal const val BUILTIN_SUBMIT_SCHEMA =
+        """  submit(payload) — Finalize the user's interaction and send collected input to the host.
+                    Used by polls, forms, and any component that collects user input.
+                    The payload shape depends on the component (e.g., poll_single sends
+                    the selected option id; poll_multi sends a list of option ids)."""
 
     internal const val GUIDELINES = """GUIDELINES:
   - Start with text for context, then use components.
