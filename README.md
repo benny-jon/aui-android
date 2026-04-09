@@ -5,6 +5,13 @@ An open-source Kotlin library for rendering AI-driven interactive UI in Jetpack 
 AI assistants respond with JSON describing pre-built native components instead of plain text.
 AUI parses the JSON and renders native Compose UI — cards, forms, chips, buttons, sheets — inside your app.
 
+## Visual Examples
+
+| AI-Generated Survey | AI-Generated Actions |
+|:---:|:---:|
+| The AI builds a multi-step survey from JSON and presents it as a native bottom sheet. Each step collects user input and the consolidated result is delivered to your app via a single callback. | The AI renders interactive components with actions tied to plugins your app registers. When the user taps a button, the matching plugin handles the side effect — navigation, opening a URL, or any custom logic — without the AI knowing your app's internals. |
+| <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <img src="docs/assets/ai-generated-actions-example.gif" width="300" /> |
+
 ## Quick Start
 
 ### 1. Add the dependency
