@@ -3,11 +3,16 @@ package com.bennyjon.aui.compose.display
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
@@ -59,13 +64,24 @@ fun DisplayRouter(
 ) {
     when (response.display) {
         AuiDisplay.INLINE -> {
-            BlockRenderer(
-                blocks = response.blocks,
-                modifier = modifier,
-                pluginRegistry = pluginRegistry,
-                onFeedback = onFeedback,
-                onUnknownBlock = onUnknownBlock,
-            )
+            Surface(
+                shape = RoundedCornerShape(
+                    topStart = 4.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp,
+                ),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.widthIn(max = 300.dp),
+            ) {
+                BlockRenderer(
+                    blocks = response.blocks,
+                    modifier = modifier.padding(16.dp),
+                    pluginRegistry = pluginRegistry,
+                    onFeedback = onFeedback,
+                    onUnknownBlock = onUnknownBlock,
+                )
+            }
         }
 
         AuiDisplay.EXPANDED -> {

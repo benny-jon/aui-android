@@ -21,9 +21,10 @@ data class AuiColors(
     /** Content color on top of [primaryContainer]. */
     val onPrimaryContainer: Color = Color(0xFF21005D),
     /** Default surface/card background. */
-    val surface: Color = Color(0xFFFFFBFE),
+    val surface: Color = Color(0xFFD4CEF3),
     /** Primary content color on [surface]. */
     val onSurface: Color = Color(0xFF1C1B1F),
+    val surfaceVariant: Color = Color(0xFFA199BD),
     /** Secondary/muted content color on [surface] (captions, placeholders). */
     val onSurfaceVariant: Color = Color(0xFF49454F),
     /** Subtle border and divider color. */
@@ -57,6 +58,7 @@ data class AuiColors(
                 onPrimaryContainer = scheme.onPrimaryContainer,
                 surface = scheme.surface,
                 onSurface = scheme.onSurface,
+                surfaceVariant = scheme.surfaceVariant,
                 onSurfaceVariant = scheme.onSurfaceVariant,
                 outline = scheme.outline,
                 success = scheme.tertiary,

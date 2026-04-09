@@ -101,8 +101,8 @@ class DemoViewModel(
         )
 
         val FULL_DEMO_SEQUENCE = listOf(
-//            "{}",
-            ALL_COMPONENTS_JSON
+            FULL_DEMO_GREETING_JSON,
+            ALL_COMPONENTS_JSON,
         )
     }
 }
@@ -373,6 +373,15 @@ private val PLUGIN_COMBINED_JSON = """
 """.trimIndent()
 
 // ── All components Demo JSON sequence ────────────────────────────────────────────
+
+private val FULL_DEMO_GREETING_JSON = """
+{
+  "display": "inline",
+  "blocks": [
+    { "type": "text", "data": { "text": "Hey! I can show you every AUI component in action — text, cards, inputs, ratings, and more. Just say the word and I'll walk you through the full showcase." } }
+  ]
+}
+""".trimIndent()
 
 private val ALL_COMPONENTS_JSON = """
 {

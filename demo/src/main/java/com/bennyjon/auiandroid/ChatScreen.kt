@@ -36,9 +36,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.theme.AuiTheme
+import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 
@@ -249,5 +251,17 @@ private fun ChatInput(onSend: (String) -> Unit) {
                 Text("Send")
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun AiMessageItemPreview() {
+    AuiThemeProvider {
+        AiMessageItem(
+            message = DemoMessage.Ai(text = "Hi there, how are you?"),
+            auiTheme = AuiTheme.fromMaterialTheme(),
+            onFeedback = { }
+        )
     }
 }
