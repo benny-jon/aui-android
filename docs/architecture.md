@@ -390,20 +390,28 @@ fun ChatScreen(viewModel: ChatViewModel) {
 }
 ```
 
-### With Custom Components
+### With Custom Components (Plugin System)
 
 ```kotlin
-// Register a custom "card_weather" component your app supports
-AuiComponentRegistry.register("card_weather") { block, onFeedback ->
-    val data = block.rawData  // access the raw JSON data map
-    WeatherCard(
-        location = data["location"] as? String ?: "",
-        temp = data["temp"] as? String ?: "",
-        condition = data["condition"] as? String ?: ""
-    )
+// 1. Define data class and component plugin
+@Serializable
+data class WeatherData(val location: String, val temp: String, val condition: String)
+
+object WeatherPlugin : AuiComponentPlugin<WeatherData>() {
+    override val id = "card_weather"
+    override val componentType = "card_weather"
+    override val dataSerializer = WeatherData.serializer()
+    override val promptSchema = "card_weather(location, temp, condition) — Weather card."
+
+    @Composable
+    override fun Render(data: WeatherData, onFeedback: (() -> Unit)?, modifier: Modifier) {
+        WeatherCard(location = data.location, temp = data.temp, condition = data.condition)
+    }
 }
 
-// Now the AI can use "card_weather" and your custom composable renders it
+// 2. Register and pass to renderer
+val registry = AuiPluginRegistry().register(WeatherPlugin)
+AuiRenderer(json = json, pluginRegistry = registry, onFeedback = { ... })
 ```
 
 ---

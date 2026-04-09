@@ -77,6 +77,9 @@ Rules: Never delete existing sections unless factually wrong. Keep under ~120 li
 
 ## Completed Phases
 
+### Phase 4 ✅ — Plugin System & Customization
+AuiComponentPlugin<T> for custom/override components (Kotlinx Serialization dataSerializer). AuiActionPlugin for named actions with chain-of-responsibility routing. AuiPluginRegistry as single source of truth for renderer + prompt. BlockRenderer resolution: plugin → built-in → skip. AuiCatalogPrompt.generate(pluginRegistry) auto-includes plugin schemas. Demo app: theme showcase (3 themes) + plugin showcase (FunFact component, Navigate/OpenUrl actions). README Customization section with examples. All public API KDocced.
+
 ### Phase 3 ✅ — Clean Library Boundary
 Library is a pure renderer with callback. No chat management. AuiRenderer handles sheets internally (inert on re-render). AuiFeedback has stepsSkipped/stepsTotal typed fields. AuiCatalogPrompt generates AI system prompt. Demo uses own message model. All public API has KDoc. README with quick-start guide. Architecture doc renamed from typo.
 
@@ -87,21 +90,7 @@ Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries)
 17 components, 3 display levels, sheet multi-step with formattedEntries, demo app.
 
 ## Current Phase
-Phase 4: Plugin System & Customization — Turn AUI into an extensible library.
-
-Goals:
-1. AuiComponentPlugin<T> for rendering (new types + overrides of built-ins). Uses Kotlinx Serialization — plugin declares a `dataSerializer: KSerializer<T>`.
-2. AuiActionPlugin for named actions with handler + promptSchema (so the AI knows about them).
-3. AuiPluginRegistry — single source of truth. Host app builds once, passes to both ViewModel (for prompt generation) and Composable (for rendering + action handling).
-4. BlockRenderer resolution order: pluginRegistry → built-ins → skip unknown. Overrides are just plugins sharing a built-in's componentType.
-5. Feedback routing: chain-of-responsibility. actionPlugin.handle runs first — returns true to claim (onFeedback skipped), false to pass through (onFeedback called). No plugin = onFeedback called.
-6. AuiCatalogPrompt.generate(pluginRegistry) includes plugin schemas automatically.
-7. Demo app: DemoHomeScreen with 3 theme buttons (Default, Dark Neon, Warm Organic) + Plugin Showcase button with FunFact component + Navigate/OpenUrl actions.
-
-**Module split:** AuiPlugin (marker), AuiActionPlugin, AuiPluginRegistry, and AuiCatalogPrompt live in `aui-core` (pure Kotlin). AuiComponentPlugin<T> lives in `aui-compose` because it has `@Composable Render()`. Component plugin lookup on the registry uses extension functions in compose. This keeps core free of Compose dependencies so AuiCatalogPrompt can read plugin schemas. Shared base via AuiPlugin.slotKey (open val) for dedup.
-
-Sessions: 15 (plugin interfaces + registry), 16 (BlockRenderer wiring + feedback routing), 17 (AuiCatalogPrompt update), 18 (theme showcase), 19 (plugin showcase), 20 (review + docs)
-Detailed plan: `.planning/phase4-customization.md`
+Phase 5: TBD — All planned phases complete. Potential next steps: publish to Maven Central, add more component types, streaming/partial render support, accessibility audit.
 
 ## Known Issues
 - None
@@ -117,4 +106,5 @@ Detailed plan: `.planning/phase4-customization.md`
 - Session 18: Demo app theme showcase. DemoHomeScreen with 3 themed cards (Default/Dark Neon/Warm Organic). NavController routing between home and chat screens. ChatScreen accepts AuiTheme param + back button. DemoThemes.kt in demo module. Added navigation-compose dependency.
 - Session 19: Demo app plugin showcase. DemoFunFactPlugin (component), ToastNavigatePlugin + OpenUrlPlugin (actions) in demo/plugins/. DemoPluginRegistry factory. ChatScreen accepts pluginRegistry param. DemoViewModel accepts custom response sequences via factory. 4th "Plugin Showcase" card on DemoHomeScreen. AuiCatalogPrompt output logged to Logcat on screen open.
 - Spacing refactor (2026-04-08): Removed spacer component. Renderer now applies blockSpacing via Arrangement.spacedBy. Added blockSpacing + sectionHeaderTopSpacing to AuiSpacing. Updated spec, architecture doc, examples, demo, tests.
-- Next: Session 20 (review + documentation — API ergonomics audit, KDoc on all public API, README Customization section).
+- Session 20: Review + docs. Added README Customization section (custom component, action, override, registry examples). Updated Public API section with plugin classes. Fixed outdated architecture.md custom components example. Phase 4 complete.
+- Next: Phase 5 TBD (Maven Central publish, new components, streaming, a11y).

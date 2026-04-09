@@ -122,6 +122,96 @@ val myTheme = AuiTheme(
 AuiRenderer(json = json, theme = myTheme, ...)
 ```
 
+## Customization
+
+AUI's plugin system lets you add custom components, override built-ins, and register app-specific actions.
+
+### Custom Component
+
+Define a data class, implement `AuiComponentPlugin`, and register it:
+
+```kotlin
+@Serializable
+data class FunFactData(val title: String, val fact: String, val source: String? = null)
+
+object FunFactPlugin : AuiComponentPlugin<FunFactData>() {
+    override val id = "fun_fact"
+    override val componentType = "demo_fun_fact"
+    override val dataSerializer = FunFactData.serializer()
+    override val promptSchema = "demo_fun_fact(title, fact, source?) — A colorful fun-fact card."
+
+    @Composable
+    override fun Render(data: FunFactData, onFeedback: (() -> Unit)?, modifier: Modifier) {
+        Card(onClick = { onFeedback?.invoke() }, modifier = modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text(data.title, style = LocalAuiTheme.current.typography.heading)
+                Text(data.fact, style = LocalAuiTheme.current.typography.body)
+            }
+        }
+    }
+}
+```
+
+### Custom Action
+
+Action plugins handle side effects like navigation or opening URLs:
+
+```kotlin
+class OpenUrlPlugin(private val context: Context) : AuiActionPlugin() {
+    override val id = "open_url"
+    override val action = "open_url"
+    override val promptSchema = "open_url(url) — Open the given URL in the device browser."
+
+    override fun handle(feedback: AuiFeedback): Boolean {
+        val url = feedback.params["url"] ?: return false
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        return true  // claimed — onFeedback will not be called
+    }
+}
+```
+
+Action plugins use chain-of-responsibility: return `true` to claim the feedback (host `onFeedback` skipped), or `false` to pass through.
+
+### Override a Built-in
+
+Register a plugin whose `componentType` matches a built-in's type — the plugin takes priority:
+
+```kotlin
+object MyCardBasicPlugin : AuiComponentPlugin<CardBasicData>() {
+    override val id = "my_card_basic"
+    override val componentType = "card_basic"  // shadows built-in card_basic
+    override val dataSerializer = CardBasicData.serializer()
+    override val promptSchema = ""  // empty — the built-in schema is already in the catalog
+
+    @Composable
+    override fun Render(data: CardBasicData, onFeedback: (() -> Unit)?, modifier: Modifier) {
+        // Your custom rendering for card_basic
+    }
+}
+```
+
+### Building the Registry
+
+Build one `AuiPluginRegistry` and pass it to both the renderer and the prompt generator:
+
+```kotlin
+val pluginRegistry = AuiPluginRegistry().registerAll(
+    FunFactPlugin,
+    OpenUrlPlugin(context),
+    MyCardBasicPlugin,
+)
+
+// Renderer — plugins render custom blocks and handle actions
+AuiRenderer(
+    json = json,
+    pluginRegistry = pluginRegistry,
+    onFeedback = { /* only called for unclaimed feedback */ }
+)
+
+// Prompt — plugin schemas are included automatically
+val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
+```
+
 ## Component Catalog
 
 18 component types across these categories:
@@ -156,6 +246,9 @@ The library exposes a deliberately small surface:
 - **`AuiCatalogPrompt`** — Generates AI system prompt text from the component catalog.
 - **`AuiParser`** — JSON parser (used internally by `AuiRenderer`, but available if you need pre-parsing).
 - **`AuiResponse`** / **`AuiBlock`** — Data models for parsed responses.
+- **`AuiPluginRegistry`** — Register and look up plugins. Pass to both renderer and prompt generator.
+- **`AuiComponentPlugin<T>`** — Add or override component types with custom Compose rendering.
+- **`AuiActionPlugin`** — Handle named actions (navigation, URLs, etc.) with chain-of-responsibility routing.
 
 Everything else is `internal`.
 
