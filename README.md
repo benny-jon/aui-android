@@ -1,5 +1,8 @@
 # AUI Android
 
+> **🚧 Work in Progress — Not ready for production use.**
+> This library is under active development and has **not been published to Maven Central** yet. APIs may change without notice. Feel free to explore the code and the demo app, but do not add it as a dependency in your project.
+
 An open-source Kotlin library for rendering AI-driven interactive UI in Jetpack Compose.
 
 AI assistants respond with JSON describing pre-built native components instead of plain text.
