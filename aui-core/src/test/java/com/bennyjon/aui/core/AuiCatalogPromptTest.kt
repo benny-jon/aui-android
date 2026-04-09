@@ -48,10 +48,74 @@ class AuiCatalogPromptTest {
         assertEquals(expected, AuiCatalogPrompt.ALL_COMPONENT_TYPES.toSet())
     }
 
+    // ── Meta-frame ────────────────────────────────────────────────────────────
+
+    @Test
+    fun `generate starts with meta-frame`() {
+        assertTrue(output.startsWith("## Interactive UI (AUI) — optional"))
+    }
+
+    @Test
+    fun `generate ends meta-frame with text default before separator`() {
+        val textDefaultIndex = output.indexOf(
+            "Default to plain text. Only emit AUI JSON when a component adds real value."
+        )
+        val separatorIndex = output.indexOf("---")
+        assertTrue(textDefaultIndex > 0)
+        assertTrue(separatorIndex > textDefaultIndex)
+    }
+
+    @Test
+    fun `generate uses consolidated AUI JSON schema header`() {
+        assertTrue(output.contains("AUI JSON schema:"))
+        assertTrue(output.contains("For \"sheet\" display (multi-step flows)"))
+        assertFalse(output.contains("Response format"))
+    }
+
+    @Test
+    fun `generate does not contain old text-only guideline bullet`() {
+        assertFalse(output.contains("Use text-only responses when components add no value."))
+    }
+
+    @Test
+    fun `generate includes feedback-only comment in block format`() {
+        assertTrue(output.contains("// feedback only on interactive components"))
+    }
+
+    @Test
+    fun `generate does not contain redundant action closing line`() {
+        assertFalse(output.contains("Use only these action values"))
+    }
+
+    @Test
+    fun `generate does not contain redundant display-level guideline`() {
+        assertFalse(output.contains("Prefer inline. Escalate to expanded"))
+    }
+
+    @Test
+    fun `generate includes actions preamble`() {
+        assertTrue(output.contains("Actions are registered by ID"))
+        assertTrue(output.contains("never invent new action names"))
+    }
+
+    @Test
+    fun `generate includes examples section`() {
+        assertTrue(output.contains("EXAMPLES:"))
+        assertTrue(output.contains("Inline poll (radio list + submit button):"))
+        assertTrue(output.contains("Sheet survey (2-step feedback flow, second step skippable):"))
+        assertTrue(output.contains("\"action\": \"submit\""))
+    }
+
+    @Test
+    fun `generate includes guideline about step question`() {
+        assertTrue(output.contains("set a \"question\" on each step describing what's being asked"))
+        assertFalse(output.contains("so the library can build the feedback summary"))
+    }
+
     // ── Structural sections ──────────────────────────────────────────────────
 
     @Test
-    fun `generate includes response format section`() {
+    fun `generate includes schema format section`() {
         assertTrue(output.contains("\"display\":"))
         assertTrue(output.contains("\"blocks\":"))
         assertTrue(output.contains("\"steps\":"))
@@ -73,10 +137,13 @@ class AuiCatalogPromptTest {
     }
 
     @Test
-    fun `generate includes feedback format`() {
-        assertTrue(output.contains("FEEDBACK"))
-        assertTrue(output.contains("\"action\":"))
-        assertTrue(output.contains("Do NOT set a \"label\" field"))
+    fun `generate includes feedback format with registered-ID model`() {
+        assertTrue(output.contains("FEEDBACK (on interactive components):"))
+        assertTrue(output.contains("\"action\": \"<registered_id>\""))
+        assertTrue(output.contains("must be a registered action ID"))
+        assertTrue(output.contains("Never invent action names"))
+        assertFalse(output.contains("\"label\" field"))
+        assertFalse(output.contains("display summary automatically"))
     }
 
     @Test
@@ -84,8 +151,9 @@ class AuiCatalogPromptTest {
         assertTrue(output.contains("SHEET-ONLY FIELDS"))
         assertTrue(output.contains("sheet_title"))
         assertTrue(output.contains("step.label"))
-        assertTrue(output.contains("step.question"))
+        assertTrue(output.contains("step.question: string — the question this step is asking the user"))
         assertTrue(output.contains("step.skippable"))
+        assertFalse(output.contains("feedback summary"))
     }
 
     @Test
@@ -137,7 +205,7 @@ class AuiCatalogPromptTest {
     // ── Plugin component schemas ─────────────────────────────────────────────
 
     @Test
-    fun `generate with component plugin includes its schema`() {
+    fun `generate with component plugin includes its schema and host-app note`() {
         val plugin = fakeComponentPlugin(
             id = "fun_fact",
             promptSchema = "demo_fun_fact(title, fact, source?) — A colorful fun-fact card.",
@@ -146,6 +214,7 @@ class AuiCatalogPromptTest {
         val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
 
         assertTrue(result.contains("PLUGIN COMPONENTS:"))
+        assertTrue(result.contains("Contributed by the host app"))
         assertTrue(result.contains("demo_fun_fact(title, fact, source?) — A colorful fun-fact card."))
     }
 
@@ -203,7 +272,6 @@ class AuiCatalogPromptTest {
 
         assertTrue(result.contains("AVAILABLE ACTIONS:"))
         assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
-        assertTrue(result.contains("Use only these action values"))
     }
 
     @Test
@@ -302,6 +370,7 @@ class AuiCatalogPromptTest {
         val sheetFieldsIndex = result.indexOf("SHEET-ONLY FIELDS")
         val availableActionsIndex = result.indexOf("AVAILABLE ACTIONS:")
         val guidelinesIndex = result.indexOf("GUIDELINES:")
+        val examplesIndex = result.indexOf("EXAMPLES:")
 
         // Plugin components appear after built-in components but before sheet fields
         assertTrue(pluginComponentsIndex > componentsIndex)
@@ -310,6 +379,9 @@ class AuiCatalogPromptTest {
         // Available actions appear after sheet fields but before guidelines
         assertTrue(availableActionsIndex > sheetFieldsIndex)
         assertTrue(availableActionsIndex < guidelinesIndex)
+
+        // Examples appear after guidelines
+        assertTrue(examplesIndex > guidelinesIndex)
     }
 
     // ── Built-in submit action ──────────────────────────────────────────────
@@ -318,7 +390,7 @@ class AuiCatalogPromptTest {
     fun `empty registry lists built-in submit in available actions`() {
         assertTrue(output.contains("AVAILABLE ACTIONS:"))
         assertTrue(output.contains("submit(payload)"))
-        assertTrue(output.contains("Finalize the user's interaction"))
+        assertTrue(output.contains("collected input back"))
     }
 
     @Test
@@ -345,7 +417,7 @@ class AuiCatalogPromptTest {
 
         assertTrue(result.contains("AVAILABLE ACTIONS:"))
         assertTrue(result.contains("submit(data, validate?) — Custom submit with validation"))
-        assertFalse(result.contains("Finalize the user's interaction"))
+        assertFalse(result.contains("collected input back"))
     }
 
     @Test
@@ -363,7 +435,7 @@ class AuiCatalogPromptTest {
 
         assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
         assertTrue(result.contains("submit(payload, source) — Enhanced submit"))
-        assertFalse(result.contains("Finalize the user's interaction"))
+        assertFalse(result.contains("collected input back"))
     }
 
     // ── Test helpers ─────────────────────────────────────────────────────────

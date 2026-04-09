@@ -65,7 +65,9 @@ object AuiCatalogPrompt {
      * @return A multi-line string describing the AUI format, components, and guidelines.
      */
     fun generate(pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty): String = buildString {
-        appendLine(RESPONSE_FORMAT)
+        appendLine(META_FRAME)
+        appendLine()
+        appendLine(SCHEMA_FORMAT)
         appendLine()
         appendLine(DISPLAY_LEVELS)
         appendLine()
@@ -80,6 +82,7 @@ object AuiCatalogPrompt {
         if (componentSchemas.isNotEmpty()) {
             appendLine()
             appendLine("PLUGIN COMPONENTS:")
+            appendLine("  (Contributed by the host app — availability varies per app.)")
             componentSchemas.forEach { plugin ->
                 appendLine("  ${plugin.promptSchema}")
             }
@@ -93,6 +96,8 @@ object AuiCatalogPrompt {
 
         appendLine()
         appendLine("AVAILABLE ACTIONS:")
+        appendLine(ACTIONS_PREAMBLE)
+        appendLine()
         if (!hostHasSubmit) {
             appendLine(BUILTIN_SUBMIT_SCHEMA)
         }
@@ -103,22 +108,48 @@ object AuiCatalogPrompt {
                 appendLine("  - ${plugin.action}")
             }
         }
-        appendLine("  Use only these action values in feedback objects.")
 
         appendLine()
-        append(GUIDELINES)
+        appendLine(GUIDELINES)
+        appendLine()
+        append(EXAMPLES)
     }
 
     // Keeping each section as a named constant makes the output easy to test against
     // and keeps the generate() function readable.
 
-    internal const val RESPONSE_FORMAT = """Response format (inline/expanded):
+    internal const val META_FRAME = """## Interactive UI (AUI) — optional
+
+In addition to normal text responses, you have access to AUI: a format for
+responding with interactive native UI components (polls, forms, rating inputs,
+quick replies, rich cards, multi-step surveys) that render inline in the chat.
+
+AUI is OPTIONAL and ADDITIVE. Most responses should remain plain text. Only
+use AUI when an interactive component genuinely serves the user better than
+prose — for example: collecting structured input, offering quick-reply choices,
+running a short survey, or displaying a rich card the user will act on.
+
+When you DO use AUI, emit a single JSON object matching the schema below as
+your ENTIRE response. No prose wrapper, no markdown code fence, no commentary
+before or after — just the raw JSON object.
+
+The feedback loop: when the user interacts with a rendered component
+(selects an option, submits a form, taps a quick reply), their interaction
+comes back to you as their next user message. Design each AUI response with
+that follow-up turn in mind.
+
+Default to plain text. Only emit AUI JSON when a component adds real value.
+
+---"""
+
+    internal const val SCHEMA_FORMAT = """AUI JSON schema:
 {
-  "display": "inline" | "expanded",
+  "display": "inline" | "expanded" | "sheet",
   "blocks": [ ... ]
 }
 
-Response format (sheet — multi-step):
+For "sheet" display (multi-step flows), replace "blocks" with "steps" and
+add a "sheet_title" at the top level:
 {
   "display": "sheet",
   "sheet_title": "...",
@@ -136,12 +167,15 @@ Choose the LEAST prominent level that serves the content well.
 Use "sheet" only when multi-step user input is needed or focused attention is required."""
 
     internal const val BLOCK_FORMAT = """BLOCK FORMAT:
-  { "type": "<component>", "data": { ... }, "feedback": { ... } }"""
+  { "type": "<component>", "data": { ... }, "feedback": { ... } }
+  // feedback only on interactive components"""
 
     internal const val FEEDBACK_FORMAT = """FEEDBACK (on interactive components):
-  { "action": "name", "params": { ... } }
-  Do NOT set a "label" field. The library computes the display summary automatically
-  from the rendered inputs and the step "question" fields."""
+  { "action": "<registered_id>", "params": { ... } }
+
+  "action" must be a registered action ID (see AVAILABLE ACTIONS below).
+  Never invent action names. "params" are passed to the action when the user
+  interacts with the component."""
 
     internal const val COMPONENTS = """AVAILABLE COMPONENTS:
 
@@ -177,26 +211,86 @@ Status:
   sheet_title: string — title in the sheet header
   steps[]: array of steps (use instead of blocks for sheet display)
     step.label: string — short label for the stepper indicator
-    step.question: string — question recorded in the feedback summary
+    step.question: string — the question this step is asking the user
     step.skippable: boolean — show a Skip button (default false)
     step.blocks[]: blocks for this step"""
 
+    internal const val ACTIONS_PREAMBLE =
+        """  Actions are registered by ID. Reference them by name in a component's
+  "feedback" object — never invent new action names. The set of available
+  actions depends on the host app; additional host-registered actions (if
+  any) are listed after the built-in below."""
+
     internal const val BUILTIN_SUBMIT_SCHEMA =
-        """  submit(payload) — Finalize the user's interaction and send collected input to the host.
-                    Used by polls, forms, and any component that collects user input.
-                    For multi-step sheet flows, place submit on the final step's button
-                    to mark the flow as complete.
-                    The payload shape depends on the component (e.g., poll_single sends
-                    the selected option id; poll_multi sends a list of option ids)."""
+        """  submit(payload) — Send the user's collected input back as their next
+    message. Place on the final button of forms and multi-step flows."""
 
     internal const val GUIDELINES = """GUIDELINES:
   - Start with text for context, then use components.
   - Use quick_replies at the end to suggest next steps.
   - Keep it concise: 2-5 blocks for inline, 3-8 for expanded, 3-10 per sheet step.
-  - Use text-only responses when components add no value.
   - Every interactive component MUST have a feedback object.
-  - Prefer inline. Escalate to expanded for rich content. Use sheet for focused multi-step input.
-  - For sheet surveys, set a "question" on each step so the library can build the feedback summary."""
+  - For sheet surveys, set a "question" on each step describing what's being asked."""
+
+    internal const val EXAMPLES = """EXAMPLES:
+
+Inline poll (radio list + submit button):
+{
+  "display": "inline",
+  "blocks": [
+    { "type": "text", "data": { "text": "Which feature should we build next?" } },
+    { "type": "radio_list", "data": {
+        "key": "feature_choice",
+        "options": [
+          { "label": "Dark mode", "value": "dark_mode" },
+          { "label": "Export to PDF", "value": "export_pdf" },
+          { "label": "Keyboard shortcuts", "value": "shortcuts" }
+        ]
+    }},
+    {
+      "type": "button_primary",
+      "data": { "label": "Vote" },
+      "feedback": { "action": "submit", "params": {} }
+    }
+  ]
+}
+
+Sheet survey (2-step feedback flow, second step skippable):
+{
+  "display": "sheet",
+  "sheet_title": "Quick feedback",
+  "steps": [
+    {
+      "label": "Rating",
+      "question": "How would you rate your experience?",
+      "blocks": [
+        { "type": "input_rating_stars", "data": { "key": "rating", "label": "Your rating" } },
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Comment",
+      "question": "Any additional comments?",
+      "skippable": true,
+      "blocks": [
+        { "type": "input_text_single", "data": {
+            "key": "comment",
+            "label": "Comments",
+            "placeholder": "Tell us more..."
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Finish" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  ]
+}"""
 
     /**
      * All component type strings supported by the library.
