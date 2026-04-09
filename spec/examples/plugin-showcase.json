@@ -1,0 +1,81 @@
+[
+  {
+    "display": "inline",
+    "blocks": [
+      {
+        "type": "heading",
+        "data": { "text": "Plugin Components" }
+      },
+      {
+        "type": "text",
+        "data": { "text": "This card is rendered by a custom component plugin — the library doesn't know about \"demo_fun_fact\" out of the box." }
+      },
+      {
+        "type": "demo_fun_fact",
+        "data": {
+          "title": "Did you know?",
+          "fact": "Kotlin was named after Kotlin Island near St. Petersburg, Russia. The JetBrains team chose the name because it was short, memorable, and — like Java — named after an island.",
+          "source": "JetBrains Blog"
+        }
+      }
+    ]
+  },
+  {
+    "display": "inline",
+    "blocks": [
+      {
+        "type": "heading",
+        "data": { "text": "Plugin Actions" }
+      },
+      {
+        "type": "text",
+        "data": { "text": "These buttons trigger action plugins. The \"open_url\" plugin launches a browser. The \"navigate\" plugin shows a Toast (since the demo has no deep-link routes)." }
+      },
+      {
+        "type": "button_primary",
+        "data": { "label": "Open Kotlin Website" },
+        "feedback": {
+          "action": "open_url",
+          "params": { "url": "https://kotlinlang.org" }
+        }
+      },
+      {
+        "type": "button_secondary",
+        "data": { "label": "Navigate to Settings" },
+        "feedback": {
+          "action": "navigate",
+          "params": { "screen": "settings" }
+        }
+      }
+    ]
+  },
+  {
+    "display": "inline",
+    "blocks": [
+      {
+        "type": "demo_fun_fact",
+        "data": {
+          "title": "Compose Fun Fact",
+          "fact": "Jetpack Compose was first announced at Google I/O 2019 and reached stable 1.0 in July 2021. It replaced the 10-year-old View system as the recommended way to build Android UI."
+        }
+      },
+      { "type": "spacer", "data": {} },
+      {
+        "type": "button_primary",
+        "data": { "label": "Open Compose Docs" },
+        "feedback": {
+          "action": "open_url",
+          "params": { "url": "https://developer.android.com/compose" }
+        }
+      },
+      {
+        "type": "button_secondary",
+        "data": { "label": "Go to Profile" },
+        "feedback": {
+          "action": "navigate",
+          "params": { "screen": "profile" }
+        }
+      }
+    ]
+  }
+]

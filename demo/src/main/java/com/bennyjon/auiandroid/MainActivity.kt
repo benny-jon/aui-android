@@ -1,15 +1,20 @@
 package com.bennyjon.auiandroid
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bennyjon.aui.compose.theme.AuiTheme
+import com.bennyjon.aui.core.AuiCatalogPrompt
+import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
 
@@ -38,15 +43,38 @@ private fun DemoNavHost() {
         }
         composable("chat/{theme}") { backStackEntry ->
             val themeKey = backStackEntry.arguments?.getString("theme") ?: "default"
-            val (title, auiTheme) = resolveTheme(themeKey)
-            val vm: DemoViewModel = viewModel()
 
-            ChatScreen(
-                viewModel = vm,
-                title = title,
-                auiTheme = auiTheme,
-                onBack = { navController.popBackStack() },
-            )
+            if (themeKey == "plugins") {
+                val context = LocalContext.current
+                val pluginRegistry = DemoPluginRegistry.create(context)
+
+                LaunchedEffect(Unit) {
+                    val prompt = AuiCatalogPrompt.generate(pluginRegistry)
+                    Log.d("AuiDemo", "AuiCatalogPrompt with plugins:\n$prompt")
+                }
+
+                val vm: DemoViewModel = viewModel(
+                    key = "plugins",
+                    factory = DemoViewModelFactory(DemoViewModel.PLUGIN_SEQUENCE),
+                )
+
+                ChatScreen(
+                    viewModel = vm,
+                    title = "Plugin Showcase",
+                    pluginRegistry = pluginRegistry,
+                    onBack = { navController.popBackStack() },
+                )
+            } else {
+                val (title, auiTheme) = resolveTheme(themeKey)
+                val vm: DemoViewModel = viewModel()
+
+                ChatScreen(
+                    viewModel = vm,
+                    title = title,
+                    auiTheme = auiTheme,
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
     }
 }

@@ -74,6 +74,22 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 contentColor = warmOrganicColors.onPrimaryContainer,
                 onClick = { onThemeSelected("warm_organic") },
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Plugin System",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            ThemeCard(
+                title = "Plugin Showcase",
+                subtitle = "Custom FunFact component + Navigate/OpenUrl actions",
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                onClick = { onThemeSelected("plugins") },
+            )
         }
     }
 }

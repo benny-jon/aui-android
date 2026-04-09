@@ -1,6 +1,7 @@
 package com.bennyjon.auiandroid
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.bennyjon.aui.core.model.AuiFeedback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +21,13 @@ import kotlinx.coroutines.flow.update
  *   cannot re-open if the user scrolls back to it.
  * - **Feedback as user message:** The library's [AuiFeedback.formattedEntries] is displayed
  *   as a user chat bubble, showing the Q&A summary without any custom formatting.
+ *
+ * @param responseSequence The ordered list of AUI JSON strings to display. Each feedback
+ *   interaction advances to the next entry. Defaults to the built-in theme showcase sequence.
  */
-class DemoViewModel : ViewModel() {
+class DemoViewModel(
+    private val responseSequence: List<String> = DEFAULT_SEQUENCE,
+) : ViewModel() {
 
     private var sequenceIndex = 0
 
@@ -67,18 +73,40 @@ class DemoViewModel : ViewModel() {
     }
 
     private fun loadNextResponse() {
-        if (sequenceIndex >= RESPONSE_SEQUENCE.size) return
-        val json = RESPONSE_SEQUENCE[sequenceIndex++]
+        if (sequenceIndex >= responseSequence.size) return
+        val json = responseSequence[sequenceIndex++]
         _messages.update { it + DemoMessage.Ai(auiJson = json) }
     }
 
-    private companion object {
-        val RESPONSE_SEQUENCE = listOf(
+    companion object {
+        /** Default sequence used by the theme showcase screens. */
+        val DEFAULT_SEQUENCE = listOf(
             EXPANDED_ACTION_JSON,
             SHEET_JSON,
             CONFIRMATION_JSON,
         )
+
+        /** Sequence used by the plugin showcase screen. */
+        val PLUGIN_SEQUENCE = listOf(
+            PLUGIN_INTRO_JSON,
+            PLUGIN_ACTIONS_JSON,
+            PLUGIN_COMBINED_JSON,
+        )
     }
+}
+
+/**
+ * Factory for creating [DemoViewModel] with a custom response sequence.
+ *
+ * Used by the plugin showcase screen to load plugin-specific JSON instead
+ * of the default theme showcase sequence.
+ */
+class DemoViewModelFactory(
+    private val responseSequence: List<String>,
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+        DemoViewModel(responseSequence) as T
 }
 
 // ── JSON sequence ─────────────────────────────────────────────────────────────
@@ -231,6 +259,105 @@ private val CONFIRMATION_JSON = """
     {
       "type": "badge_success",
       "data": { "text": "3 of 3 completed" }
+    }
+  ]
+}
+""".trimIndent()
+
+// ── Plugin showcase JSON sequence ────────────────────────────────────────────
+
+private val PLUGIN_INTRO_JSON = """
+{
+  "display": "inline",
+  "blocks": [
+    {
+      "type": "heading",
+      "data": { "text": "Plugin Components" }
+    },
+    {
+      "type": "text",
+      "data": { "text": "This card is rendered by a custom component plugin — the library doesn't know about \"demo_fun_fact\" out of the box." }
+    },
+    {
+      "type": "demo_fun_fact",
+      "data": {
+        "title": "Did you know?",
+        "fact": "Kotlin was named after Kotlin Island near St. Petersburg, Russia. The JetBrains team chose the name because it was short, memorable, and — like Java — named after an island.",
+        "source": "JetBrains Blog"
+      }
+    },
+    { "type": "spacer", "data": {} },
+    {
+      "type": "button_primary",
+      "data": { "label": "Tell me more" },
+      "feedback": {
+        "action": "more_facts",
+        "params": { "topic": "kotlin" }
+      }
+    }
+  ]
+}
+""".trimIndent()
+
+private val PLUGIN_ACTIONS_JSON = """
+{
+  "display": "inline",
+  "blocks": [
+    {
+      "type": "heading",
+      "data": { "text": "Plugin Actions" }
+    },
+    {
+      "type": "text",
+      "data": { "text": "These buttons trigger action plugins. \"Open URL\" launches the browser. \"Navigate\" shows a Toast (since the demo has no deep-link routes)." }
+    },
+    {
+      "type": "button_primary",
+      "data": { "label": "Open Kotlin Website" },
+      "feedback": {
+        "action": "open_url",
+        "params": { "url": "https://kotlinlang.org" }
+      }
+    },
+    {
+      "type": "button_secondary",
+      "data": { "label": "Navigate to Settings" },
+      "feedback": {
+        "action": "navigate",
+        "params": { "screen": "settings" }
+      }
+    }
+  ]
+}
+""".trimIndent()
+
+private val PLUGIN_COMBINED_JSON = """
+{
+  "display": "inline",
+  "blocks": [
+    {
+      "type": "demo_fun_fact",
+      "data": {
+        "title": "Compose Fun Fact",
+        "fact": "Jetpack Compose was first announced at Google I/O 2019 and reached stable 1.0 in July 2021. It replaced the 10-year-old View system as the recommended way to build Android UI."
+      }
+    },
+    { "type": "spacer", "data": {} },
+    {
+      "type": "button_primary",
+      "data": { "label": "Open Compose Docs" },
+      "feedback": {
+        "action": "open_url",
+        "params": { "url": "https://developer.android.com/compose" }
+      }
+    },
+    {
+      "type": "button_secondary",
+      "data": { "label": "Go to Profile" },
+      "feedback": {
+        "action": "navigate",
+        "params": { "screen": "profile" }
+      }
     }
   ]
 }

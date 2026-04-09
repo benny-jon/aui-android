@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.model.AuiFeedback
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 
 /**
  * Full-screen chat UI demonstrating AUI library integration.
@@ -52,6 +53,8 @@ import com.bennyjon.aui.core.model.AuiFeedback
  * @param viewModel Drives the demo chat sequence.
  * @param title Text shown in the top app bar.
  * @param auiTheme The AUI theme applied to all rendered components.
+ * @param pluginRegistry Plugin registry passed to [AuiRenderer] for custom component
+ *   rendering and action handling. Defaults to [AuiPluginRegistry.Empty].
  * @param onBack Called when the user taps the back arrow. Pass `null` to hide the arrow.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +63,7 @@ fun ChatScreen(
     viewModel: DemoViewModel,
     title: String = "AUI Demo",
     auiTheme: AuiTheme = AuiTheme.Default,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onBack: (() -> Unit)? = null,
 ) {
     val messages by viewModel.messages.collectAsState()
@@ -112,6 +116,7 @@ fun ChatScreen(
                     is DemoMessage.Ai -> AiMessageItem(
                         message = message,
                         auiTheme = auiTheme,
+                        pluginRegistry = pluginRegistry,
                         onFeedback = { feedback ->
                             viewModel.onAuiFeedback(message.id, feedback)
                         },
@@ -134,6 +139,7 @@ fun ChatScreen(
 private fun AiMessageItem(
     message: DemoMessage.Ai,
     auiTheme: AuiTheme,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit,
 ) {
     // Text portion (if any)
@@ -168,6 +174,7 @@ private fun AiMessageItem(
             json = json,
             modifier = Modifier.fillMaxWidth(),
             theme = auiTheme,
+            pluginRegistry = pluginRegistry,
             onFeedback = onFeedback,
             onParseError = { error ->
                 Log.w("AuiDemo", "AUI parse error: $error")
