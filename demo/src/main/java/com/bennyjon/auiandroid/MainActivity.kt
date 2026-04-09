@@ -65,6 +65,22 @@ private fun DemoNavHost() {
                     pluginRegistry = pluginRegistry,
                     onBack = { navController.popBackStack() },
                 )
+            } else if (themeKey == "all_components") {
+                val context = LocalContext.current
+                val pluginRegistry = DemoPluginRegistry.create(context)
+
+                val vm: DemoViewModel = viewModel(
+                    key = "complex_demos",
+                    factory = DemoViewModelFactory(DemoViewModel.FULL_DEMO_SEQUENCE),
+                )
+
+                ChatScreen(
+                    viewModel = vm,
+                    title = "All Components Demo",
+                    auiTheme = AuiTheme.fromMaterialTheme(),
+                    pluginRegistry = pluginRegistry,
+                    onBack = { navController.popBackStack() },
+                )
             } else {
                 val (title, auiTheme) = resolveTheme(themeKey)
                 val vm: DemoViewModel = viewModel()

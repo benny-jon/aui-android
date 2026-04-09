@@ -2,6 +2,7 @@ package com.bennyjon.aui.compose
 
 import com.bennyjon.aui.compose.display.buildSheetFormattedEntries
 import com.bennyjon.aui.compose.internal.buildEntriesFromBlocks
+import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.data.ChipOption
@@ -10,6 +11,9 @@ import com.bennyjon.aui.core.model.data.ChipSelectSingleData
 import com.bennyjon.aui.core.model.data.HeadingData
 import com.bennyjon.aui.core.model.data.InputSliderData
 import com.bennyjon.aui.core.model.data.TextData
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -167,5 +171,53 @@ class FeedbackBuildingTest {
         )
         val result = buildSheetFormattedEntries(entries, skippedCount = 0)
         assertEquals("Q1\nA1\n\nQ2\nA2\n\nQ3\nA3", result)
+    }
+
+    // ── buildEntriesFromBlocks with plugin inputs ────────────────────────────
+
+    private fun inputPlugin(
+        type: String,
+        key: String,
+        label: String? = null,
+    ): AuiComponentPlugin<String> = object : AuiComponentPlugin<String>() {
+        override val id = type
+        override val componentType = type
+        override val promptSchema = ""
+        override val dataSerializer: KSerializer<String> = String.serializer()
+        override val inputKey: String = key
+        override val inputLabel: String? = label
+
+        @androidx.compose.runtime.Composable
+        override fun Render(
+            data: String,
+            onFeedback: (() -> Unit)?,
+            modifier: androidx.compose.ui.Modifier,
+        ) = Unit
+    }
+
+    @Test
+    fun `buildEntriesFromBlocks pairs heading with plugin input`() {
+        val registry = AuiPluginRegistry()
+        registry.register(inputPlugin(type = "date_picker", key = "dob"))
+
+        val blocks = listOf(
+            AuiBlock.Heading(data = HeadingData(text = "When were you born?")),
+            AuiBlock.Unknown(type = "date_picker"),
+        )
+        val result = buildEntriesFromBlocks(blocks, mapOf("dob" to "1990-01-15"), registry)
+
+        assertEquals(1, result.size)
+        assertEquals("When were you born?", result[0].question)
+        assertEquals("1990-01-15", result[0].answer)
+    }
+
+    @Test
+    fun `buildEntriesFromBlocks ignores Unknown without plugin`() {
+        val blocks = listOf(
+            AuiBlock.Heading(data = HeadingData(text = "Pick a date")),
+            AuiBlock.Unknown(type = "date_picker"),
+        )
+        val result = buildEntriesFromBlocks(blocks, mapOf("dob" to "1990-01-15"))
+        assertTrue(result.isEmpty())
     }
 }

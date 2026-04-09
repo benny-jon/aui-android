@@ -17,6 +17,7 @@ import com.bennyjon.aui.core.model.data.QuickRepliesData
 import com.bennyjon.aui.core.model.data.RadioListData
 import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
+import com.bennyjon.aui.core.model.data.AuiInputData
 import com.bennyjon.aui.core.model.data.TextData
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -25,6 +26,25 @@ import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+
+/**
+ * Marker interface for [AuiBlock] subtypes that capture user input.
+ *
+ * Input blocks expose their [inputData] so the feedback pipeline can discover registry
+ * keys and labels without type-checking each subclass. All built-in input types
+ * ([ChipSelectSingle][AuiBlock.ChipSelectSingle], [InputSlider][AuiBlock.InputSlider], etc.)
+ * implement this interface.
+ *
+ * Plugin-provided input components declare their key/label via
+ * [AuiComponentPlugin][com.bennyjon.aui.compose.plugin.AuiComponentPlugin] properties instead,
+ * since their block representation is [AuiBlock.Unknown] at compile time.
+ *
+ * @see AuiInputData
+ */
+interface AuiInputBlock {
+    /** The input's data, providing [AuiInputData.key] and [AuiInputData.label]. */
+    val inputData: AuiInputData
+}
 
 /**
  * A single renderable unit in an [AuiResponse].
@@ -69,14 +89,18 @@ sealed class AuiBlock {
     data class ChipSelectSingle(
         val data: ChipSelectSingleData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     /** Multi-choice chip group. */
     @Serializable
     data class ChipSelectMulti(
         val data: ChipSelectMultiData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     /** Filled primary CTA button. */
     @Serializable
@@ -104,35 +128,45 @@ sealed class AuiBlock {
     data class InputRatingStars(
         val data: InputRatingStarsData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     /** Single-line text input with optional submit action. */
     @Serializable
     data class InputTextSingle(
         val data: InputTextSingleData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     /** Range slider for scale questions. */
     @Serializable
     data class InputSlider(
         val data: InputSliderData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     /** Vertical single-select list with radio buttons and optional descriptions. */
     @Serializable
     data class RadioList(
         val data: RadioListData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     /** Vertical multi-select list with checkboxes and optional descriptions. */
     @Serializable
     data class CheckboxList(
         val data: CheckboxListData,
         override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
+    ) : AuiBlock(), AuiInputBlock {
+        override val inputData: AuiInputData get() = data
+    }
 
     // ── Layout ───────────────────────────────────────────────────────────────
 

@@ -24,10 +24,12 @@ import androidx.compose.ui.text.font.FontWeight
 import com.bennyjon.aui.compose.components.input.AuiButtonSecondary
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.internal.BlockRenderer
+import com.bennyjon.aui.compose.plugin.componentPlugin
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
+import com.bennyjon.aui.core.model.AuiInputBlock
 import com.bennyjon.aui.core.model.AuiStep
 import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
@@ -56,12 +58,15 @@ import kotlinx.coroutines.launch
  * the composable emits `onFeedback(action = "sheet_dismissed", stepsTotal = N)`.
  * [AuiFeedback.stepsSkipped] is `null` on dismiss because skip buttons were not used.
  *
- * **Terminal action name:** The action on the consolidated terminal feedback comes from whichever
- * [AuiBlock.ButtonPrimary] feedback finalized the flow — typically the final step's button.
- * `SheetFlowDisplay` itself does not interpret action names; intermediate button actions are
- * consumed internally and never reach the host's `onFeedback`. This means if the AI places
- * `action: "submit"` on intermediate buttons, those `submit` events are not routed to any
- * plugin — only the final step's action escapes.
+ * **Terminal action gating:** Only actions in the terminal set (`submit`, `poll_complete`,
+ * `poll_submit`) advance the step — or finalize the sheet on the last step. As a fallback, if
+ * a step has at most one [AuiBlock.ButtonPrimary], any click on it is also treated as terminal
+ * (covers AI-hallucinated action names). Non-terminal actions (`open_url`, `navigate`, etc.)
+ * are passed through to [onFeedback] immediately without advancing or dismissing.
+ *
+ * **Multi-input steps:** When a step contains more than one input block, entries are created for
+ * each input using its `label` (or `key` as fallback) as the question. Single-input steps
+ * still use the step-level [AuiStep.question] for backward compatibility.
  *
  * **Structural completion signal:** Hosts that want to handle sheet flow completions uniformly
  * (regardless of what action name the AI chose) should branch on [AuiFeedback.stepsTotal]
@@ -98,7 +103,7 @@ internal fun SheetFlowDisplay(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSheet by rememberSaveable { mutableStateOf(true) }
-    val flowState = remember { SheetFlowState(steps) }
+    val flowState = remember { SheetFlowState(steps, pluginRegistry) }
 
     if (!showSheet) return
 
@@ -115,11 +120,18 @@ internal fun SheetFlowDisplay(
             sheetTitle = sheetTitle,
             pluginRegistry = pluginRegistry,
             onStepCompleted = { feedback, isSkip ->
-                val finalFeedback = flowState.advance(feedback, isSkip)
-                if (finalFeedback != null) {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        showSheet = false
-                        onFeedback(finalFeedback)
+                val step = steps[flowState.stepIndex]
+                if (!isSkip && !isTerminalSheetAction(feedback.action, step)) {
+                    // Non-terminal action (open_url, navigate, etc.): pass through
+                    // without advancing or dismissing.
+                    onFeedback(feedback)
+                } else {
+                    val finalFeedback = flowState.advance(feedback, isSkip)
+                    if (finalFeedback != null) {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            showSheet = false
+                            onFeedback(finalFeedback)
+                        }
                     }
                 }
             },
@@ -138,7 +150,10 @@ internal fun SheetFlowDisplay(
  * On the last step, [advance] returns the consolidated [AuiFeedback]; otherwise it returns `null`.
  */
 @Stable
-internal class SheetFlowState(private val steps: List<AuiStep>) {
+internal class SheetFlowState(
+    private val steps: List<AuiStep>,
+    private val pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+) {
 
     var stepIndex by mutableIntStateOf(0)
         private set
@@ -158,11 +173,7 @@ internal class SheetFlowState(private val steps: List<AuiStep>) {
             skippedCount++
         } else {
             accumulatedParams.putAll(feedback.params)
-            val question = step.question
-            val answer = getStepAnswer(step, feedback.params)
-            if (question != null && answer != null) {
-                accumulatedEntries.add(AuiEntry(question = question, answer = answer))
-            }
+            accumulatedEntries.addAll(getAllStepEntries(step, feedback.params, pluginRegistry))
         }
         return if (stepIndex == steps.lastIndex) {
             buildFinalFeedback(feedback)
@@ -265,23 +276,66 @@ private fun SheetFlowContent(
 // ── Helper functions ─────────────────────────────────────────────────────────
 
 /**
- * Finds the first input block in [step] and returns its human-readable answer from [params].
- * The registry stores display labels (e.g. "Great") under the input's key, so [params]
- * already contains the correct display value after the button merges the registry into params.
+ * Extracts [AuiEntry] instances for **all** input blocks in [step] that have a non-blank
+ * answer in [params].
+ *
+ * Both built-in input blocks ([AuiInputBlock]) and plugin-provided inputs
+ * ([AuiComponentPlugin.inputKey][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputKey])
+ * are recognized. Each input's `label` (falling back to its `key`) becomes the entry's
+ * question. For single-input steps, the step-level [AuiStep.question] is preferred over
+ * the input label to preserve backward-compatible summary text.
  */
-internal fun getStepAnswer(step: AuiStep, params: Map<String, String>): String? {
-    return step.blocks.firstNotNullOfOrNull { block ->
-        when (block) {
-            is AuiBlock.ChipSelectSingle -> params[block.data.key]
-            is AuiBlock.ChipSelectMulti -> params[block.data.key]
-            is AuiBlock.InputSlider -> params[block.data.key]
-            is AuiBlock.InputRatingStars -> params[block.data.key]
-            is AuiBlock.InputTextSingle -> params[block.data.key]
-            is AuiBlock.RadioList -> params[block.data.key]
-            is AuiBlock.CheckboxList -> params[block.data.key]
-            else -> null
-        }
-    }?.takeIf { it.isNotBlank() }
+internal fun getAllStepEntries(
+    step: AuiStep,
+    params: Map<String, String>,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+): List<AuiEntry> {
+    val entries = mutableListOf<AuiEntry>()
+    for (block in step.blocks) {
+        val (key, label) = block.inputKeyAndLabel(pluginRegistry) ?: continue
+        val answer = params[key]?.takeIf { it.isNotBlank() } ?: continue
+        entries.add(AuiEntry(question = label ?: key, answer = answer))
+    }
+    val stepQuestion = step.question
+    if (entries.size == 1 && stepQuestion != null) {
+        return listOf(entries[0].copy(question = stepQuestion))
+    }
+    return entries
+}
+
+/**
+ * Returns the registry key and human-readable label for this block if it is an input,
+ * or `null` otherwise.
+ *
+ * Checks [AuiInputBlock] for built-ins and falls back to
+ * [AuiComponentPlugin][com.bennyjon.aui.compose.plugin.AuiComponentPlugin] properties
+ * for [AuiBlock.Unknown] blocks backed by a plugin.
+ */
+private fun AuiBlock.inputKeyAndLabel(
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+): Pair<String, String?>? = when {
+    this is AuiInputBlock -> inputData.key to inputData.label
+    this is AuiBlock.Unknown -> {
+        val plugin = pluginRegistry.componentPlugin(type)
+        plugin?.inputKey?.let { key -> key to plugin.inputLabel }
+    }
+    else -> null
+}
+
+/** Actions that signal step completion / sheet finalization. */
+private val TERMINAL_SHEET_ACTIONS = setOf("submit", "complete", "poll_complete", "poll_submit")
+
+/**
+ * Returns `true` when [action] should advance (or finalize) the sheet flow.
+ *
+ * An action is terminal if it is in [TERMINAL_SHEET_ACTIONS], **or** the step has at most
+ * one [AuiBlock.ButtonPrimary] whose action matches — this fallback covers AI-generated
+ * action names that don't follow the convention but are clearly the step's only submit path.
+ */
+internal fun isTerminalSheetAction(action: String, step: AuiStep): Boolean {
+    if (action in TERMINAL_SHEET_ACTIONS) return true
+    val primaryButtons = step.blocks.filterIsInstance<AuiBlock.ButtonPrimary>()
+    return primaryButtons.size <= 1 && primaryButtons.any { it.feedback?.action == action }
 }
 
 /**

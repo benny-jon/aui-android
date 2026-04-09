@@ -2,11 +2,14 @@ package com.bennyjon.auiandroid
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.bennyjon.aui.core.model.AuiFeedback
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Drives the demo chat screen.
@@ -70,6 +73,10 @@ class DemoViewModel(
     fun onUserText(text: String) {
         if (text.isBlank()) return
         _messages.update { it + DemoMessage.User(text = text) }
+        viewModelScope.launch {
+            delay(300)
+            loadNextResponse()
+        }
     }
 
     private fun loadNextResponse() {
@@ -91,6 +98,11 @@ class DemoViewModel(
             PLUGIN_INTRO_JSON,
             PLUGIN_ACTIONS_JSON,
             PLUGIN_COMBINED_JSON,
+        )
+
+        val FULL_DEMO_SEQUENCE = listOf(
+//            "{}",
+            ALL_COMPONENTS_JSON
         )
     }
 }
@@ -355,6 +367,186 @@ private val PLUGIN_COMBINED_JSON = """
         "action": "navigate",
         "params": { "screen": "profile" }
       }
+    }
+  ]
+}
+""".trimIndent()
+
+// ── All components Demo JSON sequence ────────────────────────────────────────────
+
+private val ALL_COMPONENTS_JSON = """
+{
+  "display": "sheet",
+  "sheet_title": "AUI Component Showcase",
+  "steps": [
+    {
+      "label": "Welcome",
+      "question": "Ready to explore every AUI component?",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Welcome to the showcase" } },
+        { "type": "text", "data": { "text": "This survey walks through every built-in component and action." } },
+        { "type": "caption", "data": { "text": "Takes about 2 minutes." } },
+        { "type": "demo_fun_fact", "data": {
+            "title": "Did you know?",
+            "fact": "AUI components feed user interactions back as the next message.",
+            "source": "AUI spec v0.5"
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Start" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Profile",
+      "question": "Tell us a bit about yourself.",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Your profile" } },
+        { "type": "input_text_single", "data": {
+            "key": "display_name",
+            "label": "Display name",
+            "placeholder": "e.g. Benny",
+            "submit_label": "Set"
+        }},
+        { "type": "chip_select_single", "data": {
+            "key": "role",
+            "label": "Your role",
+            "options": [
+              { "label": "Developer", "value": "dev" },
+              { "label": "Designer", "value": "design" },
+              { "label": "PM", "value": "pm" },
+              { "label": "Other", "value": "other" }
+            ]
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Preferences",
+      "question": "What are you interested in?",
+      "blocks": [
+        { "type": "text", "data": { "text": "Pick as many as apply." } },
+        { "type": "chip_select_multi", "data": {
+            "key": "topics",
+            "label": "Topics",
+            "options": [
+              { "label": "Android", "value": "android" },
+              { "label": "iOS", "value": "ios" },
+              { "label": "AI", "value": "ai" },
+              { "label": "Design systems", "value": "ds" }
+            ]
+        }},
+        { "type": "checkbox_list", "data": {
+            "key": "notifications",
+            "label": "Notify me about",
+            "options": [
+              { "label": "New releases", "description": "Version bumps and changelogs", "value": "releases" },
+              { "label": "Blog posts", "description": "Deep dives and tutorials", "value": "blog" },
+              { "label": "Community events", "value": "events" }
+            ]
+        }},
+        { "type": "radio_list", "data": {
+            "key": "frequency",
+            "label": "How often?",
+            "options": [
+              { "label": "Daily", "value": "daily" },
+              { "label": "Weekly", "description": "Recommended", "value": "weekly" },
+              { "label": "Monthly", "value": "monthly" }
+            ],
+            "selected": "weekly"
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Rating",
+      "question": "How would you rate AUI so far?",
+      "blocks": [
+        { "type": "input_rating_stars", "data": {
+            "key": "rating",
+            "label": "Overall rating",
+            "value": 4
+        }},
+        { "type": "input_slider", "data": {
+            "key": "recommend_score",
+            "label": "How likely to recommend (0-10)?",
+            "min": 0,
+            "max": 10,
+            "value": 8,
+            "step": 1
+        }},
+        { "type": "progress_bar", "data": {
+            "label": "Survey progress",
+            "progress": 4,
+            "max": 6
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Extras",
+      "question": "Anything else you'd like to share?",
+      "skippable": true,
+      "blocks": [
+        { "type": "caption", "data": { "text": "Optional — feel free to skip." } },
+        { "type": "input_text_single", "data": {
+            "key": "comments",
+            "label": "Comments",
+            "placeholder": "Tell us more..."
+        }},
+        { "type": "divider", "data": {} },
+        { "type": "text", "data": { "text": "Want to dig deeper?" } },
+        {
+          "type": "button_secondary",
+          "data": { "label": "Read the docs" },
+          "feedback": { "action": "open_url", "params": { "url": "https://github.com/bennyjon/aui" } }
+        },
+        {
+          "type": "button_secondary",
+          "data": { "label": "Go to settings" },
+          "feedback": { "action": "navigate", "params": { "screen": "settings" } }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Finish",
+      "question": "All done — submit your responses?",
+      "blocks": [
+        { "type": "heading", "data": { "text": "You're all set" } },
+        { "type": "badge_success", "data": { "text": "Ready to submit" } },
+        { "type": "status_banner_success", "data": { "text": "Thanks for walking through every component!" } },
+        { "type": "text", "data": { "text": "Tap submit to send your responses, or pick a quick action below." } },
+        { "type": "quick_replies", "data": {
+            "options": [
+              { "label": "Restart survey", "feedback": { "action": "navigate", "params": { "screen": "survey", "step": 0 } } },
+              { "label": "View results", "feedback": { "action": "navigate", "params": { "screen": "results" } } },
+              { "label": "Share feedback", "feedback": { "action": "open_url", "params": { "url": "https://github.com/bennyjon/aui/issues" } } }
+            ]
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
     }
   ]
 }

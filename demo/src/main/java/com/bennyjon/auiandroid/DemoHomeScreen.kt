@@ -90,6 +90,20 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 onClick = { onThemeSelected("plugins") },
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Complex Demos",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ThemeCard(
+                title = "All Components Showcase",
+                subtitle = "Sheet flow using all available components and actions",
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                onClick = { onThemeSelected("all_components") },
+            )
         }
     }
 }

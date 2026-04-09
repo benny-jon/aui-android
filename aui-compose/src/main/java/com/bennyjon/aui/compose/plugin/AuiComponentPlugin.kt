@@ -50,6 +50,22 @@ abstract class AuiComponentPlugin<T : Any> : AuiPlugin {
     abstract val dataSerializer: KSerializer<T>
 
     /**
+     * If this plugin renders an input component, return its registry key.
+     *
+     * Returning non-null tells the feedback pipeline (both [BlockRenderer][com.bennyjon.aui.compose.internal.BlockRenderer]
+     * and [SheetFlowDisplay][com.bennyjon.aui.compose.display.SheetFlowDisplay]) to include this
+     * component's value in entry accumulation. `null` means this plugin is not an input.
+     */
+    open val inputKey: String? get() = null
+
+    /**
+     * Human-readable label for this input, used as the entry question in feedback summaries.
+     *
+     * Only meaningful when [inputKey] is non-null. Falls back to [inputKey] if `null`.
+     */
+    open val inputLabel: String? get() = null
+
+    /**
      * Render this component.
      *
      * @param data the parsed data object (deserialized via [dataSerializer]).

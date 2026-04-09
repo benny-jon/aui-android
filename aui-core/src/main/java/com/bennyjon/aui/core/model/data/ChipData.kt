@@ -15,24 +15,24 @@ data class ChipOption(
 @Serializable
 data class ChipSelectSingleData(
     /** Key used to identify this input in feedback params. */
-    val key: String,
+    override val key: String,
     /** Optional label displayed above the chip group. */
-    val label: String? = null,
+    override val label: String? = null,
     /** The selectable options. */
     val options: List<ChipOption>,
     /** Pre-selected option value, if any. */
     val selected: String? = null,
-)
+) : AuiInputData
 
 /** Data for the `chip_select_multi` block. Allows picking multiple options. */
 @Serializable
 data class ChipSelectMultiData(
     /** Key used to identify this input in feedback params. */
-    val key: String,
+    override val key: String,
     /** Optional label displayed above the chip group. */
-    val label: String? = null,
+    override val label: String? = null,
     /** The selectable options. */
     val options: List<ChipOption>,
     /** Pre-selected option values, if any. */
     val selected: List<String> = emptyList(),
-)
+) : AuiInputData

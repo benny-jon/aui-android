@@ -33,6 +33,7 @@ import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
+import com.bennyjon.aui.core.model.AuiInputBlock
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -43,8 +44,16 @@ private const val TAG = "BlockRenderer"
  * Scans [blocks] for heading→input pairs and maps them to [AuiEntry] instances using the
  * current [registry] values. Each [AuiBlock.Heading] sets the current question; the next
  * input block whose key has a value in the registry produces an entry.
+ *
+ * Both built-in input blocks ([AuiInputBlock]) and plugin-provided inputs
+ * ([AuiComponentPlugin.inputKey][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputKey])
+ * are recognized.
  */
-internal fun buildEntriesFromBlocks(blocks: List<AuiBlock>, registry: Map<String, String>): List<AuiEntry> {
+internal fun buildEntriesFromBlocks(
+    blocks: List<AuiBlock>,
+    registry: Map<String, String>,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+): List<AuiEntry> {
     val entries = mutableListOf<AuiEntry>()
     var currentQuestion: String? = null
     for (block in blocks) {
@@ -52,7 +61,7 @@ internal fun buildEntriesFromBlocks(blocks: List<AuiBlock>, registry: Map<String
             currentQuestion = block.data.text
             continue
         }
-        val key = block.inputKey() ?: continue
+        val key = block.inputKey(pluginRegistry) ?: continue
         val question = currentQuestion ?: continue
         val answer = registry[key]?.takeIf { it.isNotBlank() } ?: continue
         entries.add(AuiEntry(question = question, answer = answer))
@@ -61,16 +70,19 @@ internal fun buildEntriesFromBlocks(blocks: List<AuiBlock>, registry: Map<String
     return entries
 }
 
-private fun AuiBlock.inputKey(): String? = when (this) {
-    is AuiBlock.ChipSelectSingle -> data.key
-    is AuiBlock.ChipSelectMulti -> data.key
-    is AuiBlock.InputSlider -> data.key
-    is AuiBlock.InputRatingStars -> data.key
-    is AuiBlock.InputTextSingle -> data.key
-    is AuiBlock.RadioList -> data.key
-    is AuiBlock.CheckboxList -> data.key
-    else -> null
-}
+/**
+ * Returns the registry key for this block if it is an input, or `null` otherwise.
+ *
+ * Checks [AuiInputBlock] for built-ins and falls back to
+ * [AuiComponentPlugin.inputKey][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputKey]
+ * for [AuiBlock.Unknown] blocks backed by a plugin.
+ */
+internal fun AuiBlock.inputKey(pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty): String? =
+    when {
+        this is AuiInputBlock -> inputData.key
+        this is AuiBlock.Unknown -> pluginRegistry.componentPlugin(type)?.inputKey
+        else -> null
+    }
 
 /** Lenient JSON instance for decoding plugin component data. */
 private val pluginJson = Json { ignoreUnknownKeys = true }
@@ -108,7 +120,7 @@ internal fun BlockRenderer(
     val registry = registryOverride ?: localRegistry
     val entryBlocks = allBlocksForEntries ?: blocks
     val wrappedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
-        val entries = buildEntriesFromBlocks(entryBlocks, registry.value)
+        val entries = buildEntriesFromBlocks(entryBlocks, registry.value, pluginRegistry)
         val formattedEntries = entries
             .joinToString("\n\n") { "${it.question}\n${it.answer}" }
             .ifBlank { null }

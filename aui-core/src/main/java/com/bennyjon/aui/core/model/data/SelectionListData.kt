@@ -17,24 +17,24 @@ data class SelectionOption(
 @Serializable
 data class RadioListData(
     /** Key used to identify this input in feedback params. */
-    val key: String,
+    override val key: String,
     /** Optional label displayed above the list. */
-    val label: String? = null,
+    override val label: String? = null,
     /** The selectable options. */
     val options: List<SelectionOption>,
     /** Pre-selected option value, if any. */
     val selected: String? = null,
-)
+) : AuiInputData
 
 /** Data for the `checkbox_list` block. Allows picking multiple options, each with an optional description. */
 @Serializable
 data class CheckboxListData(
     /** Key used to identify this input in feedback params. */
-    val key: String,
+    override val key: String,
     /** Optional label displayed above the list. */
-    val label: String? = null,
+    override val label: String? = null,
     /** The selectable options. */
     val options: List<SelectionOption>,
     /** Pre-selected option values, if any. */
     val selected: List<String> = emptyList(),
-)
+) : AuiInputData

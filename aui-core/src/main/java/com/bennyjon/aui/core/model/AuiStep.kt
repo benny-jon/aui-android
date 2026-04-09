@@ -11,8 +11,9 @@ import kotlinx.serialization.Serializable
  * by the library.
  *
  * @param blocks The content blocks to render for this step. Include a `button_primary` as
- *   the action trigger. The library derives the answer for this step from the first input
- *   block's value in [AuiFeedback.params] — no label field is needed.
+ *   the action trigger. For single-input steps, the library derives one entry using [question]
+ *   as the heading. For multi-input steps, each input's `label` (or `key`) becomes its own
+ *   entry question.
  * @param label Short label shown in the auto-rendered stepper indicator (e.g. "Experience").
  *   Defaults to the step number if absent.
  * @param question Full question text stored in [AuiEntry.question] when the user answers
@@ -24,5 +25,5 @@ data class AuiStep(
     val blocks: List<AuiBlock>,
     val label: String? = null,
     val question: String? = null,
-    val skippable: Boolean = false,
+    val skippable: Boolean = true,
 )

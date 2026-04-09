@@ -212,7 +212,7 @@ Status:
   steps[]: array of steps (use instead of blocks for sheet display)
     step.label: string — short label for the stepper indicator
     step.question: string — the question this step is asking the user
-    step.skippable: boolean — show a Skip button (default false)
+    step.skippable: boolean — show a Skip button (default true)
     step.blocks[]: blocks for this step"""
 
     internal const val ACTIONS_PREAMBLE =
