@@ -38,7 +38,6 @@
         "step": 1
       }
     },
-    { "type": "spacer", "data": {} },
     {
       "type": "button_primary",
       "data": { "label": "Submit Feedback" },

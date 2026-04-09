@@ -22,8 +22,10 @@ data class AuiSpacing(
     val xLarge: Dp = 32.dp,
     /** Thickness of `divider` blocks. */
     val dividerThickness: Dp = 1.dp,
-    /** Height of `spacer` blocks. */
-    val spacerHeight: Dp = 16.dp,
+    /** Vertical gap between sibling blocks in a `blocks` array. */
+    val blockSpacing: Dp = 12.dp,
+    /** Additional top padding above `section_header` blocks, on top of [blockSpacing]. */
+    val sectionHeaderTopSpacing: Dp = 8.dp,
 ) {
     companion object {
         /** Default spacing scale. */

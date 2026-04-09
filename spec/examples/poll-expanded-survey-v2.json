@@ -69,7 +69,6 @@
         ]
       }
     },
-    { "type": "spacer", "data": {} },
     {
       "type": "button_primary",
       "data": { "label": "Submit Feedback" },

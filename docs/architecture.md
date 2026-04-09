@@ -57,6 +57,7 @@ AuiRenderer(
 │  │  │  AuiRenderer composable                         │     │   │
 │  │  │  ├── Theme system (AuiTheme)                    │     │   │
 │  │  │  ├── Display router (inline/expanded/sheet)     │     │   │
+│  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
 │  │  │  ├── Component catalog (50+ composables)        │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
 │  │  │                                                 │     │   │
@@ -261,7 +262,9 @@ data class AuiSpacing(
     val m: Dp,     // default 16.dp
     val l: Dp,     // default 24.dp
     val xl: Dp,    // default 32.dp
-    val xxl: Dp    // default 48.dp
+    val xxl: Dp,   // default 48.dp
+    val blockSpacing: Dp,           // default 12.dp — vertical gap between sibling blocks
+    val sectionHeaderTopSpacing: Dp // default 8.dp — extra top padding above section_header
 )
 
 data class AuiShapes(
@@ -531,7 +534,6 @@ aui/
 │       │   │   │   └── AuiMapStatic.kt
 │       │   │   └── layout/
 │       │   │       ├── AuiDivider.kt
-│       │   │       ├── AuiSpacer.kt
 │       │   │       ├── AuiSectionHeader.kt
 │       │   │       └── AuiLoading.kt
 │       │   │
@@ -688,14 +690,28 @@ AuiRenderer(
 )
 ```
 
-### 2. No Coroutine Scope Leaks
+### 2. Block Spacing
+
+Spacing between sibling blocks is the renderer's responsibility, not the AI's.
+The root `BlockRenderer` uses `Column(verticalArrangement = Arrangement.spacedBy(theme.blockSpacing))`
+to apply a uniform vertical gap between blocks. Host apps customize this value through
+`AuiSpacing.blockSpacing` (default `12.dp`).
+
+`section_header` carries additional leading space on top of the base `blockSpacing`
+so section boundaries read clearly. This is exposed as `AuiSpacing.sectionHeaderTopSpacing`
+(default `8.dp`), applied as extra top padding on the `section_header` composable.
+
+There is no per-block spacing field, no spacer block, and no way for the AI JSON to
+influence spacing. The AI never emits spacing blocks.
+
+### 3. No Coroutine Scope Leaks
 
 The library never launches its own coroutines. All async work
 (network, AI calls) is the host app's responsibility.
 Components that need state (e.g., chip selection) use Compose's
 built-in `remember` + state hoisting.
 
-### 3. Compose Preview Support
+### 4. Compose Preview Support
 
 Every component includes a `@Preview` composable so developers
 can see what each component looks like in Android Studio without
@@ -714,19 +730,19 @@ private fun CardBasicPreview() {
 }
 ```
 
-### 4. ProGuard / R8 Rules Included
+### 5. ProGuard / R8 Rules Included
 
 The library ships with consumer ProGuard rules so JSON
 serialization works correctly in release builds without
 consumer-side configuration.
 
-### 5. No Reflection
+### 6. No Reflection
 
 All type routing uses sealed class `when` expressions.
 No reflection, no annotation processing at runtime.
 This keeps startup fast and APK size small.
 
-### 6. Accessibility by Default
+### 7. Accessibility by Default
 
 Every component emits correct semantics:
 - Buttons have content descriptions from their labels

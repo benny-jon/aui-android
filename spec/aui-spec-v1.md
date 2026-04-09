@@ -381,6 +381,10 @@ List items and cards inside `horizontal_scroll_cards` each carry their own feedb
 
 Organized by what the AI is trying to accomplish. Every component works at any display level — the presentation router handles placement.
 
+### Layout & Spacing
+
+Sibling blocks inside a `blocks` array are automatically spaced vertically by the renderer according to the host app's AUI theme. AI authors do not control spacing and should not attempt to — there is no spacing field, no spacer block, and no way to request tighter or looser layout. Blocks that should feel visually grouped (like a button and a related chip) should be composed using group/container components instead.
+
 ### DISPLAYING INFORMATION
 
 #### `text`
@@ -762,12 +766,6 @@ All field values are collected and sent as params in the feedback.
 
 #### `divider`
 Visual separator line.
-```
-data: {}
-```
-
-#### `spacer`
-Vertical breathing room.
 ```
 data: {}
 ```
@@ -1213,7 +1211,7 @@ Input:
   form_group(fields[], submit_label)
 
 Utility:
-  divider() · spacer() · loading(message?) · section_header(title, action_label?)
+  divider() · loading(message?) · section_header(title, action_label?)
 
 Sheet-only fields (top-level):
   sheet_title: string — title in the sheet header
@@ -1254,7 +1252,7 @@ GUIDELINES:
 ### Phase 1 — Chat MVP (~20 components)
 text, heading, caption, card_basic, card_basic_icon, card_image_left,
 list_simple, list_icon, button_primary, button_secondary, quick_replies,
-chip_select_single, input_text_single, form_group, divider, spacer,
+chip_select_single, input_text_single, form_group, divider,
 badge_success, badge_error, status_banner_success, loading
 
 ### Phase 2 — Rich Content (+15 components)

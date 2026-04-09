@@ -1,6 +1,7 @@
 package com.bennyjon.aui.compose.internal
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -20,7 +21,6 @@ import com.bennyjon.aui.compose.components.input.AuiQuickReplies
 import com.bennyjon.aui.compose.components.input.AuiRadioList
 import com.bennyjon.aui.compose.components.layout.AuiDivider
 import com.bennyjon.aui.compose.components.layout.AuiProgressBar
-import com.bennyjon.aui.compose.components.layout.AuiSpacer
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.components.status.AuiBadgeSuccess
 import com.bennyjon.aui.compose.components.status.AuiStatusBannerSuccess
@@ -29,6 +29,7 @@ import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.components.text.AuiText
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
 import com.bennyjon.aui.compose.plugin.componentPlugin
+import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
@@ -113,8 +114,12 @@ internal fun BlockRenderer(
             .ifBlank { null }
         onFeedback(feedback.copy(entries = entries, formattedEntries = formattedEntries))
     }
+    val theme = LocalAuiTheme.current
     CompositionLocalProvider(LocalAuiValueRegistry provides registry) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(theme.spacing.blockSpacing),
+    ) {
         blocks.forEach { block ->
             when (block) {
                 is AuiBlock.Text -> AuiText(block = block)
@@ -131,7 +136,6 @@ internal fun BlockRenderer(
                 is AuiBlock.RadioList -> AuiRadioList(block = block, onFeedback = wrappedOnFeedback)
                 is AuiBlock.CheckboxList -> AuiCheckboxList(block = block, onFeedback = wrappedOnFeedback)
                 is AuiBlock.Divider -> AuiDivider()
-                is AuiBlock.Spacer -> AuiSpacer()
                 is AuiBlock.StepperHorizontal -> AuiStepperHorizontal(block = block)
                 is AuiBlock.ProgressBar -> AuiProgressBar(block = block)
                 is AuiBlock.BadgeSuccess -> AuiBadgeSuccess(block = block)

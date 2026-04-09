@@ -104,7 +104,6 @@ class FeedbackBuildingTest {
     fun `buildEntriesFromBlocks ignores non-input blocks between heading and input`() {
         val blocks = listOf(
             AuiBlock.Heading(data = HeadingData(text = "Rate your experience")),
-            AuiBlock.Spacer(),
             AuiBlock.Divider(),
             AuiBlock.ChipSelectSingle(
                 data = ChipSelectSingleData(key = "rating", options = emptyList()),

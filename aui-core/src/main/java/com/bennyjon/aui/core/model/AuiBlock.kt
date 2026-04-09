@@ -15,7 +15,6 @@ import com.bennyjon.aui.core.model.data.InputTextSingleData
 import com.bennyjon.aui.core.model.data.ProgressBarData
 import com.bennyjon.aui.core.model.data.QuickRepliesData
 import com.bennyjon.aui.core.model.data.RadioListData
-import com.bennyjon.aui.core.model.data.SpacerData
 import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.TextData
@@ -144,13 +143,6 @@ sealed class AuiBlock {
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
-    /** Vertical breathing room. */
-    @Serializable
-    data class Spacer(
-        val data: SpacerData = SpacerData(),
-        override val feedback: AuiFeedback? = null,
-    ) : AuiBlock()
-
     // ── Progress ─────────────────────────────────────────────────────────────
 
     /** Horizontal step progress indicator. */
@@ -224,7 +216,6 @@ internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(
             "radio_list" -> AuiBlock.RadioList.serializer()
             "checkbox_list" -> AuiBlock.CheckboxList.serializer()
             "divider" -> AuiBlock.Divider.serializer()
-            "spacer" -> AuiBlock.Spacer.serializer()
             "stepper_horizontal" -> AuiBlock.StepperHorizontal.serializer()
             "progress_bar" -> AuiBlock.ProgressBar.serializer()
             "badge_success" -> AuiBlock.BadgeSuccess.serializer()

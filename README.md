@@ -124,13 +124,13 @@ AuiRenderer(json = json, theme = myTheme, ...)
 
 ## Component Catalog
 
-19 component types across these categories:
+18 component types across these categories:
 
 | Category | Components |
 |----------|-----------|
 | **Display** | `text`, `heading`, `caption` |
 | **Input** | `chip_select_single`, `chip_select_multi`, `button_primary`, `button_secondary`, `quick_replies`, `input_rating_stars`, `input_text_single`, `input_slider`, `radio_list`, `checkbox_list` |
-| **Layout** | `divider`, `spacer` |
+| **Layout** | `divider` |
 | **Progress** | `stepper_horizontal`, `progress_bar` |
 | **Status** | `badge_success`, `status_banner_success` |
 

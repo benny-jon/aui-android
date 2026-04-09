@@ -136,7 +136,6 @@ private val EXPANDED_ACTION_JSON = """
         ]
       }
     },
-    { "type": "spacer", "data": {} },
     {
       "type": "button_primary",
       "data": { "label": "Tell me more" },
@@ -286,7 +285,6 @@ private val PLUGIN_INTRO_JSON = """
         "source": "JetBrains Blog"
       }
     },
-    { "type": "spacer", "data": {} },
     {
       "type": "button_primary",
       "data": { "label": "Tell me more" },
@@ -342,7 +340,6 @@ private val PLUGIN_COMBINED_JSON = """
         "fact": "Jetpack Compose was first announced at Google I/O 2019 and reached stable 1.0 in July 2021. It replaced the 10-year-old View system as the recommended way to build Android UI."
       }
     },
-    { "type": "spacer", "data": {} },
     {
       "type": "button_primary",
       "data": { "label": "Open Compose Docs" },

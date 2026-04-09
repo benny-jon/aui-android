@@ -164,7 +164,6 @@ Input:
 
 Layout:
   divider()
-  spacer()
 
 Progress:
   stepper_horizontal(steps[]{label}, current)
@@ -221,7 +220,6 @@ Status:
         "radio_list",
         "checkbox_list",
         "divider",
-        "spacer",
         "stepper_horizontal",
         "progress_bar",
         "badge_success",

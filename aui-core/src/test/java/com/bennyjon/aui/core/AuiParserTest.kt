@@ -64,7 +64,7 @@ class AuiParserTest {
         val response = parser.parse(json)
 
         assertEquals(AuiDisplay.EXPANDED, response.display)
-        assertEquals(8, response.blocks.size)
+        assertEquals(7, response.blocks.size)
 
         val chips = response.blocks[2] as AuiBlock.ChipSelectMulti
         assertEquals("features", chips.data.key)
@@ -77,7 +77,7 @@ class AuiParserTest {
         assertEquals(10f, slider.data.max)
         assertEquals(5f, slider.data.value)
 
-        val button = response.blocks[7] as AuiBlock.ButtonPrimary
+        val button = response.blocks[6] as AuiBlock.ButtonPrimary
         assertEquals("Submit Feedback", button.data.label)
         assertEquals("poll_submit", button.feedback?.action)
     }
@@ -142,7 +142,7 @@ class AuiParserTest {
         val response = parser.parse(json)
 
         assertEquals(AuiDisplay.EXPANDED, response.display)
-        assertEquals(8, response.blocks.size)
+        assertEquals(7, response.blocks.size)
 
         val radioList = response.blocks[2] as AuiBlock.RadioList
         assertEquals("satisfaction", radioList.data.key)
@@ -160,7 +160,7 @@ class AuiParserTest {
         assertEquals("chat", checkboxList.data.options[0].value)
         assertEquals(emptyList<String>(), checkboxList.data.selected)
 
-        val button = response.blocks[7] as AuiBlock.ButtonPrimary
+        val button = response.blocks[6] as AuiBlock.ButtonPrimary
         assertEquals("Submit Feedback", button.data.label)
         assertEquals("poll_submit", button.feedback?.action)
         assertEquals("feature_survey_v2", button.feedback?.params?.get("poll_id"))

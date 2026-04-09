@@ -61,6 +61,7 @@ private fun DemoNavHost() {
                 ChatScreen(
                     viewModel = vm,
                     title = "Plugin Showcase",
+                    auiTheme = AuiTheme.fromMaterialTheme(),
                     pluginRegistry = pluginRegistry,
                     onBack = { navController.popBackStack() },
                 )

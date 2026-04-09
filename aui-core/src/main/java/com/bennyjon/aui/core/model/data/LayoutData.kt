@@ -7,9 +7,3 @@ import kotlinx.serialization.Serializable
 data class DividerData(
     val placeholder: String? = null,
 )
-
-/** Data for the `spacer` block. Adds vertical breathing room. No configurable fields. */
-@Serializable
-data class SpacerData(
-    val placeholder: String? = null,
-)

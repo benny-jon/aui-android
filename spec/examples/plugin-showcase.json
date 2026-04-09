@@ -59,7 +59,6 @@
           "fact": "Jetpack Compose was first announced at Google I/O 2019 and reached stable 1.0 in July 2021. It replaced the 10-year-old View system as the recommended way to build Android UI."
         }
       },
-      { "type": "spacer", "data": {} },
       {
         "type": "button_primary",
         "data": { "label": "Open Compose Docs" },

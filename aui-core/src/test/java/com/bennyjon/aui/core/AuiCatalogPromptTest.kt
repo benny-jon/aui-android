@@ -41,7 +41,7 @@ class AuiCatalogPromptTest {
             "quick_replies",
             "input_rating_stars", "input_text_single", "input_slider",
             "radio_list", "checkbox_list",
-            "divider", "spacer",
+            "divider",
             "stepper_horizontal", "progress_bar",
             "badge_success", "status_banner_success",
         )
