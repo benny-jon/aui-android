@@ -181,6 +181,21 @@ data class CardBasicData(val title: String, val subtitle: String? = null)
 data class QuickRepliesData(val options: List<QuickReplyOption>)
 data class QuickReplyOption(val label: String, val feedback: AuiFeedback? = null)
 // ... etc for every component
+
+// ── Input Data Contract ─────────────────────────────────
+// All user-input data classes implement this interface,
+// giving the feedback pipeline a uniform way to discover
+// the input's registry key and human-readable label.
+
+interface AuiInputData {
+    val key: String        // identifies the input's value in feedback params
+    val label: String?     // used as the entry question in feedback summaries
+}
+
+// Implemented by: ChipSelectSingleData, ChipSelectMultiData,
+// InputTextSingleData, InputTextMultiData, InputEmailData,
+// InputPhoneData, InputNumberData, InputSelectData, InputDateData,
+// InputTimeData, InputSliderData, InputRatingStarsData
 ```
 
 ### aui-compose — Public API
@@ -438,6 +453,7 @@ aui/
 │       │   │       ├── ListIconData.kt
 │       │   │       ├── ButtonData.kt
 │       │   │       ├── QuickRepliesData.kt
+│       │   │       ├── AuiInputData.kt        # Shared interface for input data classes
 │       │   │       ├── ChipSelectData.kt
 │       │   │       ├── FormGroupData.kt
 │       │   │       └── ... (one per component type)
