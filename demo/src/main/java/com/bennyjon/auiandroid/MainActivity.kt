@@ -98,7 +98,6 @@ private fun DemoNavHost() {
 
 @Composable
 private fun resolveTheme(key: String): Pair<String, AuiTheme> = when (key) {
-    "dark_neon" -> "Dark Neon" to DemoThemes.darkNeon()
     "warm_organic" -> "Warm Organic" to DemoThemes.warmOrganic()
     else -> "Default" to AuiTheme.fromMaterialTheme()
 }

@@ -57,15 +57,6 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 onClick = { onThemeSelected("default") },
             )
 
-            val darkNeonColors = DemoThemes.darkNeon().colors
-            ThemeCard(
-                title = "Dark Neon",
-                subtitle = "Electric cyan accents with bold shapes",
-                containerColor = darkNeonColors.primaryContainer,
-                contentColor = darkNeonColors.onPrimaryContainer,
-                onClick = { onThemeSelected("dark_neon") },
-            )
-
             val warmOrganicColors = DemoThemes.warmOrganic().colors
             ThemeCard(
                 title = "Warm Organic",
