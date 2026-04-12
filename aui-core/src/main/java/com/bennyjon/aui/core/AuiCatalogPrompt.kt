@@ -129,9 +129,20 @@ use AUI when an interactive component genuinely serves the user better than
 prose — for example: collecting structured input, offering quick-reply choices,
 running a short survey, or displaying a rich card the user will act on.
 
-When you DO use AUI, emit a single JSON object matching the schema below as
-your ENTIRE response. No prose wrapper, no markdown code fence, no commentary
-before or after — just the raw JSON object.
+RESPONSE FORMAT — always respond with a JSON object using this envelope:
+{
+  "text": "Your conversational message here",
+  "aui": { ... AUI payload (optional) ... }
+}
+
+The "text" field is REQUIRED — it is your spoken reply shown in the chat bubble.
+The "aui" field is OPTIONAL — include it only when you want to render interactive UI.
+
+For text-only replies: { "text": "Hello! How can I help?" }
+For AUI replies:       { "text": "Here's a quick poll:", "aui": { "display": "inline", "blocks": [...] } }
+
+CRITICAL: No prose wrapper, no markdown code fence, no commentary before or
+after — just the raw JSON object. Never output anything outside this envelope.
 
 The feedback loop: when the user interacts with a rendered component
 (selects an option, submits a form, taps a quick reply), their interaction
@@ -142,14 +153,14 @@ Default to plain text. Only emit AUI JSON when a component adds real value.
 
 ---"""
 
-    internal const val SCHEMA_FORMAT = """AUI JSON schema:
+    internal const val SCHEMA_FORMAT = """AUI payload schema (goes inside the "aui" field of the response envelope):
 {
   "display": "inline" | "expanded" | "sheet",
   "blocks": [ ... ]
 }
 
 For "sheet" display (multi-step flows), replace "blocks" with "steps" and
-add a "sheet_title" at the top level:
+add a "sheet_title":
 {
   "display": "sheet",
   "sheet_title": "...",
@@ -234,62 +245,71 @@ Status:
 
     internal const val EXAMPLES = """EXAMPLES:
 
+Text-only reply:
+{ "text": "Sure, I can help with that!" }
+
 Inline poll (radio list + submit button):
 {
-  "display": "inline",
-  "blocks": [
-    { "type": "text", "data": { "text": "Which feature should we build next?" } },
-    { "type": "radio_list", "data": {
-        "key": "feature_choice",
-        "options": [
-          { "label": "Dark mode", "value": "dark_mode" },
-          { "label": "Export to PDF", "value": "export_pdf" },
-          { "label": "Keyboard shortcuts", "value": "shortcuts" }
-        ]
-    }},
-    {
-      "type": "button_primary",
-      "data": { "label": "Vote" },
-      "feedback": { "action": "submit", "params": {} }
-    }
-  ]
+  "text": "Let me know what you think:",
+  "aui": {
+    "display": "inline",
+    "blocks": [
+      { "type": "text", "data": { "text": "Which feature should we build next?" } },
+      { "type": "radio_list", "data": {
+          "key": "feature_choice",
+          "options": [
+            { "label": "Dark mode", "value": "dark_mode" },
+            { "label": "Export to PDF", "value": "export_pdf" },
+            { "label": "Keyboard shortcuts", "value": "shortcuts" }
+          ]
+      }},
+      {
+        "type": "button_primary",
+        "data": { "label": "Vote" },
+        "feedback": { "action": "submit", "params": {} }
+      }
+    ]
+  }
 }
 
 Sheet survey (2-step feedback flow, second step skippable):
 {
-  "display": "sheet",
-  "sheet_title": "Quick feedback",
-  "steps": [
-    {
-      "label": "Rating",
-      "question": "How would you rate your experience?",
-      "blocks": [
-        { "type": "input_rating_stars", "data": { "key": "rating", "label": "Your rating" } },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": { "action": "submit", "params": {} }
-        }
-      ]
-    },
-    {
-      "label": "Comment",
-      "question": "Any additional comments?",
-      "skippable": true,
-      "blocks": [
-        { "type": "input_text_single", "data": {
-            "key": "comment",
-            "label": "Comments",
-            "placeholder": "Tell us more..."
-        }},
-        {
-          "type": "button_primary",
-          "data": { "label": "Finish" },
-          "feedback": { "action": "submit", "params": {} }
-        }
-      ]
-    }
-  ]
+  "text": "I'd love your feedback!",
+  "aui": {
+    "display": "sheet",
+    "sheet_title": "Quick feedback",
+    "steps": [
+      {
+        "label": "Rating",
+        "question": "How would you rate your experience?",
+        "blocks": [
+          { "type": "input_rating_stars", "data": { "key": "rating", "label": "Your rating" } },
+          {
+            "type": "button_primary",
+            "data": { "label": "Next" },
+            "feedback": { "action": "submit", "params": {} }
+          }
+        ]
+      },
+      {
+        "label": "Comment",
+        "question": "Any additional comments?",
+        "skippable": true,
+        "blocks": [
+          { "type": "input_text_single", "data": {
+              "key": "comment",
+              "label": "Comments",
+              "placeholder": "Tell us more..."
+          }},
+          {
+            "type": "button_primary",
+            "data": { "label": "Finish" },
+            "feedback": { "action": "submit", "params": {} }
+          }
+        ]
+      }
+    ]
+  }
 }"""
 
     /**

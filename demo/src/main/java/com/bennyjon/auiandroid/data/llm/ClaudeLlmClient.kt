@@ -1,5 +1,8 @@
 package com.bennyjon.auiandroid.data.llm
 
+import android.os.Build
+import android.util.Log
+import com.bennyjon.auiandroid.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -10,11 +13,6 @@ import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * [LlmClient] implementation that calls the Anthropic Messages API.
@@ -40,6 +38,9 @@ class ClaudeLlmClient(
         history: List<LlmMessage>,
     ): LlmResponse {
         return try {
+            if (BuildConfig.DEBUG) {
+                Log.d("ClaudeLlmClient", systemPrompt)
+            }
             val requestBody = buildRequestBody(systemPrompt, history)
 
             val response = httpClient.post(MESSAGES_URL) {
@@ -52,10 +53,10 @@ class ClaudeLlmClient(
             }
 
             val responseText = response.bodyAsText()
-            val contentText = extractContentText(responseText)
-                ?: return AuiResponseExtractor.error("No text content in Claude response")
-
-            AuiResponseExtractor.fromRawResponse(contentText)
+            if (BuildConfig.DEBUG) {
+                Log.d("ClaudeLlmClient", responseText)
+            }
+            AuiResponseExtractor.fromRawResponse(responseText)
         } catch (e: Exception) {
             AuiResponseExtractor.error("Claude API error: ${e.message}", e)
         }
@@ -83,25 +84,6 @@ class ClaudeLlmClient(
         )
 
         return json.encodeToString(body)
-    }
-
-    /**
-     * Extracts the text from the first `text` content block in the API response.
-     */
-    private fun extractContentText(responseJson: String): String? {
-        return try {
-            val root = json.parseToJsonElement(responseJson).jsonObject
-            val content = root["content"]?.jsonArray ?: return null
-            for (block in content) {
-                val obj = block.jsonObject
-                if (obj["type"]?.jsonPrimitive?.content == "text") {
-                    return obj["text"]?.jsonPrimitive?.content
-                }
-            }
-            null
-        } catch (e: Exception) {
-            null
-        }
     }
 
     @Serializable

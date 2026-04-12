@@ -41,8 +41,8 @@ object AppModule {
     @Provides
     @Singleton
     @SystemPrompt
-    fun provideSystemPrompt(pluginRegistry: AuiPluginRegistry): String = "You are a helpful Socratic assistant"
-//        AuiCatalogPrompt.generate(pluginRegistry)
+    fun provideSystemPrompt(pluginRegistry: AuiPluginRegistry): String =
+        AuiCatalogPrompt.generate(pluginRegistry)
 
     @Provides
     @Singleton

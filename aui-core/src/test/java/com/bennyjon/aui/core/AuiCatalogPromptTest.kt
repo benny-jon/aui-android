@@ -56,6 +56,14 @@ class AuiCatalogPromptTest {
     }
 
     @Test
+    fun `generate meta-frame describes envelope format`() {
+        assertTrue(output.contains("\"text\": \"Your conversational message here\""))
+        assertTrue(output.contains("\"aui\": { ... AUI payload (optional) ... }"))
+        assertTrue(output.contains("The \"text\" field is REQUIRED"))
+        assertTrue(output.contains("The \"aui\" field is OPTIONAL"))
+    }
+
+    @Test
     fun `generate ends meta-frame with text default before separator`() {
         val textDefaultIndex = output.indexOf(
             "Default to plain text. Only emit AUI JSON when a component adds real value."
@@ -67,9 +75,8 @@ class AuiCatalogPromptTest {
 
     @Test
     fun `generate uses consolidated AUI JSON schema header`() {
-        assertTrue(output.contains("AUI JSON schema:"))
+        assertTrue(output.contains("AUI payload schema"))
         assertTrue(output.contains("For \"sheet\" display (multi-step flows)"))
-        assertFalse(output.contains("Response format"))
     }
 
     @Test
@@ -99,11 +106,15 @@ class AuiCatalogPromptTest {
     }
 
     @Test
-    fun `generate includes examples section`() {
+    fun `generate includes examples section with envelope format`() {
         assertTrue(output.contains("EXAMPLES:"))
+        assertTrue(output.contains("Text-only reply:"))
         assertTrue(output.contains("Inline poll (radio list + submit button):"))
         assertTrue(output.contains("Sheet survey (2-step feedback flow, second step skippable):"))
         assertTrue(output.contains("\"action\": \"submit\""))
+        // Examples use envelope format with "text" and "aui" fields
+        assertTrue(output.contains("\"text\": \"Let me know what you think:\""))
+        assertTrue(output.contains("\"aui\":"))
     }
 
     @Test

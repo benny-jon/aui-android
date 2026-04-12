@@ -13,6 +13,7 @@ import com.bennyjon.aui.core.model.AuiResponse
  * Constructed only via [AuiResponseExtractor].
  */
 data class LlmResponse(
+    val id: String? = null,
     val text: String? = null,
     val auiJson: String? = null,
     val auiResponse: AuiResponse? = null,
