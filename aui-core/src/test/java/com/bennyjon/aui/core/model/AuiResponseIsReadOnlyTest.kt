@@ -1,6 +1,8 @@
 package com.bennyjon.aui.core.model
 
 import com.bennyjon.aui.core.model.data.ButtonPrimaryData
+import com.bennyjon.aui.core.model.data.QuickRepliesData
+import com.bennyjon.aui.core.model.data.QuickReplyOption
 import com.bennyjon.aui.core.model.data.TextData
 import com.bennyjon.aui.core.plugin.AuiActionPlugin
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
@@ -128,5 +130,80 @@ class AuiResponseIsReadOnlyTest {
             blocks = listOf(AuiBlock.Text(data = TextData(text = "Hello"))),
         )
         assertTrue(response.isReadOnly(AuiPluginRegistry.Empty))
+    }
+
+    // ── Nested feedback (QuickReplies) ──────────────────────────────────────
+
+    @Test
+    fun `quick replies with submit options is not read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.QuickReplies(
+                    data = QuickRepliesData(
+                        options = listOf(
+                            QuickReplyOption(label = "Yes", feedback = AuiFeedback(action = "submit")),
+                            QuickReplyOption(label = "No", feedback = AuiFeedback(action = "submit")),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        assertFalse(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `quick replies with only read-only options is read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.QuickReplies(
+                    data = QuickRepliesData(
+                        options = listOf(
+                            QuickReplyOption(label = "Link 1", feedback = AuiFeedback(action = "open_url")),
+                            QuickReplyOption(label = "Link 2", feedback = AuiFeedback(action = "open_url")),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        assertTrue(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `quick replies with no feedback on options is read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.QuickReplies(
+                    data = QuickRepliesData(
+                        options = listOf(
+                            QuickReplyOption(label = "Option A"),
+                            QuickReplyOption(label = "Option B"),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        assertTrue(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `quick replies mixed with submit block-level feedback is not read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.Text(data = TextData(text = "Pick one:")),
+                AuiBlock.QuickReplies(
+                    data = QuickRepliesData(
+                        options = listOf(
+                            QuickReplyOption(label = "Yes", feedback = AuiFeedback(action = "submit")),
+                            QuickReplyOption(label = "No", feedback = AuiFeedback(action = "submit")),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        assertFalse(response.isReadOnly(registry))
     }
 }
