@@ -90,7 +90,14 @@ Fixed: expanded poll multi-input capture (shared registry + allBlocksForEntries)
 17 components, 3 display levels, sheet multi-step with formattedEntries, demo app.
 
 ## Current Phase
-Phase 5: TBD — All planned phases complete. Potential next steps: publish to Maven Central, add more component types, streaming/partial render support, accessibility audit.
+
+**Phase 5: Live Chat Demo** — see `.planning/phase5-live-chat.md` for sessions 21-26 and the deliverables checklist. **Claude Code: read that phase plan at the start of every Phase 5 session.**
+
+Add a "Live Chat" entry point to the demo that talks to a real LLM end-to-end. Generic LlmClient interface (Fake / Claude / OpenAI), Room-backed ChatRepository with provider-agnostic schema, all in the demo module. Library stays a pure renderer.
+
+## Session Convention
+
+Every Claude Code session reads **two files**: this `CLAUDE.md` and the phase plan named in **Current Phase** above. Do NOT read `execution-guide.md` (human-facing index) or `.planning/archive/` (historical reference).
 
 ## Known Issues
 - None
@@ -107,4 +114,4 @@ Phase 5: TBD — All planned phases complete. Potential next steps: publish to M
 - Session 19: Demo app plugin showcase. DemoFunFactPlugin (component), ToastNavigatePlugin + OpenUrlPlugin (actions) in demo/plugins/. DemoPluginRegistry factory. ChatScreen accepts pluginRegistry param. DemoViewModel accepts custom response sequences via factory. 4th "Plugin Showcase" card on DemoHomeScreen. AuiCatalogPrompt output logged to Logcat on screen open.
 - Spacing refactor (2026-04-08): Removed spacer component. Renderer now applies blockSpacing via Arrangement.spacedBy. Added blockSpacing + sectionHeaderTopSpacing to AuiSpacing. Updated spec, architecture doc, examples, demo, tests.
 - Session 20: Review + docs. Added README Customization section (custom component, action, override, registry examples). Updated Public API section with plugin classes. Fixed outdated architecture.md custom components example. Phase 4 complete.
-- Next: Phase 5 TBD (Maven Central publish, new components, streaming, a11y).
+- Next: Phase 5 — Live Chat Demo (Sessions 21-26). Generic LlmClient + Room repo in demo module. See `.planning/phase5-live-chat.md`.

@@ -1,0 +1,56 @@
+{
+  "display": "sheet",
+  "sheet_title": "Quick survey",
+  "steps": [
+    {
+      "label": "Role",
+      "question": "What best describes your role?",
+      "blocks": [
+        { "type": "radio_list", "data": {
+            "key": "role",
+            "options": [
+              { "label": "Developer", "value": "dev" },
+              { "label": "Designer", "value": "design" },
+              { "label": "Product manager", "value": "pm" },
+              { "label": "Other", "value": "other" }
+            ]
+        }},
+        { "type": "input_text_single", "data": {
+            "key": "role_other",
+            "label": "If other, please specify",
+            "placeholder": "Your role"
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Next" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    },
+    {
+      "label": "Source",
+      "question": "How did you hear about us?",
+      "blocks": [
+        { "type": "radio_list", "data": {
+            "key": "source",
+            "options": [
+              { "label": "Search engine", "value": "search" },
+              { "label": "Social media", "value": "social" },
+              { "label": "Friend or colleague", "value": "referral" },
+              { "label": "Other", "value": "other" }
+            ]
+        }},
+        { "type": "input_text_single", "data": {
+            "key": "source_other",
+            "label": "If other, please specify",
+            "placeholder": "Where you heard about us"
+        }},
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  ]
+}
