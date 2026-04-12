@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -120,7 +121,7 @@ fun LiveChatScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(items = messages, key = { it.id }) { message ->
                 when (message.role) {
@@ -253,7 +254,7 @@ private fun AssistantMessage(
             AuiThemeProvider {
                 AuiRenderer(
                     response = response,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     pluginRegistry = pluginRegistry,
                     onFeedback = { feedback ->
                         if (!message.isAuiSpent) {

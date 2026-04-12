@@ -1,6 +1,5 @@
 package com.bennyjon.auiandroid.data.llm
 
-import android.os.Build
 import android.util.Log
 import com.bennyjon.auiandroid.BuildConfig
 import io.ktor.client.HttpClient
@@ -10,9 +9,9 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * [LlmClient] implementation that calls the Anthropic Messages API.
@@ -31,8 +30,6 @@ class ClaudeLlmClient(
     private val model: String = DEFAULT_MODEL,
 ) : LlmClient {
 
-    private val json = Json { ignoreUnknownKeys = true }
-
     override suspend fun complete(
         systemPrompt: String,
         history: List<LlmMessage>,
@@ -48,6 +45,7 @@ class ClaudeLlmClient(
                 headers {
                     append("x-api-key", apiKey)
                     append("anthropic-version", API_VERSION)
+                    append("anthropic-beta", "prompt-caching-2024-07-31")
                 }
                 setBody(requestBody)
             }
@@ -67,38 +65,32 @@ class ClaudeLlmClient(
         history: List<LlmMessage>,
     ): String {
         val messages = history.map { msg ->
-            ApiMessage(
-                role = when (msg.role) {
+            buildJsonObject {
+                put("role", when (msg.role) {
                     LlmMessage.Role.USER -> "user"
                     LlmMessage.Role.ASSISTANT -> "assistant"
-                },
-                content = msg.content,
-            )
+                })
+                put("content", msg.content)
+            }
         }
 
-        val body = ApiRequest(
-            model = model,
-            max_tokens = MAX_TOKENS,
-            system = systemPrompt,
-            messages = messages,
-        )
+        val system = buildJsonArray {
+            add(buildJsonObject {
+                put("type", "text")
+                put("text", systemPrompt)
+                put("cache_control", buildJsonObject { put("type", "ephemeral") })
+            })
+        }
 
-        return json.encodeToString(body)
+        val body = buildJsonObject {
+            put("model", model)
+            put("max_tokens", MAX_TOKENS)
+            put("system", system)
+            put("messages", buildJsonArray { messages.forEach { add(it) } })
+        }
+
+        return body.toString()
     }
-
-    @Serializable
-    private data class ApiMessage(
-        val role: String,
-        val content: String,
-    )
-
-    @Serializable
-    private data class ApiRequest(
-        val model: String,
-        val max_tokens: Int,
-        val system: String,
-        val messages: List<ApiMessage>,
-    )
 
     internal companion object {
         const val MESSAGES_URL = "https://api.anthropic.com/v1/messages"
