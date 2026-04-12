@@ -57,6 +57,17 @@ abstract class AuiActionPlugin : AuiPlugin {
     abstract val action: String
 
     /**
+     * True for pass-through actions (open_url, navigate) that don't collect input.
+     *
+     * The host app uses this via [AuiResponse.isReadOnly] to decide whether an AUI
+     * response is purely informational or requires user interaction. Read-only
+     * responses are never marked as "spent" in a chat conversation.
+     *
+     * Defaults to `false` (assume interactive).
+     */
+    open val isReadOnly: Boolean get() = false
+
+    /**
      * Handle the action when triggered by user interaction.
      *
      * Called by the renderer before `onFeedback`, if [AuiFeedback.action] matches

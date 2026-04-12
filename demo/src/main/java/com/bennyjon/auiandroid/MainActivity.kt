@@ -14,6 +14,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.AuiCatalogPrompt
+import com.bennyjon.auiandroid.livechat.LiveChatScreen
+import com.bennyjon.auiandroid.livechat.LiveChatViewModel
+import com.bennyjon.auiandroid.livechat.LiveChatViewModelFactory
 import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
@@ -22,6 +25,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DemoServiceLocator.init(this)
         enableEdgeToEdge()
         setContent {
             AUIAndroidTheme {
@@ -38,7 +42,23 @@ private fun DemoNavHost() {
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
             DemoHomeScreen(
-                onThemeSelected = { themeKey -> navController.navigate("chat/$themeKey") },
+                onThemeSelected = { themeKey ->
+                    if (themeKey == "live_chat") {
+                        navController.navigate("live_chat")
+                    } else {
+                        navController.navigate("chat/$themeKey")
+                    }
+                },
+            )
+        }
+        composable("live_chat") {
+            val vm: LiveChatViewModel = viewModel(
+                factory = LiveChatViewModelFactory(conversationId = "live"),
+            )
+            LiveChatScreen(
+                viewModel = vm,
+                pluginRegistry = DemoServiceLocator.pluginRegistry,
+                onBack = { navController.popBackStack() },
             )
         }
         composable("chat/{theme}") { backStackEntry ->

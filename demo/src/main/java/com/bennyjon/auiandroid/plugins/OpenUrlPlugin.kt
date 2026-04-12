@@ -17,6 +17,7 @@ import com.bennyjon.aui.core.plugin.AuiActionPlugin
 class OpenUrlPlugin(private val context: Context) : AuiActionPlugin() {
     override val id = "open_url"
     override val action = "open_url"
+    override val isReadOnly = true
 
     override val promptSchema = "open_url(url) — Open the given URL in the device browser."
 

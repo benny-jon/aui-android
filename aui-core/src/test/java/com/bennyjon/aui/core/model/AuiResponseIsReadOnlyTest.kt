@@ -1,0 +1,132 @@
+package com.bennyjon.aui.core.model
+
+import com.bennyjon.aui.core.model.data.ButtonPrimaryData
+import com.bennyjon.aui.core.model.data.TextData
+import com.bennyjon.aui.core.plugin.AuiActionPlugin
+import com.bennyjon.aui.core.plugin.AuiPluginRegistry
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class AuiResponseIsReadOnlyTest {
+
+    private val readOnlyPlugin = object : AuiActionPlugin() {
+        override val id = "open_url"
+        override val action = "open_url"
+        override val isReadOnly = true
+        override val promptSchema = ""
+        override fun handle(feedback: AuiFeedback) = true
+    }
+
+    private val interactivePlugin = object : AuiActionPlugin() {
+        override val id = "add_to_cart"
+        override val action = "add_to_cart"
+        override val promptSchema = ""
+        override fun handle(feedback: AuiFeedback) = true
+    }
+
+    private val registry = AuiPluginRegistry().registerAll(readOnlyPlugin, interactivePlugin)
+
+    @Test
+    fun `no feedback blocks are read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.Text(data = TextData(text = "Hello")),
+            ),
+        )
+        assertTrue(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `submit action is not read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.ButtonPrimary(
+                    data = ButtonPrimaryData(label = "Submit"),
+                    feedback = AuiFeedback(action = "submit"),
+                ),
+            ),
+        )
+        assertFalse(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `only read-only plugin actions are read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.ButtonPrimary(
+                    data = ButtonPrimaryData(label = "Open"),
+                    feedback = AuiFeedback(action = "open_url", params = mapOf("url" to "https://example.com")),
+                ),
+            ),
+        )
+        assertTrue(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `mixed read-only and submit is not read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.ButtonPrimary(
+                    data = ButtonPrimaryData(label = "Open"),
+                    feedback = AuiFeedback(action = "open_url"),
+                ),
+                AuiBlock.ButtonPrimary(
+                    data = ButtonPrimaryData(label = "Submit"),
+                    feedback = AuiFeedback(action = "submit"),
+                ),
+            ),
+        )
+        assertFalse(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `unknown action with no plugin is not read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.ButtonPrimary(
+                    data = ButtonPrimaryData(label = "Mystery"),
+                    feedback = AuiFeedback(action = "unknown_action"),
+                ),
+            ),
+        )
+        assertFalse(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `interactive plugin action is not read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(
+                AuiBlock.ButtonPrimary(
+                    data = ButtonPrimaryData(label = "Add"),
+                    feedback = AuiFeedback(action = "add_to_cart"),
+                ),
+            ),
+        )
+        assertFalse(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `empty response is read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = emptyList(),
+        )
+        assertTrue(response.isReadOnly(registry))
+    }
+
+    @Test
+    fun `empty registry with no-feedback blocks is read-only`() {
+        val response = AuiResponse(
+            display = AuiDisplay.INLINE,
+            blocks = listOf(AuiBlock.Text(data = TextData(text = "Hello"))),
+        )
+        assertTrue(response.isReadOnly(AuiPluginRegistry.Empty))
+    }
+}

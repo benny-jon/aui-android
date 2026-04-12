@@ -15,6 +15,7 @@ import com.bennyjon.aui.core.plugin.AuiActionPlugin
 class ToastNavigatePlugin(private val context: Context) : AuiActionPlugin() {
     override val id = "navigate"
     override val action = "navigate"
+    override val isReadOnly = true
 
     override val promptSchema =
         "navigate(screen, ...params) — Navigate to a named screen in the app."
