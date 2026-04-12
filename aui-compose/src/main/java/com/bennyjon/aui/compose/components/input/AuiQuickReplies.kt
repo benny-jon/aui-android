@@ -1,9 +1,8 @@
 package com.bennyjon.aui.compose.components.input
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
@@ -24,9 +23,10 @@ import com.bennyjon.aui.core.model.data.QuickReplyOption
 /**
  * Renders a `quick_replies` block.
  *
- * Displays a horizontally scrollable row of outlined chips. Each option triggers its own
+ * Displays a wrapping row of outlined chips. Each option triggers its own
  * [AuiFeedback] immediately on tap. The tapped option stays highlighted to indicate selection.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AuiQuickReplies(
     block: AuiBlock.QuickReplies,
@@ -36,8 +36,8 @@ fun AuiQuickReplies(
     val theme = LocalAuiTheme.current
     var tappedIndex by remember { mutableStateOf<Int?>(null) }
 
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
+    FlowRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(theme.spacing.small),
     ) {
         block.data.options.forEachIndexed { index, option ->

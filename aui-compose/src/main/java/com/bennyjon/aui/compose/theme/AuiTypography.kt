@@ -20,6 +20,12 @@ data class AuiTypography(
         fontSize = 20.sp,
         lineHeight = 28.sp,
     ),
+    /** Secondary headings and step questions. */
+    val subheading: TextStyle = TextStyle(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+    ),
     /** Body / plain text (`text` block). */
     val body: TextStyle = TextStyle(
         fontWeight = FontWeight.Normal,
@@ -61,6 +67,7 @@ data class AuiTypography(
             val t = MaterialTheme.typography
             return AuiTypography(
                 heading = t.headlineSmall,
+                subheading = t.titleMedium,
                 body = t.bodyMedium,
                 caption = t.bodySmall,
                 label = t.labelSmall,

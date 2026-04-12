@@ -245,6 +245,16 @@ private fun SheetFlowContent(
             Spacer(modifier = Modifier.height(theme.spacing.medium))
         }
 
+        val question = step.question
+        if (question != null) {
+            Text(
+                text = question,
+                style = theme.typography.subheading,
+                color = theme.colors.onSurface,
+            )
+            Spacer(modifier = Modifier.height(theme.spacing.small))
+        }
+
         // key() forces a fresh BlockRenderer (and registry) each time the step changes.
         key(flowState.stepIndex) {
             BlockRenderer(
