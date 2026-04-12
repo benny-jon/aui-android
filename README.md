@@ -62,6 +62,18 @@ what components are available and how to format responses. When you pass a
 `pluginRegistry`, plugin component schemas and action schemas are included
 automatically. It stays in sync with the library automatically.
 
+### 4. Enable prompt caching (recommended)
+
+The AUI catalog prompt is large but identical across every request in a conversation,
+making it an ideal candidate for **prompt caching**. With caching enabled, the catalog
+tokens are processed once and reused on subsequent requests — significantly reducing
+cost and latency.
+
+Most LLM providers support this by marking the system prompt as cacheable:
+
+- **Anthropic (Claude):** [Prompt Caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) — send the system prompt as a content block with `cache_control` and add the `anthropic-beta: prompt-caching-2024-07-31` header. Cached tokens cost 90% less.
+- **OpenAI:** [Prompt Caching](https://platform.openai.com/docs/guides/prompt-caching) — caching is automatic for prompts longer than 1,024 tokens. No code changes needed. Cached tokens cost 50% less.
+
 ## How It Works
 
 ```
