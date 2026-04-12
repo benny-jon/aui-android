@@ -8,8 +8,9 @@ import com.bennyjon.auiandroid.data.chat.ChatRepository
 import com.bennyjon.auiandroid.data.chat.DefaultChatRepository
 import com.bennyjon.auiandroid.data.chat.db.ChatDatabase
 import com.bennyjon.auiandroid.data.chat.db.ChatMessageDao
-import com.bennyjon.auiandroid.data.llm.FakeLlmClient
 import com.bennyjon.auiandroid.data.llm.LlmClient
+import com.bennyjon.auiandroid.data.llm.LlmClientFactory
+import com.bennyjon.auiandroid.data.llm.LlmProvider
 import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
 
 /**
@@ -17,6 +18,9 @@ import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
  *
  * Call [init] once from [MainActivity.onCreate] with the application context.
  * All dependencies are lazily created and shared across the app.
+ *
+ * Use [setProvider] to switch between LLM backends at runtime. Switching
+ * providers rebuilds the [LlmClient] and [ChatRepository].
  */
 object DemoServiceLocator {
 
@@ -46,17 +50,47 @@ object DemoServiceLocator {
         database.chatMessageDao()
     }
 
-    /** Current LLM client. Defaults to [FakeLlmClient]. */
-    val currentLlmClient: LlmClient by lazy {
-        FakeLlmClient()
+    /** The Anthropic API key from BuildConfig. Empty string if not configured. */
+    val anthropicApiKey: String by lazy {
+        BuildConfig.ANTHROPIC_API_KEY
     }
 
+    /** Whether the Claude provider is available (API key is configured). */
+    val isClaudeAvailable: Boolean
+        get() = anthropicApiKey.isNotBlank()
+
+    /** The currently active LLM provider. */
+    var currentProvider: LlmProvider = LlmProvider.FAKE
+        private set
+
+    /** Current LLM client, rebuilt on provider switch. */
+    var currentLlmClient: LlmClient = LlmClientFactory.create(LlmProvider.FAKE)
+        private set
+
     /** Chat repository backed by Room and the current LLM client. */
-    val chatRepository: ChatRepository by lazy {
+    var chatRepository: ChatRepository = createRepository(currentLlmClient)
+        private set
+
+    /**
+     * Switches to a new [LlmProvider], rebuilding the client and repository.
+     *
+     * The caller is responsible for clearing the conversation if desired —
+     * typically done via [ChatRepository.clearConversation] before or after switching.
+     */
+    fun setProvider(provider: LlmProvider) {
+        if (provider == currentProvider) return
+        currentProvider = provider
+        currentLlmClient = LlmClientFactory.create(
+            provider = provider,
+            anthropicApiKey = anthropicApiKey,
+        )
+        chatRepository = createRepository(currentLlmClient)
+    }
+
+    private fun createRepository(client: LlmClient): ChatRepository =
         DefaultChatRepository(
-            llmClient = currentLlmClient,
+            llmClient = client,
             dao = dao,
             systemPrompt = systemPrompt,
         )
-    }
 }

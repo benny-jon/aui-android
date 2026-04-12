@@ -18,6 +18,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,12 +43,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
-import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiResponse
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.chat.ChatMessage
+import com.bennyjon.auiandroid.data.llm.LlmProvider
 
 /**
  * Full-screen chat UI for live conversations with an LLM.
@@ -55,6 +57,9 @@ import com.bennyjon.auiandroid.data.chat.ChatMessage
  * right-aligned bubbles, assistant messages as left-aligned bubbles with optional
  * [AuiRenderer] content. Spent AUI responses are grayed out. A text input bar at
  * the bottom allows the user to send messages.
+ *
+ * The top app bar includes a provider dropdown for switching between LLM backends
+ * and a clear button.
  *
  * @param viewModel Drives the chat state.
  * @param pluginRegistry Plugin registry for AUI rendering and action handling.
@@ -69,6 +74,7 @@ fun LiveChatScreen(
 ) {
     val messages by viewModel.messages.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
+    val currentProvider by viewModel.currentProvider.collectAsState()
     val listState = rememberLazyListState()
 
     LaunchedEffect(messages.size) {
@@ -90,6 +96,11 @@ fun LiveChatScreen(
                     }
                 },
                 actions = {
+                    ProviderDropdown(
+                        currentProvider = currentProvider,
+                        isClaudeAvailable = viewModel.isClaudeAvailable,
+                        onProviderSelected = viewModel::switchProvider,
+                    )
                     TextButton(onClick = viewModel::clearConversation) {
                         Text("Clear")
                     }
@@ -134,6 +145,52 @@ fun LiveChatScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Dropdown button in the top bar for selecting the active [LlmProvider].
+ *
+ * Displays the current provider name. Claude is disabled if no API key is configured.
+ */
+@Composable
+private fun ProviderDropdown(
+    currentProvider: LlmProvider,
+    isClaudeAvailable: Boolean,
+    onProviderSelected: (LlmProvider) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Text(currentProvider.displayName)
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            LlmProvider.entries.forEach { provider ->
+                val enabled = when (provider) {
+                    LlmProvider.CLAUDE -> isClaudeAvailable
+                    else -> true
+                }
+                DropdownMenuItem(
+                    text = {
+                        val label = if (provider == LlmProvider.CLAUDE && !isClaudeAvailable) {
+                            "${provider.displayName} (no key)"
+                        } else {
+                            provider.displayName
+                        }
+                        Text(label)
+                    },
+                    onClick = {
+                        expanded = false
+                        onProviderSelected(provider)
+                    },
+                    enabled = enabled,
+                )
             }
         }
     }
