@@ -104,4 +104,3 @@ app/app.iml.rej
 
 # Claude
 .claude/*.local.json
-.planning
