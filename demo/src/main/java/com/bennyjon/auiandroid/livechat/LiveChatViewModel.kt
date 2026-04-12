@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
+import com.bennyjon.auiandroid.data.AppSettings
 import com.bennyjon.auiandroid.data.chat.ChatMessage
 import com.bennyjon.auiandroid.data.chat.ChatRepository
 import com.bennyjon.auiandroid.data.chat.DefaultChatRepository
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -37,6 +39,8 @@ import javax.inject.Inject
  *
  * Supports switching [LlmProvider] at runtime. Switching clears the current
  * conversation and rebuilds the repository with the new provider's client.
+ * The selected provider is persisted via [AppSettings] so it survives
+ * app restarts.
  */
 @HiltViewModel
 class LiveChatViewModel @Inject constructor(
@@ -45,6 +49,7 @@ class LiveChatViewModel @Inject constructor(
     @SystemPrompt private val systemPrompt: String,
     @AnthropicApiKey private val anthropicApiKey: String,
     private val httpClient: HttpClient,
+    private val appSettings: AppSettings,
 ) : ViewModel() {
 
     private val conversationId: String = "live"
@@ -52,6 +57,7 @@ class LiveChatViewModel @Inject constructor(
     private val _repositoryVersion = MutableStateFlow(0)
 
     private var repository: ChatRepository = createRepository(LlmProvider.FAKE)
+    private val _currentProvider = MutableStateFlow(LlmProvider.FAKE)
 
     /** All messages in the conversation, with spent-marking applied. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,13 +72,27 @@ class LiveChatViewModel @Inject constructor(
     /** True while a message is being sent and the LLM response is pending. */
     val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
 
-    private val _currentProvider = MutableStateFlow(LlmProvider.FAKE)
-
     /** The currently active LLM provider. */
     val currentProvider: StateFlow<LlmProvider> = _currentProvider.asStateFlow()
 
     /** Whether the Claude provider is available (API key configured). */
     val isClaudeAvailable: Boolean = anthropicApiKey.isNotBlank()
+
+    init {
+        viewModelScope.launch {
+            val saved = appSettings.llmProvider.first()
+            val provider = if (saved == LlmProvider.CLAUDE && !isClaudeAvailable) {
+                LlmProvider.FAKE
+            } else {
+                saved
+            }
+            if (provider != _currentProvider.value) {
+                repository = createRepository(provider)
+                _currentProvider.value = provider
+                _repositoryVersion.value++
+            }
+        }
+    }
 
     /** Sends a user text message and waits for the LLM response. */
     fun send(text: String) {
@@ -103,7 +123,7 @@ class LiveChatViewModel @Inject constructor(
      * Switches to a new [LlmProvider], clearing the conversation.
      *
      * No-op if the provider is already active or if switching to Claude
-     * without an API key.
+     * without an API key. The selection is persisted to [AppSettings].
      */
     fun switchProvider(provider: LlmProvider) {
         if (provider == _currentProvider.value) return
@@ -114,6 +134,7 @@ class LiveChatViewModel @Inject constructor(
             repository = createRepository(provider)
             _currentProvider.value = provider
             _repositoryVersion.value++
+            appSettings.setLlmProvider(provider)
         }
     }
 

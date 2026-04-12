@@ -81,6 +81,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.datastore.preferences)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

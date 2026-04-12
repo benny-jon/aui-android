@@ -1,6 +1,9 @@
 package com.bennyjon.auiandroid.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.bennyjon.aui.core.AuiCatalogPrompt
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
@@ -20,6 +23,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import javax.inject.Qualifier
 import javax.inject.Singleton
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
@@ -54,6 +59,11 @@ object AppModule {
     @Singleton
     fun provideDao(database: ChatDatabase): ChatMessageDao =
         database.chatMessageDao()
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        context.dataStore
 
     @Provides
     @Singleton
