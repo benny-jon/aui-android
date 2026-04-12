@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,11 +17,12 @@ import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.AuiCatalogPrompt
 import com.bennyjon.auiandroid.livechat.LiveChatScreen
 import com.bennyjon.auiandroid.livechat.LiveChatViewModel
-import com.bennyjon.auiandroid.livechat.LiveChatViewModelFactory
 import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,12 +53,10 @@ private fun DemoNavHost() {
             )
         }
         composable("live_chat") {
-            val vm: LiveChatViewModel = viewModel(
-                factory = LiveChatViewModelFactory(conversationId = "live"),
-            )
+            val vm: LiveChatViewModel = hiltViewModel()
             LiveChatScreen(
                 viewModel = vm,
-                pluginRegistry = DemoServiceLocator.pluginRegistry,
+                pluginRegistry = vm.pluginRegistry,
                 onBack = { navController.popBackStack() },
             )
         }

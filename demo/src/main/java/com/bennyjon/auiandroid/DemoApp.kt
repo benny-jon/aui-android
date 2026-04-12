@@ -1,11 +1,7 @@
 package com.bennyjon.auiandroid
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class DemoApp : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-        DemoServiceLocator.init(this)
-    }
-}
+@HiltAndroidApp
+class DemoApp : Application()
