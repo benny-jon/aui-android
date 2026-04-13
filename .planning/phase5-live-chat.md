@@ -418,7 +418,15 @@ Read CLAUDE.md and .planning/session-aui-catalog-prompt-tuning.md.
 
 ---
 
-## Session 26: OpenAiLlmClient
+## Session 26: Inline Markdown support for `AuiText`
+
+```
+Read CLAUDE.md and .planning/session-aui-text-markdown.md.
+```
+
+---
+
+## Session 27: OpenAiLlmClient
 
 ```
 Read CLAUDE.md and .planning/phase5-live-chat.md.
@@ -442,7 +450,7 @@ the abstraction leaks — refactor first.
 
 ---
 
-## Session 27: Polish + Documentation
+## Session 28: Polish + Documentation
 
 ```
 Read CLAUDE.md and .planning/phase5-live-chat.md.
