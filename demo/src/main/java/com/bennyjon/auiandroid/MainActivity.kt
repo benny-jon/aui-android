@@ -63,6 +63,7 @@ private fun DemoNavHost() {
             val auiTheme = when (selectedTheme) {
                 DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
                 DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
+                DemoAuiTheme.EARTHY_GREEN -> DemoThemes.earthyGreen()
             }
             val colorScheme = auiTheme.colors.toMaterialColorScheme(
                 base = MaterialTheme.colorScheme,
@@ -135,5 +136,6 @@ private fun DemoNavHost() {
 @Composable
 private fun resolveTheme(key: String): Pair<String, AuiTheme> = when (key) {
     "warm_organic" -> "Warm Organic" to DemoThemes.warmOrganic()
+    "earthy_green" -> "Earthy Green" to DemoThemes.earthyGreen()
     else -> "Default" to AuiTheme.fromMaterialTheme()
 }

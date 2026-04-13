@@ -69,6 +69,15 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 onClick = { onThemeSelected("warm_organic") },
             )
 
+            val earthyGreenColors = DemoThemes.earthyGreen().colors
+            ThemeCard(
+                title = "Earthy Green",
+                subtitle = "Forest greens, clean sans-serif, softly rounded",
+                containerColor = earthyGreenColors.primaryContainer,
+                contentColor = earthyGreenColors.onPrimaryContainer,
+                onClick = { onThemeSelected("earthy_green") },
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(

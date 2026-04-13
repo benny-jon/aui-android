@@ -59,6 +59,7 @@ import com.bennyjon.auiandroid.ui.theme.DemoThemes
 enum class DemoAuiTheme(val displayName: String) {
     DEFAULT("Default"),
     WARM_ORGANIC("Warm Organic"),
+    EARTHY_GREEN("Earthy Green"),
 }
 
 /**
@@ -221,6 +222,7 @@ private fun ProviderDropdown(
 private fun resolveAuiTheme(theme: DemoAuiTheme): AuiTheme = when (theme) {
     DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
     DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
+    DemoAuiTheme.EARTHY_GREEN -> DemoThemes.earthyGreen()
 }
 
 /**
