@@ -8,6 +8,7 @@ import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.data.TextData
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 
 /**
@@ -25,7 +26,7 @@ fun AuiText(
     Text(
         text = block.data.text,
         style = theme.typography.body,
-        color = theme.colors.onSurface,
+        color = LocalAuiBodyColor.current,
         modifier = modifier,
     )
 }

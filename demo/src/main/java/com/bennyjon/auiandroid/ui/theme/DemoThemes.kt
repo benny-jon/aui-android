@@ -40,6 +40,9 @@ object DemoThemes {
         onSuccess = Color.White,
         successContainer = Color(0xFFDCEDC8),
         onSuccessContainer = Color(0xFF1B5E20),
+        headingColor = Color(0xFF3E2723),
+        bodyColor = Color(0xFF3E2723),
+        captionColor = Color(0xFF6D4C41),
     )
 
     private val WarmOrganicDarkColors = AuiColors(
@@ -55,6 +58,9 @@ object DemoThemes {
         onSuccess = Color(0xFF1B3A2A),
         successContainer = Color(0xFF2E4A30),
         onSuccessContainer = Color(0xFFA5D6A7),
+        headingColor = Color(0xFFEFEBE9),
+        bodyColor = Color(0xFFEFEBE9),
+        captionColor = Color(0xFFBCAAA4),
     )
 
     private val WarmOrganicTypography = AuiTypography(
@@ -63,6 +69,12 @@ object DemoThemes {
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             lineHeight = 28.sp,
+        ),
+        subheading = TextStyle(
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+            lineHeight = 26.sp,
         ),
         body = TextStyle(
             fontFamily = FontFamily.Serif,

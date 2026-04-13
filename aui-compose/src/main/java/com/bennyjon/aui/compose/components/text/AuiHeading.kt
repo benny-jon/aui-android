@@ -8,6 +8,7 @@ import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.data.HeadingData
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiHeadingColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 
 /**
@@ -24,7 +25,7 @@ fun AuiHeading(
     Text(
         text = block.data.text,
         style = theme.typography.heading,
-        color = theme.colors.onSurface,
+        color = LocalAuiHeadingColor.current,
         modifier = modifier,
     )
 }

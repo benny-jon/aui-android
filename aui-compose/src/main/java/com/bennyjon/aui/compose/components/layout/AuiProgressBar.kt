@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.data.ProgressBarData
@@ -33,7 +34,7 @@ fun AuiProgressBar(
         Text(
             text = block.data.label,
             style = theme.typography.caption,
-            color = theme.colors.onSurfaceVariant,
+            color = LocalAuiCaptionColor.current,
         )
         Spacer(Modifier.height(theme.spacing.xSmall))
         LinearProgressIndicator(

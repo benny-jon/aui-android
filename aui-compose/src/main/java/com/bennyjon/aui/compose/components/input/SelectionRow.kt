@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
+import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 
 /**
@@ -48,13 +50,13 @@ internal fun SelectionRow(
             Text(
                 text = label,
                 style = theme.typography.body,
-                color = theme.colors.onSurface,
+                color = LocalAuiBodyColor.current,
             )
             if (description != null) {
                 Text(
                     text = description,
                     style = theme.typography.caption,
-                    color = theme.colors.onSurfaceVariant,
+                    color = LocalAuiCaptionColor.current,
                 )
             }
         }

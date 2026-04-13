@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
@@ -56,7 +57,7 @@ fun AuiQuickReplies(
                 shape = theme.shapes.chip,
                 colors = SuggestionChipDefaults.suggestionChipColors(
                     containerColor = if (isSelected) theme.colors.primaryContainer else theme.colors.surface,
-                    labelColor = if (isSelected) theme.colors.onPrimaryContainer else theme.colors.onSurface,
+                    labelColor = if (isSelected) theme.colors.onPrimaryContainer else LocalAuiBodyColor.current,
                 ),
                 border = SuggestionChipDefaults.suggestionChipBorder(
                     enabled = true,

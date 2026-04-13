@@ -25,6 +25,8 @@ import com.bennyjon.aui.compose.components.input.AuiButtonSecondary
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.compose.plugin.componentPlugin
+import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
+import com.bennyjon.aui.compose.theme.LocalAuiHeadingColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
@@ -226,7 +228,7 @@ private fun SheetFlowContent(
             Text(
                 text = sheetTitle,
                 style = theme.typography.heading.copy(fontWeight = FontWeight.SemiBold),
-                color = theme.colors.onSurface,
+                color = LocalAuiHeadingColor.current,
             )
             Spacer(modifier = Modifier.height(theme.spacing.medium))
         }
@@ -250,7 +252,7 @@ private fun SheetFlowContent(
             Text(
                 text = question,
                 style = theme.typography.subheading,
-                color = theme.colors.onSurface,
+                color = LocalAuiBodyColor.current,
             )
             Spacer(modifier = Modifier.height(theme.spacing.small))
         }

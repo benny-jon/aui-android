@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
@@ -64,7 +65,7 @@ fun AuiInputSlider(
             Text(
                 text = data.label,
                 style = theme.typography.label,
-                color = theme.colors.onSurfaceVariant,
+                color = LocalAuiCaptionColor.current,
                 modifier = Modifier
                     .weight(1f)
                     .padding(bottom = theme.spacing.xSmall),

@@ -65,7 +65,12 @@ fun AuiThemeProvider(
     theme: AuiTheme = AuiTheme.Default,
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalAuiTheme provides theme) {
+    CompositionLocalProvider(
+        LocalAuiTheme provides theme,
+        LocalAuiHeadingColor provides theme.colors.headingColor,
+        LocalAuiBodyColor provides theme.colors.bodyColor,
+        LocalAuiCaptionColor provides theme.colors.captionColor,
+    ) {
         content()
     }
 }

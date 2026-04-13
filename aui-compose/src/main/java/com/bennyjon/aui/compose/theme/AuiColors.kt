@@ -37,6 +37,28 @@ data class AuiColors(
     val successContainer: Color = Color(0xFFB7F397),
     /** Content color on top of [successContainer]. */
     val onSuccessContainer: Color = Color(0xFF072100),
+    /**
+     * Default color for heading text.
+     *
+     * Display contexts (inline bubble, expanded, sheet) may override this via
+     * [LocalAuiHeadingColor][com.bennyjon.aui.compose.theme.LocalAuiHeadingColor]
+     * to ensure proper contrast against their specific background surface.
+     */
+    val headingColor: Color = onSurface,
+    /**
+     * Default color for body text.
+     *
+     * Display contexts may override this via
+     * [LocalAuiBodyColor][com.bennyjon.aui.compose.theme.LocalAuiBodyColor].
+     */
+    val bodyColor: Color = onSurface,
+    /**
+     * Default color for caption and label text.
+     *
+     * Display contexts may override this via
+     * [LocalAuiCaptionColor][com.bennyjon.aui.compose.theme.LocalAuiCaptionColor].
+     */
+    val captionColor: Color = onSurfaceVariant,
 ) {
     companion object {
         /** Material3-inspired default color palette. */
@@ -65,6 +87,9 @@ data class AuiColors(
                 onSuccess = scheme.onTertiary,
                 successContainer = scheme.tertiaryContainer,
                 onSuccessContainer = scheme.onTertiaryContainer,
+                headingColor = scheme.onSurface,
+                bodyColor = scheme.onSurface,
+                captionColor = scheme.onSurfaceVariant,
             )
         }
     }

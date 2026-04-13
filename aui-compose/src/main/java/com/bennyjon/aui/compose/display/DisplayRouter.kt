@@ -5,17 +5,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.internal.BlockRenderer
-import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
+import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
+import com.bennyjon.aui.compose.theme.LocalAuiHeadingColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
@@ -62,6 +64,7 @@ fun DisplayRouter(
     onFeedback: (AuiFeedback) -> Unit = {},
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
+    val theme = LocalAuiTheme.current
     when (response.display) {
         AuiDisplay.INLINE -> {
             Surface(
@@ -71,16 +74,22 @@ fun DisplayRouter(
                     bottomStart = 16.dp,
                     bottomEnd = 16.dp,
                 ),
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                color = theme.colors.surfaceVariant,
                 modifier = Modifier.widthIn(max = 300.dp),
             ) {
-                BlockRenderer(
-                    blocks = response.blocks,
-                    modifier = modifier.padding(16.dp),
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = onFeedback,
-                    onUnknownBlock = onUnknownBlock,
-                )
+                CompositionLocalProvider(
+                    LocalAuiHeadingColor provides theme.colors.onSurface,
+                    LocalAuiBodyColor provides theme.colors.onSurfaceVariant,
+                    LocalAuiCaptionColor provides theme.colors.onSurfaceVariant,
+                ) {
+                    BlockRenderer(
+                        blocks = response.blocks,
+                        modifier = modifier.padding(16.dp),
+                        pluginRegistry = pluginRegistry,
+                        onFeedback = onFeedback,
+                        onUnknownBlock = onUnknownBlock,
+                    )
+                }
             }
         }
 

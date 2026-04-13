@@ -7,13 +7,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.data.CaptionData
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 
 /**
  * Renders a `caption` block.
  *
  * Displays small, muted metadata text using [com.bennyjon.aui.compose.theme.AuiTheme]
- * caption typography and [com.bennyjon.aui.compose.theme.AuiColors.onSurfaceVariant] color.
+ * caption typography and [com.bennyjon.aui.compose.theme.LocalAuiCaptionColor] color.
  */
 @Composable
 fun AuiCaption(
@@ -24,7 +25,7 @@ fun AuiCaption(
     Text(
         text = block.data.text,
         style = theme.typography.caption,
-        color = theme.colors.onSurfaceVariant,
+        color = LocalAuiCaptionColor.current,
         modifier = modifier,
     )
 }
