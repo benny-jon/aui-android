@@ -1,0 +1,99 @@
+{
+  "text": "Here's a detailed comparison to help you decide:",
+  "aui": {
+    "display": "expanded",
+    "blocks": [
+      {
+        "type": "heading",
+        "data": { "text": "Performance" }
+      },
+      {
+        "type": "text",
+        "data": {
+          "text": "**MacBook Pro 16\":** M3 Max destroys compile times and runs multiple VMs effortlessly. ARM architecture means some x86 tools need Rosetta, but compatibility is excellent now.\n\n**Dell XPS 15:** Raw multi-core power with Intel i9. Native x86, RTX GPU for CUDA/ML workloads. Slightly behind M3 in efficiency tasks.\n\n**ThinkPad X1 Carbon:** Solid i7 performance in ultraportable form. Less powerful than the others but handles most dev work smoothly."
+        }
+      },
+      { "type": "divider" },
+      {
+        "type": "heading",
+        "data": { "text": "Battery Life" }
+      },
+      {
+        "type": "text",
+        "data": {
+          "text": "**MacBook:** 18-22 hours real-world. Code all day unplugged.\n\n**Dell XPS:** 6-8 hours (less with GPU active). Needs charging mid-day.\n\n**ThinkPad:** 10-12 hours. Respectable for x86."
+        }
+      },
+      { "type": "divider" },
+      {
+        "type": "heading",
+        "data": { "text": "Display & Ergonomics" }
+      },
+      {
+        "type": "text",
+        "data": {
+          "text": "**MacBook:** 16.2\" Liquid Retina XDR, 3456\u00d72234. Bright, accurate, easy on eyes.\n\n**Dell XPS:** 15.6\" up to 3.5K OLED option. Stunning contrast, slightly better for media.\n\n**ThinkPad:** 14\" 2.8K, smaller but sharp. Legendary keyboard\u2014best typing experience."
+        }
+      },
+      { "type": "divider" },
+      {
+        "type": "heading",
+        "data": { "text": "Development Environment" }
+      },
+      {
+        "type": "text",
+        "data": {
+          "text": "**MacBook:** macOS is Unix-based, great terminal. Best for iOS/Mac dev, web, and most backend work. Docker runs via VM.\n\n**Dell XPS:** Native Linux (Ubuntu). Perfect for containerized workflows, kernel dev, anything requiring true Linux.\n\n**ThinkPad:** Runs Linux or Windows. Maximum flexibility, excellent for cross-platform testing."
+        }
+      },
+      { "type": "divider" },
+      {
+        "type": "heading",
+        "data": { "text": "Portability" }
+      },
+      {
+        "type": "text",
+        "data": {
+          "text": "**MacBook:** 4.7 lbs. Powerful but hefty for daily carry.\n\n**Dell XPS:** 4.2 lbs. Slightly lighter, still substantial.\n\n**ThinkPad:** 2.48 lbs. Truly ultraportable\u2014barely notice it in a bag."
+        }
+      },
+      { "type": "divider" },
+      {
+        "type": "heading",
+        "data": { "text": "Value & Upgradeability" }
+      },
+      {
+        "type": "text",
+        "data": {
+          "text": "**MacBook:** Premium price, zero upgrades after purchase. What you buy is what you get.\n\n**Dell XPS:** Better value per spec, some models allow RAM/storage upgrades.\n\n**ThinkPad:** Mid-range pricing, easier to service, legendary durability."
+        }
+      },
+      { "type": "divider" },
+      {
+        "type": "text",
+        "data": {
+          "text": "**Bottom line:**\n\n\u2022 **Choose MacBook** if you want the best battery, performance-per-watt, and a polished Unix experience\n\u2022 **Choose Dell XPS** if you need native Linux, GPU acceleration for ML, or best screen quality\n\u2022 **Choose ThinkPad** if portability matters most and you want the best keyboard with solid performance"
+        }
+      },
+      {
+        "type": "quick_replies",
+        "data": {
+          "options": [
+            {
+              "label": "Which for machine learning?",
+              "feedback": { "action": "submit", "params": { "topic": "ml_recommendation" } }
+            },
+            {
+              "label": "Best for remote work/travel?",
+              "feedback": { "action": "submit", "params": { "topic": "travel_recommendation" } }
+            },
+            {
+              "label": "Show me alternatives",
+              "feedback": { "action": "submit", "params": { "topic": "more_options" } }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

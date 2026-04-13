@@ -104,7 +104,8 @@ internal object AuiResponseExtractor {
      * Tries to unwrap content text in this priority order:
      * 1. Structured envelope `{ "text": "...", "aui": { ... } }`
      * 2. Raw AUI JSON (detected by `display` field) — may be wrapped in markdown code fences
-     * 3. Plain text fallback
+     * 3. Embedded JSON within mixed content (e.g. text preceding the JSON)
+     * 4. Plain text fallback
      */
     private fun parseClaudeApiResponse(root: JsonObject): LlmResponse {
         val id = root["id"]?.jsonPrimitive?.content
@@ -123,6 +124,19 @@ internal object AuiResponseExtractor {
         val rawAui = tryParseRawAui(stripped)
         if (rawAui != null) {
             return rawAui.copy(id = id ?: rawAui.id)
+        }
+
+        // Try to find embedded JSON within mixed content (model added text before/after).
+        val embedded = tryExtractEmbeddedJson(stripped)
+        if (embedded != null) {
+            return embedded.copy(id = id ?: embedded.id)
+        }
+
+        if (stripped.contains("\"aui\"")) {
+            logWarning(
+                "Content looks like it contains AUI but could not be parsed. " +
+                    "First 200 chars: ${stripped.take(200)}"
+            )
         }
 
         return LlmResponse(id = id, text = contentText)
@@ -152,6 +166,7 @@ internal object AuiResponseExtractor {
             // Only treat as envelope if it has the `text` key
             if (root.containsKey("text")) parseEnvelope(root) else null
         } catch (e: Exception) {
+            logWarning("tryParseEnvelope failed: ${e.message}")
             null
         }
     }
@@ -176,8 +191,28 @@ internal object AuiResponseExtractor {
                 null
             }
         } catch (e: Exception) {
+            logWarning("tryParseRawAui failed: ${e.message}")
             null
         }
+    }
+
+    /**
+     * Tries to find a JSON object embedded within [text] that may have a leading
+     * or trailing text prefix/suffix (e.g. the model wrote conversational text
+     * before the JSON envelope).
+     *
+     * Extracts the substring from the first `{` to the last `}` and attempts to
+     * parse it as an envelope or raw AUI JSON.
+     */
+    private fun tryExtractEmbeddedJson(text: String): LlmResponse? {
+        val firstBrace = text.indexOf('{')
+        val lastBrace = text.lastIndexOf('}')
+        if (firstBrace < 0 || lastBrace <= firstBrace) return null
+        // Only attempt if the JSON is actually embedded (has a prefix or suffix)
+        if (firstBrace == 0 && lastBrace == text.length - 1) return null
+
+        val candidate = text.substring(firstBrace, lastBrace + 1)
+        return tryParseEnvelope(candidate) ?: tryParseRawAui(candidate)
     }
 
     /**
@@ -191,5 +226,9 @@ internal object AuiResponseExtractor {
         if (openEnd == -1) return text
         if (!trimmed.endsWith("```")) return text
         return trimmed.substring(openEnd + 1, trimmed.length - 3).trim()
+    }
+
+    private fun logWarning(message: String) {
+        System.err.println("AuiResponseExtractor: $message")
     }
 }

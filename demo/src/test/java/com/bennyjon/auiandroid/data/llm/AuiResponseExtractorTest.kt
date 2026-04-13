@@ -1,6 +1,7 @@
 package com.bennyjon.auiandroid.data.llm
 
 import com.bennyjon.aui.core.model.AuiDisplay
+import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -356,6 +357,61 @@ class AuiResponseExtractorTest {
     }
 
     @Test
+    fun `envelope with expanded AUI and special characters parses correctly`() {
+        val raw = loadResource("claude_response_expanded_aui.json")
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals("Here's a detailed comparison to help you decide:", result.text)
+        assertNotNull("auiJson should not be null", result.auiJson)
+        assertNotNull("auiResponse should not be null", result.auiResponse)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
+        assertNull(result.errorMessage)
+        val blocks = result.auiResponse!!.blocks
+        assert(blocks.size > 10) { "Expected many blocks, got ${blocks.size}" }
+    }
+
+    @Test
+    fun `claude api response wrapping expanded AUI envelope parses correctly`() {
+        val envelope = loadResource("claude_response_expanded_aui.json")
+        val raw = wrapInClaudeApiResponse("msg_01NEaZ42ggHy5yrrRkagC5km", envelope)
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals("msg_01NEaZ42ggHy5yrrRkagC5km", result.id)
+        assertEquals("Here's a detailed comparison to help you decide:", result.text)
+        assertNotNull("auiJson should not be null", result.auiJson)
+        assertNotNull("auiResponse should not be null", result.auiResponse)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
+        assertNull(result.errorMessage)
+        val blocks = result.auiResponse!!.blocks
+        assert(blocks.size > 10) { "Expected many blocks, got ${blocks.size}" }
+    }
+
+    @Test
+    fun `claude api response with text before envelope extracts embedded JSON`() {
+        val raw = """
+        {
+          "id": "msg_embedded",
+          "content": [
+            {
+              "type": "text",
+              "text": "Sure, here you go!\n\n{\"text\": \"A poll for you:\", \"aui\": {\"display\": \"inline\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hello\"}}]}}"
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals("msg_embedded", result.id)
+        assertEquals("A poll for you:", result.text)
+        assertNotNull(result.auiJson)
+        assertNotNull(result.auiResponse)
+        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+    }
+
+    @Test
     fun `claude api response detects raw AUI JSON wrapped in code fences`() {
         val raw = """
         {
@@ -376,5 +432,31 @@ class AuiResponseExtractorTest {
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
         assertEquals(AuiDisplay.SHEET, result.auiResponse!!.display)
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────
+
+    private fun loadResource(name: String): String =
+        this::class.java.classLoader!!
+            .getResourceAsStream(name)!!
+            .bufferedReader()
+            .readText()
+
+    /**
+     * Wraps an envelope JSON string inside a Claude Messages API response,
+     * the same way the real API returns it (envelope encoded as a JSON string
+     * inside `content[0].text`).
+     */
+    private fun wrapInClaudeApiResponse(id: String, envelopeJson: String): String {
+        val escapedText = Json.encodeToString(kotlinx.serialization.serializer<String>(), envelopeJson)
+        return """
+        {
+          "id": "$id",
+          "type": "message",
+          "role": "assistant",
+          "content": [{ "type": "text", "text": $escapedText }],
+          "stop_reason": "end_turn"
+        }
+        """.trimIndent()
     }
 }
