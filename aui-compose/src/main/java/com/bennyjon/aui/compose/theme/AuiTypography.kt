@@ -3,6 +3,7 @@ package com.bennyjon.aui.compose.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -44,6 +45,13 @@ data class AuiTypography(
         fontSize = 12.sp,
         lineHeight = 16.sp,
     ),
+    /** Inline code spans (monospace). */
+    val code: TextStyle = TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+    ),
     /** Button labels. */
     val button: TextStyle = TextStyle(
         fontWeight = FontWeight.Medium,
@@ -69,6 +77,7 @@ data class AuiTypography(
                 heading = t.headlineSmall,
                 subheading = t.titleMedium,
                 body = t.bodyMedium,
+                code = t.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                 caption = t.bodySmall,
                 label = t.labelSmall,
                 button = t.labelLarge,

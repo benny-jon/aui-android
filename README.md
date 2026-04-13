@@ -269,6 +269,8 @@ val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 | **Progress** | `stepper_horizontal`, `progress_bar` |
 | **Status** | `badge_success`, `status_banner_success` |
 
+The `text` component renders inline Markdown: `**bold**`, `*italic*`, `` `code` ``, and `[links](url)`. Structural Markdown (headings, lists, etc.) uses dedicated block types instead.
+
 Unknown component types are silently skipped (never crash). You can handle them with `onUnknownBlock`.
 
 ## Modules
