@@ -5,8 +5,11 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,11 +18,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.AuiCatalogPrompt
+import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 import com.bennyjon.auiandroid.livechat.LiveChatScreen
 import com.bennyjon.auiandroid.livechat.LiveChatViewModel
 import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
+import com.bennyjon.auiandroid.ui.theme.toMaterialColorScheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -54,11 +59,23 @@ private fun DemoNavHost() {
         }
         composable("live_chat") {
             val vm: LiveChatViewModel = hiltViewModel()
-            LiveChatScreen(
-                viewModel = vm,
-                pluginRegistry = vm.pluginRegistry,
-                onBack = { navController.popBackStack() },
+            val selectedTheme by vm.selectedTheme.collectAsState()
+            val auiTheme = when (selectedTheme) {
+                DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
+                DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
+            }
+            val colorScheme = auiTheme.colors.toMaterialColorScheme(
+                base = MaterialTheme.colorScheme,
             )
+            MaterialTheme(colorScheme = colorScheme) {
+                LiveChatScreen(
+                    viewModel = vm,
+                    pluginRegistry = vm.pluginRegistry,
+                    theme = selectedTheme,
+                    onChangeTheme = { vm.switchTheme(it) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
         composable("chat/{theme}") { backStackEntry ->
             val themeKey = backStackEntry.arguments?.getString("theme") ?: "default"

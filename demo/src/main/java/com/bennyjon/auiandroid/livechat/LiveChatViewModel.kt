@@ -78,6 +78,11 @@ class LiveChatViewModel @Inject constructor(
     /** Whether the Claude provider is available (API key configured). */
     val isClaudeAvailable: Boolean = anthropicApiKey.isNotBlank()
 
+    private val _selectedTheme = MutableStateFlow(DemoAuiTheme.DEFAULT)
+
+    /** The currently selected AUI theme. */
+    val selectedTheme: StateFlow<DemoAuiTheme> = _selectedTheme.asStateFlow()
+
     init {
         viewModelScope.launch {
             val saved = appSettings.llmProvider.first()
@@ -91,6 +96,9 @@ class LiveChatViewModel @Inject constructor(
                 _currentProvider.value = provider
                 _repositoryVersion.value++
             }
+        }
+        viewModelScope.launch {
+            _selectedTheme.value = appSettings.selectedTheme.first()
         }
     }
 
@@ -116,6 +124,17 @@ class LiveChatViewModel @Inject constructor(
     fun clearConversation() {
         viewModelScope.launch {
             repository.clearConversation(conversationId)
+        }
+    }
+
+    /**
+     * Switches the AUI theme. The selection is persisted to [AppSettings].
+     */
+    fun switchTheme(theme: DemoAuiTheme) {
+        if (theme == _selectedTheme.value) return
+        _selectedTheme.value = theme
+        viewModelScope.launch {
+            appSettings.setSelectedTheme(theme)
         }
     }
 

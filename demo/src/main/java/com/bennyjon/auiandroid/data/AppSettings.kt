@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.bennyjon.auiandroid.data.llm.LlmProvider
+import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -34,7 +35,21 @@ class AppSettings @Inject constructor(
         }
     }
 
+    /** Emits the persisted [DemoAuiTheme], defaulting to [DemoAuiTheme.DEFAULT]. */
+    val selectedTheme: Flow<DemoAuiTheme> = dataStore.data.map { prefs ->
+        val name = prefs[KEY_SELECTED_THEME]
+        DemoAuiTheme.entries.firstOrNull { it.name == name } ?: DemoAuiTheme.DEFAULT
+    }
+
+    /** Persists the selected [DemoAuiTheme]. */
+    suspend fun setSelectedTheme(theme: DemoAuiTheme) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SELECTED_THEME] = theme.name
+        }
+    }
+
     private companion object {
         val KEY_LLM_PROVIDER = stringPreferencesKey("llm_provider")
+        val KEY_SELECTED_THEME = stringPreferencesKey("selected_theme")
     }
 }

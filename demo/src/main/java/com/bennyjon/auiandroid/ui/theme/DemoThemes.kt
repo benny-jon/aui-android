@@ -3,6 +3,7 @@ package com.bennyjon.auiandroid.ui.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -120,3 +121,24 @@ object DemoThemes {
         shapes = WarmOrganicShapes,
     )
 }
+
+/**
+ * Maps [AuiColors] fields onto a Material 3 [ColorScheme], falling back to [base]
+ * for any colors that [AuiColors] does not define (e.g. secondary, tertiary, error).
+ *
+ * This allows the entire screen — scaffold, bubbles, input bar — to reflect the
+ * selected AUI theme, not just the AUI renderer blocks.
+ */
+fun AuiColors.toMaterialColorScheme(base: ColorScheme): ColorScheme = base.copy(
+    primary = primary,
+    onPrimary = onPrimary,
+    primaryContainer = primaryContainer,
+    onPrimaryContainer = onPrimaryContainer,
+    surface = surface,
+    onSurface = onSurface,
+    onSurfaceVariant = onSurfaceVariant,
+    outline = outline,
+    surfaceVariant = primaryContainer,
+    background = surface,
+    onBackground = onSurface,
+)

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -44,12 +43,23 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiResponse
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.chat.ChatMessage
 import com.bennyjon.auiandroid.data.llm.LlmProvider
+import com.bennyjon.auiandroid.ui.theme.DemoThemes
+
+/**
+ * Available AUI themes in the demo app.
+ *
+ * Each entry maps to an [AuiTheme] instance used to wrap the [AuiRenderer].
+ */
+enum class DemoAuiTheme(val displayName: String) {
+    DEFAULT("Default"),
+    WARM_ORGANIC("Warm Organic"),
+}
 
 /**
  * Full-screen chat UI for live conversations with an LLM.
@@ -59,8 +69,8 @@ import com.bennyjon.auiandroid.data.llm.LlmProvider
  * [AuiRenderer] content. Spent AUI responses are grayed out. A text input bar at
  * the bottom allows the user to send messages.
  *
- * The top app bar includes a provider dropdown for switching between LLM backends
- * and a clear button.
+ * The top app bar includes a theme dropdown for switching AUI themes, a provider
+ * dropdown for switching between LLM backends, and a clear button.
  *
  * @param viewModel Drives the chat state.
  * @param pluginRegistry Plugin registry for AUI rendering and action handling.
@@ -71,6 +81,8 @@ import com.bennyjon.auiandroid.data.llm.LlmProvider
 fun LiveChatScreen(
     viewModel: LiveChatViewModel,
     pluginRegistry: AuiPluginRegistry,
+    theme: DemoAuiTheme = DemoAuiTheme.DEFAULT,
+    onChangeTheme: (DemoAuiTheme) -> Unit,
     onBack: () -> Unit,
 ) {
     val messages by viewModel.messages.collectAsState()
@@ -97,6 +109,10 @@ fun LiveChatScreen(
                     }
                 },
                 actions = {
+                    ThemeDropdown(
+                        currentTheme = theme,
+                        onThemeSelected = onChangeTheme,
+                    )
                     ProviderDropdown(
                         currentProvider = currentProvider,
                         isClaudeAvailable = viewModel.isClaudeAvailable,
@@ -129,6 +145,7 @@ fun LiveChatScreen(
                     ChatMessage.Role.ASSISTANT -> AssistantMessage(
                         message = message,
                         pluginRegistry = pluginRegistry,
+                        auiTheme = resolveAuiTheme(theme),
                         onFeedback = viewModel::onFeedback,
                     )
                 }
@@ -197,10 +214,53 @@ private fun ProviderDropdown(
     }
 }
 
+/**
+ * Resolves a [DemoAuiTheme] selection to the corresponding [AuiTheme] instance.
+ */
+@Composable
+private fun resolveAuiTheme(theme: DemoAuiTheme): AuiTheme = when (theme) {
+    DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
+    DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
+}
+
+/**
+ * Dropdown button in the top bar for selecting the active [AuiTheme].
+ *
+ * Displays the current theme name. Tapping opens a menu with all [DemoAuiTheme] entries.
+ */
+@Composable
+private fun ThemeDropdown(
+    currentTheme: DemoAuiTheme,
+    onThemeSelected: (DemoAuiTheme) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Text(currentTheme.displayName)
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DemoAuiTheme.entries.forEach { theme ->
+                DropdownMenuItem(
+                    text = { Text(theme.displayName) },
+                    onClick = {
+                        expanded = false
+                        onThemeSelected(theme)
+                    },
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun AssistantMessage(
     message: ChatMessage,
     pluginRegistry: AuiPluginRegistry,
+    auiTheme: AuiTheme,
     onFeedback: (com.bennyjon.aui.core.model.AuiFeedback) -> Unit,
 ) {
     // Error banner
@@ -249,20 +309,19 @@ private fun AssistantMessage(
     message.auiResponse
         ?.takeIf { shouldRenderAui(it, message.isAuiSpent) }
         ?.let { response ->
-        val spentAlpha = if (message.isAuiSpent) 0.4f else 1f
+        val spentAlpha = if (message.isAuiSpent) 0.6f else 1f
         Box(modifier = Modifier.alpha(spentAlpha)) {
-            AuiThemeProvider {
-                AuiRenderer(
-                    response = response,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = { feedback ->
-                        if (!message.isAuiSpent) {
-                            onFeedback(feedback)
-                        }
-                    },
-                )
-            }
+            AuiRenderer(
+                response = response,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = { feedback ->
+                    if (!message.isAuiSpent) {
+                        onFeedback(feedback)
+                    }
+                },
+            )
         }
     }
 }
