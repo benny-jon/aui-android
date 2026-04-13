@@ -389,7 +389,7 @@ Read CLAUDE.md and .planning/phase5-live-chat.md.
 
 1. Add Ktor deps to demo (client-android, content-negotiation, kotlinx-json).
 
-2. ANTHROPIC_API_KEY from local.properties → BuildConfig. Empty = don't fail build.
+2. ANTHROPIC_API_KEY from config.properties → BuildConfig. Empty = don't fail build.
 
 3. ClaudeLlmClient(apiKey, httpClient, model = "claude-sonnet-4-5"):
    POST /v1/messages, headers (x-api-key, anthropic-version: 2023-06-01),
@@ -410,7 +410,15 @@ Read CLAUDE.md and .planning/phase5-live-chat.md.
 
 ---
 
-## Session 25: OpenAiLlmClient
+## Session 25: AuiCatalogPrompt — Tuning Knobs & Content Improvements
+
+```
+Read CLAUDE.md and .planning/session-aui-catalog-prompt-tuning.md.
+```
+
+---
+
+## Session 26: OpenAiLlmClient
 
 ```
 Read CLAUDE.md and .planning/phase5-live-chat.md.
@@ -418,7 +426,7 @@ Read CLAUDE.md and .planning/phase5-live-chat.md.
 ACCEPTANCE: diff outside demo/data/llm/ is at most one line. If bigger,
 the abstraction leaks — refactor first.
 
-1. OPENAI_API_KEY from local.properties → BuildConfig.
+1. OPENAI_API_KEY from config.properties → BuildConfig.
 
 2. OpenAiLlmClient(apiKey, httpClient, model = "gpt-4o"):
    POST /v1/chat/completions, Authorization: Bearer,
@@ -434,7 +442,7 @@ the abstraction leaks — refactor first.
 
 ---
 
-## Session 26: Polish + Documentation
+## Session 27: Polish + Documentation
 
 ```
 Read CLAUDE.md and .planning/phase5-live-chat.md.
@@ -467,7 +475,7 @@ DO NOT touch: spec/aui-spec-v1.md, docs/architecture.md, other .planning/ files.
 - [ ] ClaudeLlmClient against real Anthropic API
 - [ ] OpenAiLlmClient against real OpenAI API
 - [ ] Provider dropdown with clear-on-switch
-- [ ] API keys from local.properties → BuildConfig (gitignored)
+- [ ] API keys from config.properties → BuildConfig (gitignored)
 - [ ] docs/livechat.md
 - [ ] CLAUDE.md updated, Phase 5 complete
 
