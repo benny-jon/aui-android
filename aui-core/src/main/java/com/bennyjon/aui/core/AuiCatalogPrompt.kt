@@ -4,6 +4,55 @@ import com.bennyjon.aui.core.plugin.AuiActionPlugin
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 
 /**
+ * Controls how eagerly the AI should reach for AUI components vs. plain text.
+ *
+ * Passed via [AuiPromptConfig.aggressiveness] to [AuiCatalogPrompt.generate]. Each level swaps
+ * the framing paragraph near the top of the generated prompt, shifting the model's default
+ * disposition without changing the available component set.
+ */
+enum class Aggressiveness {
+    /** "Default to plain text. Only use AUI when it clearly adds value over prose." */
+    Conservative,
+    /** "Use AUI whenever a component makes the response more useful, actionable, or scannable." */
+    Balanced,
+    /** "Prefer rich components for responses involving links, lists, comparisons, or choices." */
+    Eager
+}
+
+/**
+ * A domain-specific example appended to the EXAMPLES section of the generated prompt.
+ *
+ * Built-in examples always remain (they teach envelope format and sheet mechanics). Custom
+ * examples are appended after them so the model learns domain-specific patterns without
+ * losing foundational ones.
+ *
+ * @param title Short description of what the example demonstrates (rendered as a section label).
+ * @param json Raw AUI response JSON — the full envelope, including the "text" field.
+ */
+data class AuiPromptExample(
+    val title: String,
+    val json: String
+)
+
+/**
+ * Tuning knobs for [AuiCatalogPrompt.generate].
+ *
+ * The library owns the schema (components, actions, envelope format). Host apps own the voice —
+ * [aggressiveness] tunes framing tone, and [customExamples] lets hosts teach the model
+ * domain-specific patterns.
+ *
+ * @param aggressiveness Controls how eagerly the AI should reach for AUI components vs. plain
+ *   text. Swaps the framing paragraph near the top of the prompt. Defaults to [Aggressiveness.Balanced].
+ * @param customExamples Additional examples appended to the built-in EXAMPLES section. Useful for
+ *   teaching the model domain-specific patterns (e.g. shopping cards, product lists) without
+ *   losing the library's default examples, which teach envelope format and sheet mechanics.
+ */
+data class AuiPromptConfig(
+    val aggressiveness: Aggressiveness = Aggressiveness.Balanced,
+    val customExamples: List<AuiPromptExample> = emptyList()
+)
+
+/**
  * Generates the AI system prompt text describing the AUI response format and available components.
  *
  * Include the output of [generate] in your AI assistant's system prompt so it knows how to
@@ -44,10 +93,27 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *     OpenUrlActionPlugin(context),
  * )
  *
+ * // Default — balanced tone
  * val systemPrompt = buildString {
  *     append("You are a helpful assistant for our shopping app.\n\n")
  *     append(AuiCatalogPrompt.generate(pluginRegistry = registry))
- *     append("\n\nAdditional app-specific instructions here...")
+ * }
+ *
+ * // Eager tone with domain-specific examples
+ * val eagerPrompt = buildString {
+ *     append("You are a shopping assistant.\n\n")
+ *     append(AuiCatalogPrompt.generate(
+ *         pluginRegistry = registry,
+ *         config = AuiPromptConfig(
+ *             aggressiveness = Aggressiveness.Eager,
+ *             customExamples = listOf(
+ *                 AuiPromptExample(
+ *                     title = "Product comparison",
+ *                     json = """{ "text": "Here are your options:", "aui": { ... } }"""
+ *                 )
+ *             )
+ *         )
+ *     ))
  * }
  * ```
  *
@@ -62,10 +128,15 @@ object AuiCatalogPrompt {
      * @param pluginRegistry The plugin registry containing component and action plugins.
      *   Plugin schemas are automatically included in the generated prompt so the AI
      *   knows about custom component types and available actions.
+     * @param config Tuning knobs for prompt tone and domain-specific examples.
+     *   The library owns the schema; host apps own the voice via this config.
      * @return A multi-line string describing the AUI format, components, and guidelines.
      */
-    fun generate(pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty): String = buildString {
-        appendLine(META_FRAME)
+    fun generate(
+        pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+        config: AuiPromptConfig = AuiPromptConfig(),
+    ): String = buildString {
+        appendLine(metaFrameFor(config.aggressiveness))
         appendLine()
         appendLine(SCHEMA_FORMAT)
         appendLine()
@@ -110,24 +181,63 @@ object AuiCatalogPrompt {
         }
 
         appendLine()
+        appendLine(COMPONENT_CHEAT_SHEET)
+        appendLine()
         appendLine(GUIDELINES)
         appendLine()
         append(EXAMPLES)
+
+        if (config.customExamples.isNotEmpty()) {
+            appendLine()
+            appendLine()
+            for (example in config.customExamples) {
+                appendLine("Example: ${example.title}")
+                append(example.json)
+                appendLine()
+            }
+        }
     }
 
     // Keeping each section as a named constant makes the output easy to test against
     // and keeps the generate() function readable.
 
-    internal const val META_FRAME = """## Interactive UI (AUI) — optional
+    /**
+     * Returns the meta-frame section with framing tone adjusted for [aggressiveness].
+     *
+     * The envelope format, feedback loop, and critical instructions are identical across
+     * all levels — only the "when to use AUI" paragraph changes.
+     */
+    internal fun metaFrameFor(aggressiveness: Aggressiveness): String {
+        val framing = when (aggressiveness) {
+            Aggressiveness.Conservative -> FRAMING_CONSERVATIVE
+            Aggressiveness.Balanced -> FRAMING_BALANCED
+            Aggressiveness.Eager -> FRAMING_EAGER
+        }
+        return META_FRAME_TEMPLATE.replace("{{FRAMING}}", framing)
+    }
+
+    internal const val FRAMING_CONSERVATIVE =
+        """AUI is OPTIONAL and ADDITIVE. Default to plain text. Only use AUI when an
+interactive component clearly adds value over prose — for example: collecting
+structured input, offering quick-reply choices, or running a short survey."""
+
+    internal const val FRAMING_BALANCED =
+        """Use AUI whenever a component makes the response more useful, actionable, or
+scannable than prose alone. Plain text is fine for pure conversation, explanations,
+and single-sentence answers — but reach for components when they help."""
+
+    internal const val FRAMING_EAGER =
+        """Prefer rich AUI components for any response involving links, lists, comparisons,
+choices, or actionable items. Plain text is for pure conversation and short
+explanations. When in doubt, use a component."""
+
+    internal const val META_FRAME_TEMPLATE = """## Interactive UI (AUI) — optional
 
 In addition to normal text responses, you have access to AUI: a format for
 responding with interactive native UI components (polls, forms, rating inputs,
 quick replies, rich cards, multi-step surveys) that render inline in the chat.
 
-AUI is OPTIONAL and ADDITIVE. Most responses should remain plain text. Only
-use AUI when an interactive component genuinely serves the user better than
-prose — for example: collecting structured input, offering quick-reply choices,
-running a short survey, or displaying a rich card the user will act on.
+{{FRAMING}}
 
 RESPONSE FORMAT — always respond with a JSON object using this envelope:
 {
@@ -148,8 +258,6 @@ The feedback loop: when the user interacts with a rendered component
 (selects an option, submits a form, taps a quick reply), their interaction
 comes back to you as their next user message. Design each AUI response with
 that follow-up turn in mind.
-
-Default to plain text. Only emit AUI JSON when a component adds real value.
 
 ---"""
 
@@ -236,11 +344,26 @@ Status:
         """  submit(payload) — Send the user's collected input back as their next
     message. Place on the final button of forms and multi-step flows."""
 
+    internal const val COMPONENT_CHEAT_SHEET = """WHEN TO REACH FOR WHICH COMPONENT:
+  - Links / URLs → button_primary or button_secondary with action=open_url.
+    Never render a URL as plain text when a tappable button is available.
+  - Lists of products / places / options → expanded display with a block per
+    item, each with its own action button(s).
+  - Comparing or picking between options → radio_list or chip_select_single + submit.
+  - Multi-select preferences → checkbox_list or chip_select_multi + submit.
+  - Rating or feedback collection → sheet with input_rating_stars.
+  - Suggesting next actions or conversational branches → quick_replies at the end.
+  - Numeric input within a range → input_slider."""
+
     internal const val GUIDELINES = """GUIDELINES:
   - Start with text for context, then use components.
   - Use quick_replies at the end to suggest next steps.
   - Keep it concise: 2-5 blocks for inline, 3-8 for expanded, 3-10 per sheet step.
-  - Every interactive component MUST have a feedback object.
+  - Triggers (button_primary, button_secondary, quick_replies options) MUST have a
+    feedback object — they fire actions when tapped.
+  - Collectors (radio_list, checkbox_list, chip_select_*, input_*) passively gather
+    state and do NOT need feedback on themselves. Pair them with a trigger button
+    whose feedback carries the collected input via submit.
   - For sheet surveys, set a "question" on each step describing what's being asked."""
 
     internal const val EXAMPLES = """EXAMPLES:
@@ -308,6 +431,49 @@ Sheet survey (2-step feedback flow, second step skippable):
           }
         ]
       }
+    ]
+  }
+}
+
+Expanded response with tappable link buttons (product recommendations):
+{
+  "text": "Here are three solid options:",
+  "aui": {
+    "display": "expanded",
+    "blocks": [
+      { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
+      { "type": "text", "data": { "text": "Top-tier noise cancellation, around $348." } },
+      { "type": "button_primary",
+        "data": { "label": "View on Amazon" },
+        "feedback": { "action": "open_url", "params": { "url": "https://example.com/sony" } }
+      },
+      { "type": "divider" },
+      { "type": "heading", "data": { "text": "Bose QuietComfort Ultra" } },
+      { "type": "text", "data": { "text": "Excellent comfort for long wear, around $379." } },
+      { "type": "button_primary",
+        "data": { "label": "View on Amazon" },
+        "feedback": { "action": "open_url", "params": { "url": "https://example.com/bose" } }
+      }
+    ]
+  }
+}
+
+Quick replies with per-option actions (each chip fires its own feedback):
+{
+  "text": "Want to learn more?",
+  "aui": {
+    "display": "inline",
+    "blocks": [
+      { "type": "quick_replies", "data": {
+          "options": [
+            { "label": "Read the docs",
+              "feedback": { "action": "open_url", "params": { "url": "https://example.com/docs" } } },
+            { "label": "See examples",
+              "feedback": { "action": "open_url", "params": { "url": "https://example.com/examples" } } },
+            { "label": "Explain simply",
+              "feedback": { "action": "submit", "params": { "topic": "Explain simply" } } }
+          ]
+      }}
     ]
   }
 }"""

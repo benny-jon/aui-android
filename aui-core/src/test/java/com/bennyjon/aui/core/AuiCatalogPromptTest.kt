@@ -64,24 +64,9 @@ class AuiCatalogPromptTest {
     }
 
     @Test
-    fun `generate ends meta-frame with text default before separator`() {
-        val textDefaultIndex = output.indexOf(
-            "Default to plain text. Only emit AUI JSON when a component adds real value."
-        )
-        val separatorIndex = output.indexOf("---")
-        assertTrue(textDefaultIndex > 0)
-        assertTrue(separatorIndex > textDefaultIndex)
-    }
-
-    @Test
     fun `generate uses consolidated AUI JSON schema header`() {
         assertTrue(output.contains("AUI payload schema"))
         assertTrue(output.contains("For \"sheet\" display (multi-step flows)"))
-    }
-
-    @Test
-    fun `generate does not contain old text-only guideline bullet`() {
-        assertFalse(output.contains("Use text-only responses when components add no value."))
     }
 
     @Test
@@ -380,6 +365,7 @@ class AuiCatalogPromptTest {
         val pluginComponentsIndex = result.indexOf("PLUGIN COMPONENTS:")
         val sheetFieldsIndex = result.indexOf("SHEET-ONLY FIELDS")
         val availableActionsIndex = result.indexOf("AVAILABLE ACTIONS:")
+        val cheatSheetIndex = result.indexOf("WHEN TO REACH FOR WHICH COMPONENT:")
         val guidelinesIndex = result.indexOf("GUIDELINES:")
         val examplesIndex = result.indexOf("EXAMPLES:")
 
@@ -387,9 +373,12 @@ class AuiCatalogPromptTest {
         assertTrue(pluginComponentsIndex > componentsIndex)
         assertTrue(pluginComponentsIndex < sheetFieldsIndex)
 
-        // Available actions appear after sheet fields but before guidelines
+        // Available actions appear after sheet fields but before cheat sheet
         assertTrue(availableActionsIndex > sheetFieldsIndex)
-        assertTrue(availableActionsIndex < guidelinesIndex)
+        assertTrue(availableActionsIndex < cheatSheetIndex)
+
+        // Cheat sheet appears after actions but before guidelines
+        assertTrue(cheatSheetIndex < guidelinesIndex)
 
         // Examples appear after guidelines
         assertTrue(examplesIndex > guidelinesIndex)
@@ -447,6 +436,214 @@ class AuiCatalogPromptTest {
         assertTrue(result.contains("navigate(screen) — Navigate to a named screen"))
         assertTrue(result.contains("submit(payload, source) — Enhanced submit"))
         assertFalse(result.contains("collected input back"))
+    }
+
+    // ── Component cheat sheet ───────────────────────────────────────────────
+
+    @Test
+    fun `generate includes component cheat sheet`() {
+        assertTrue(output.contains("WHEN TO REACH FOR WHICH COMPONENT:"))
+        assertTrue(output.contains("button_primary or button_secondary with action=open_url"))
+        assertTrue(output.contains("radio_list or chip_select_single + submit"))
+        assertTrue(output.contains("input_slider"))
+    }
+
+    // ── Collector vs trigger feedback clarification ─────────────────────────
+
+    @Test
+    fun `generate clarifies trigger vs collector feedback`() {
+        assertTrue(output.contains("Triggers"))
+        assertTrue(output.contains("MUST have a"))
+        assertTrue(output.contains("feedback object"))
+        assertTrue(output.contains("Collectors"))
+        assertTrue(output.contains("do NOT need feedback on themselves"))
+    }
+
+    // ── New built-in examples ───────────────────────────────────────────────
+
+    @Test
+    fun `generate includes expanded tappable link buttons example`() {
+        assertTrue(output.contains("Expanded response with tappable link buttons"))
+        assertTrue(output.contains("\"display\": \"expanded\""))
+        assertTrue(output.contains("View on Amazon"))
+        assertTrue(output.contains("action\": \"open_url\""))
+    }
+
+    @Test
+    fun `generate includes quick replies per-option feedback example`() {
+        assertTrue(output.contains("Quick replies with per-option actions"))
+        assertTrue(output.contains("Read the docs"))
+        assertTrue(output.contains("Explain simply"))
+    }
+
+    // ── Aggressiveness ──────────────────────────────────────────────────────
+
+    @Test
+    fun `default generate uses Balanced framing`() {
+        assertTrue(
+            output.contains("Use AUI whenever a component makes the response more useful")
+        )
+    }
+
+    @Test
+    fun `Conservative aggressiveness uses conservative framing`() {
+        val result = AuiCatalogPrompt.generate(
+            config = AuiPromptConfig(aggressiveness = Aggressiveness.Conservative)
+        )
+        assertTrue(result.contains("AUI is OPTIONAL and ADDITIVE. Default to plain text"))
+        assertFalse(result.contains("Prefer rich AUI components"))
+        assertFalse(result.contains("reach for components when they help"))
+    }
+
+    @Test
+    fun `Balanced aggressiveness uses balanced framing`() {
+        val result = AuiCatalogPrompt.generate(
+            config = AuiPromptConfig(aggressiveness = Aggressiveness.Balanced)
+        )
+        assertTrue(result.contains("reach for components when they help"))
+        assertFalse(result.contains("Default to plain text"))
+        assertFalse(result.contains("When in doubt, use a component"))
+    }
+
+    @Test
+    fun `Eager aggressiveness uses eager framing`() {
+        val result = AuiCatalogPrompt.generate(
+            config = AuiPromptConfig(aggressiveness = Aggressiveness.Eager)
+        )
+        assertTrue(result.contains("Prefer rich AUI components"))
+        assertTrue(result.contains("When in doubt, use a component"))
+        assertFalse(result.contains("Default to plain text"))
+        assertFalse(result.contains("reach for components when they help"))
+    }
+
+    @Test
+    fun `all aggressiveness levels share envelope format and critical instructions`() {
+        for (level in Aggressiveness.entries) {
+            val result = AuiCatalogPrompt.generate(
+                config = AuiPromptConfig(aggressiveness = level)
+            )
+            assertTrue(
+                "$level missing envelope format",
+                result.contains("\"text\": \"Your conversational message here\"")
+            )
+            assertTrue(
+                "$level missing CRITICAL instruction",
+                result.contains("CRITICAL: No prose wrapper")
+            )
+            assertTrue(
+                "$level missing feedback loop",
+                result.contains("The feedback loop:")
+            )
+        }
+    }
+
+    // ── Custom examples ─────────────────────────────────────────────────────
+
+    @Test
+    fun `custom examples are appended after built-in examples`() {
+        val config = AuiPromptConfig(
+            customExamples = listOf(
+                AuiPromptExample(
+                    title = "Product comparison",
+                    json = """{ "text": "Compare these:", "aui": { "display": "expanded" } }"""
+                ),
+                AuiPromptExample(
+                    title = "Booking flow",
+                    json = """{ "text": "Book a room:", "aui": { "display": "sheet" } }"""
+                )
+            )
+        )
+        val result = AuiCatalogPrompt.generate(config = config)
+
+        assertTrue(result.contains("Example: Product comparison"))
+        assertTrue(result.contains("Compare these:"))
+        assertTrue(result.contains("Example: Booking flow"))
+        assertTrue(result.contains("Book a room:"))
+
+        // Custom examples appear after built-in examples
+        val builtInExampleIndex = result.indexOf("feature_choice")
+        val customExample1Index = result.indexOf("Product comparison")
+        val customExample2Index = result.indexOf("Booking flow")
+        assertTrue(customExample1Index > builtInExampleIndex)
+        assertTrue(customExample2Index > customExample1Index)
+    }
+
+    @Test
+    fun `custom examples never replace built-in examples`() {
+        val config = AuiPromptConfig(
+            customExamples = listOf(
+                AuiPromptExample(title = "My example", json = """{ "text": "test" }""")
+            )
+        )
+        val result = AuiCatalogPrompt.generate(config = config)
+
+        // Built-in signature phrases still present
+        assertTrue(result.contains("feature_choice"))
+        assertTrue(result.contains("Sheet survey"))
+        assertTrue(result.contains("View on Amazon"))
+        assertTrue(result.contains("Read the docs"))
+        // Custom example also present
+        assertTrue(result.contains("Example: My example"))
+    }
+
+    @Test
+    fun `no custom examples means no extra example section`() {
+        val result = AuiCatalogPrompt.generate(config = AuiPromptConfig())
+        assertFalse(result.contains("Example: "))
+    }
+
+    // ── Default output section coverage ─────────────────────────────────────
+
+    @Test
+    fun `default generate includes all expected section headers`() {
+        val expectedHeaders = listOf(
+            "## Interactive UI (AUI)",
+            "AUI payload schema",
+            "DISPLAY LEVELS:",
+            "BLOCK FORMAT:",
+            "FEEDBACK (on interactive components):",
+            "AVAILABLE COMPONENTS:",
+            "SHEET-ONLY FIELDS",
+            "AVAILABLE ACTIONS:",
+            "WHEN TO REACH FOR WHICH COMPONENT:",
+            "GUIDELINES:",
+            "EXAMPLES:",
+        )
+        for (header in expectedHeaders) {
+            assertTrue(
+                "Missing section header: '$header'",
+                output.contains(header)
+            )
+        }
+    }
+
+    @Test
+    fun `default generate is non-empty`() {
+        assertTrue(output.isNotEmpty())
+        assertTrue(output.length > 1000)
+    }
+
+    // ── Plugin schemas still work with config ───────────────────────────────
+
+    @Test
+    fun `plugin schemas appear when registry and config are both provided`() {
+        val plugin = fakeComponentPlugin(
+            id = "fun_fact",
+            promptSchema = "demo_fun_fact(title, fact) — Fun fact card.",
+        )
+        val registry = AuiPluginRegistry().register(plugin)
+        val config = AuiPromptConfig(
+            aggressiveness = Aggressiveness.Eager,
+            customExamples = listOf(
+                AuiPromptExample(title = "Test", json = """{ "text": "test" }""")
+            )
+        )
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry, config = config)
+
+        assertTrue(result.contains("PLUGIN COMPONENTS:"))
+        assertTrue(result.contains("demo_fun_fact(title, fact) — Fun fact card."))
+        assertTrue(result.contains("Prefer rich AUI components"))
+        assertTrue(result.contains("Example: Test"))
     }
 
     // ── Test helpers ─────────────────────────────────────────────────────────

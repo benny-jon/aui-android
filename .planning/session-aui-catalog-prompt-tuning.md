@@ -217,13 +217,13 @@ Add unit tests in `aui-core`:
 
 ## Deliverables checklist
 
-- [ ] `AuiPromptConfig`, `Aggressiveness`, `AuiPromptExample` added to `aui-core`
-- [ ] `AuiCatalogPrompt.generate()` accepts config; single-arg overload preserved
-- [ ] Three framing variants wired to `Aggressiveness`
-- [ ] Custom examples appended after built-ins
-- [ ] "When to reach for which component" cheat sheet added to default prompt
-- [ ] Two new built-in examples added (tappable link buttons, per-option quick_replies feedback)
-- [ ] Collector-vs-trigger feedback clarification verified
-- [ ] Unit tests covering all five cases in Part 4
-- [ ] KDoc + README + CLAUDE.md updated
+- [x] `AuiPromptConfig`, `Aggressiveness`, `AuiPromptExample` added to `aui-core`
+- [x] `AuiCatalogPrompt.generate()` accepts config; single-arg overload preserved
+- [x] Three framing variants wired to `Aggressiveness`
+- [x] Custom examples appended after built-ins
+- [x] "When to reach for which component" cheat sheet added to default prompt
+- [x] Two new built-in examples added (tappable link buttons, per-option quick_replies feedback)
+- [x] Collector-vs-trigger feedback clarification verified
+- [x] Unit tests covering all five cases in Part 4
+- [x] KDoc + README + CLAUDE.md updated
 

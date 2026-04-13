@@ -62,6 +62,29 @@ what components are available and how to format responses. When you pass a
 `pluginRegistry`, plugin component schemas and action schemas are included
 automatically. It stays in sync with the library automatically.
 
+You can tune the prompt tone and add domain-specific examples via `AuiPromptConfig`:
+
+```kotlin
+val systemPrompt = buildString {
+    append("You are a shopping assistant.\n\n")
+    append(AuiCatalogPrompt.generate(
+        pluginRegistry = myPluginRegistry,
+        config = AuiPromptConfig(
+            aggressiveness = Aggressiveness.Eager,
+            customExamples = listOf(
+                AuiPromptExample(
+                    title = "Product comparison",
+                    json = """{ "text": "Compare:", "aui": { "display": "expanded", "blocks": [...] } }"""
+                )
+            )
+        )
+    ))
+}
+```
+
+- **Aggressiveness**: `Conservative` (plain text default), `Balanced` (default — use components when helpful), `Eager` (prefer components for links, lists, choices).
+- **Custom examples**: Appended after built-in examples. Teach the model your domain patterns without losing the library's foundational examples.
+
 ### 4. Enable prompt caching (recommended)
 
 The AUI catalog prompt is large but identical across every request in a conversation,
