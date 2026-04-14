@@ -33,7 +33,6 @@ fun AuiText(
     val annotated = remember(block.data.text, theme, bodyColor) {
         parseInlineMarkdown(
             source = block.data.text,
-            bodyStyle = theme.typography.body,
             codeStyle = theme.typography.code,
             linkColor = theme.colors.primary,
         )

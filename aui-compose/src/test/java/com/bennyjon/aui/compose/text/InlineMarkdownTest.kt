@@ -2,7 +2,6 @@ package com.bennyjon.aui.compose.text
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -14,13 +13,11 @@ import org.junit.Test
 
 class InlineMarkdownTest {
 
-    private val bodyStyle = TextStyle(fontSize = 14.sp)
     private val codeStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp)
     private val linkColor = Color.Blue
 
     private fun parse(source: String) = parseInlineMarkdown(
         source = source,
-        bodyStyle = bodyStyle,
         codeStyle = codeStyle,
         linkColor = linkColor,
     )

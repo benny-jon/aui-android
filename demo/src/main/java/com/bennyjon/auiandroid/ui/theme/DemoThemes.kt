@@ -5,17 +5,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.bennyjon.aui.compose.theme.AuiColors
 import com.bennyjon.aui.compose.theme.AuiShapes
 import com.bennyjon.aui.compose.theme.AuiSpacing
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiTypography
+import com.bennyjon.auiandroid.ui.theme.green.GreenDarkScheme
+import com.bennyjon.auiandroid.ui.theme.green.GreenLightScheme
+import com.bennyjon.auiandroid.ui.theme.green.GreenTheme
+import com.bennyjon.auiandroid.ui.theme.warm.WarmDarkScheme
+import com.bennyjon.auiandroid.ui.theme.warm.WarmLightScheme
+import com.bennyjon.auiandroid.ui.theme.warm.WarmTheme
 
 /**
  * Demo-specific [AuiTheme] definitions showcasing host app customization.
@@ -28,81 +29,9 @@ object DemoThemes {
 
     // ── Warm Organic ──────────────────────────────────────────────────
 
-    private val WarmOrganicLightColors = AuiColors(
-        primary = Color(0xFF8D6E63),
-        onPrimary = Color.White,
-        primaryContainer = Color(0xFFD7CCC8),
-        onPrimaryContainer = Color(0xFF3E2723),
-        surface = Color(0xFFFFF8E1),
-        onSurface = Color(0xFF3E2723),
-        onSurfaceVariant = Color(0xFF6D4C41),
-        outline = Color(0xFFBCAAA4),
-        success = Color(0xFF558B2F),
-        onSuccess = Color.White,
-        successContainer = Color(0xFFDCEDC8),
-        onSuccessContainer = Color(0xFF1B5E20),
-        headingColor = Color(0xFF3E2723),
-        bodyColor = Color(0xFF3E2723),
-        captionColor = Color(0xFF6D4C41),
-    )
-
-    private val WarmOrganicDarkColors = AuiColors(
-        primary = Color(0xFFBCAAA4),
-        onPrimary = Color(0xFF2E1F14),
-        primaryContainer = Color(0xFF5D4037),
-        onPrimaryContainer = Color(0xFFD7CCC8),
-        surface = Color(0xFF2E1F14),
-        onSurface = Color(0xFFEFEBE9),
-        onSurfaceVariant = Color(0xFFBCAAA4),
-        outline = Color(0xFF5D4037),
-        success = Color(0xFF81C784),
-        onSuccess = Color(0xFF1B3A2A),
-        successContainer = Color(0xFF2E4A30),
-        onSuccessContainer = Color(0xFFA5D6A7),
-        headingColor = Color(0xFFEFEBE9),
-        bodyColor = Color(0xFFEFEBE9),
-        captionColor = Color(0xFFBCAAA4),
-    )
-
-    private val WarmOrganicTypography = AuiTypography(
-        heading = TextStyle(
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            lineHeight = 28.sp,
-        ),
-        subheading = TextStyle(
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            lineHeight = 26.sp,
-        ),
-        body = TextStyle(
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            lineHeight = 22.sp,
-        ),
-        caption = TextStyle(
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-        ),
-        label = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-        ),
-        button = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            letterSpacing = 0.1.sp,
-        ),
-    )
+    private val WarmOrganicLightColors = AuiColors.fromColorScheme(WarmLightScheme)
+    private val WarmOrganicDarkColors = AuiColors.fromColorScheme(WarmDarkScheme)
+    private val WarmOrganicTypography = AuiTypography.fromTypography(WarmTheme.WarmTypography)
 
     private val WarmOrganicShapes = AuiShapes(
         chip = CircleShape,
@@ -123,81 +52,9 @@ object DemoThemes {
 
     // ── Earthy Green ─────────────────────────────────────────────────
 
-    private val EarthyGreenLightColors = AuiColors(
-        primary = Color(0xFF4A7C59),
-        onPrimary = Color.White,
-        primaryContainer = Color(0xFFC8E6C9),
-        onPrimaryContainer = Color(0xFF1B3A1E),
-        surface = Color(0xFFF1F8E9),
-        onSurface = Color(0xFF1B3A1E),
-        onSurfaceVariant = Color(0xFF4E6B52),
-        outline = Color(0xFFA5C4AA),
-        success = Color(0xFF2E7D32),
-        onSuccess = Color.White,
-        successContainer = Color(0xFFA5D6A7),
-        onSuccessContainer = Color(0xFF1B5E20),
-        headingColor = Color(0xFF1B3A1E),
-        bodyColor = Color(0xFF2E3D30),
-        captionColor = Color(0xFF4E6B52),
-    )
-
-    private val EarthyGreenDarkColors = AuiColors(
-        primary = Color(0xFF81C784),
-        onPrimary = Color(0xFF0D2610),
-        primaryContainer = Color(0xFF2E5733),
-        onPrimaryContainer = Color(0xFFC8E6C9),
-        surface = Color(0xFF0D2610),
-        onSurface = Color(0xFFE8F5E9),
-        onSurfaceVariant = Color(0xFF81C784),
-        outline = Color(0xFF2E5733),
-        success = Color(0xFF66BB6A),
-        onSuccess = Color(0xFF0D2610),
-        successContainer = Color(0xFF1B5E20),
-        onSuccessContainer = Color(0xFFA5D6A7),
-        headingColor = Color(0xFFE8F5E9),
-        bodyColor = Color(0xFFE8F5E9),
-        captionColor = Color(0xFF81C784),
-    )
-
-    private val EarthyGreenTypography = AuiTypography(
-        heading = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            lineHeight = 28.sp,
-        ),
-        subheading = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            lineHeight = 26.sp,
-        ),
-        body = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            lineHeight = 22.sp,
-        ),
-        caption = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-        ),
-        label = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-        ),
-        button = TextStyle(
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            letterSpacing = 0.1.sp,
-        ),
-    )
+    private val EarthyGreenLightColors = AuiColors.fromColorScheme(GreenLightScheme)
+    private val EarthyGreenDarkColors = AuiColors.fromColorScheme(GreenDarkScheme)
+    private val EarthyGreenTypography = AuiTypography.fromTypography(GreenTheme.GreenTypography)
 
     private val EarthyGreenShapes = AuiShapes(
         chip = RoundedCornerShape(12.dp),

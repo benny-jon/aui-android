@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
     ksp(libs.androidx.room.compiler)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

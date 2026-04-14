@@ -1,6 +1,7 @@
 package com.bennyjon.aui.compose.theme
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -71,9 +72,13 @@ data class AuiTypography(
          * with the host app's theme.
          */
         @Composable
-        fun fromMaterialTheme(): AuiTypography {
-            val t = MaterialTheme.typography
-            return AuiTypography(
+        fun fromMaterialTheme() = fromTypography(MaterialTheme.typography)
+
+        /**
+         *  Derives an [AuiTypography] from a material typography.
+         */
+        fun fromTypography(t: Typography) =
+            AuiTypography(
                 heading = t.headlineSmall,
                 subheading = t.titleMedium,
                 body = t.bodyMedium,
@@ -82,6 +87,5 @@ data class AuiTypography(
                 label = t.labelSmall,
                 button = t.labelLarge,
             )
-        }
     }
 }

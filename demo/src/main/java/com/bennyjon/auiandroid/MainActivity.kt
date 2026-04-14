@@ -24,7 +24,9 @@ import com.bennyjon.auiandroid.livechat.LiveChatViewModel
 import com.bennyjon.auiandroid.plugins.DemoPluginRegistry
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
+import com.bennyjon.auiandroid.ui.theme.green.GreenTheme
 import com.bennyjon.auiandroid.ui.theme.toMaterialColorScheme
+import com.bennyjon.auiandroid.ui.theme.warm.WarmTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -65,10 +67,15 @@ private fun DemoNavHost() {
                 DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
                 DemoAuiTheme.EARTHY_GREEN -> DemoThemes.earthyGreen()
             }
+            val typography = when (selectedTheme) {
+                DemoAuiTheme.DEFAULT -> MaterialTheme.typography
+                DemoAuiTheme.WARM_ORGANIC -> WarmTheme.WarmTypography
+                DemoAuiTheme.EARTHY_GREEN -> GreenTheme.GreenTypography
+            }
             val colorScheme = auiTheme.colors.toMaterialColorScheme(
                 base = MaterialTheme.colorScheme,
             )
-            MaterialTheme(colorScheme = colorScheme) {
+            MaterialTheme(colorScheme = colorScheme, typography = typography) {
                 LiveChatScreen(
                     viewModel = vm,
                     pluginRegistry = vm.pluginRegistry,

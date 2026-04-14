@@ -1,5 +1,6 @@
 package com.bennyjon.aui.compose.theme
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -71,9 +72,13 @@ data class AuiColors(
          * with the host app's theme.
          */
         @Composable
-        fun fromMaterialTheme(): AuiColors {
-            val scheme = MaterialTheme.colorScheme
-            return AuiColors(
+        fun fromMaterialTheme() = fromColorScheme(MaterialTheme.colorScheme)
+
+        /**
+         * Derives an [com.bennyjon.aui.compose.theme.AuiColors] from a color scheme.
+         */
+        fun fromColorScheme(scheme: ColorScheme) =
+            AuiColors(
                 primary = scheme.primary,
                 onPrimary = scheme.onPrimary,
                 primaryContainer = scheme.primaryContainer,
@@ -91,6 +96,5 @@ data class AuiColors(
                 bodyColor = scheme.onSurface,
                 captionColor = scheme.onSurfaceVariant,
             )
-        }
     }
 }

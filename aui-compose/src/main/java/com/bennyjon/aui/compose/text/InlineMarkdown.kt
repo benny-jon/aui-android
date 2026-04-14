@@ -32,7 +32,6 @@ import androidx.compose.ui.text.withStyle
  */
 fun parseInlineMarkdown(
     source: String,
-    bodyStyle: TextStyle,
     codeStyle: TextStyle,
     linkColor: Color,
 ): AnnotatedString = buildAnnotatedString {

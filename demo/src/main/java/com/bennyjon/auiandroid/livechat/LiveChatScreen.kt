@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
+import com.bennyjon.aui.compose.text.parseInlineMarkdown
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiResponse
@@ -297,8 +298,13 @@ private fun AssistantMessage(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier.widthIn(max = 300.dp),
             ) {
+                val spannedText = parseInlineMarkdown(
+                    source = text,
+                    codeStyle = auiTheme.typography.code,
+                    linkColor = auiTheme.colors.primary
+                )
                 Text(
-                    text = text,
+                    text = spannedText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -311,21 +317,23 @@ private fun AssistantMessage(
     message.auiResponse
         ?.takeIf { shouldRenderAui(it, message.isAuiSpent) }
         ?.let { response ->
-        val spentAlpha = if (message.isAuiSpent) 0.6f else 1f
-        Box(modifier = Modifier.alpha(spentAlpha)) {
-            AuiRenderer(
-                response = response,
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                theme = auiTheme,
-                pluginRegistry = pluginRegistry,
-                onFeedback = { feedback ->
-                    if (!message.isAuiSpent) {
-                        onFeedback(feedback)
-                    }
-                },
-            )
+            val spentAlpha = if (message.isAuiSpent) 0.6f else 1f
+            Box(modifier = Modifier.alpha(spentAlpha)) {
+                AuiRenderer(
+                    response = response,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    theme = auiTheme,
+                    pluginRegistry = pluginRegistry,
+                    onFeedback = { feedback ->
+                        if (!message.isAuiSpent) {
+                            onFeedback(feedback)
+                        }
+                    },
+                )
+            }
         }
-    }
 }
 
 @Composable
