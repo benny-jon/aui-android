@@ -23,10 +23,11 @@ import androidx.compose.ui.unit.dp
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
 
 /**
- * Demo landing screen with themed chat entry points.
+ * Demo landing screen with live chat and themed showcase entry points.
  *
- * Each card launches the same [ChatScreen] with a different [com.bennyjon.aui.compose.theme.AuiTheme],
- * demonstrating that host apps can fully customise the AUI renderer's visual style.
+ * The live-chat card opens [com.bennyjon.auiandroid.livechat.LiveChatScreen] for
+ * end-to-end LLM conversations. Theme cards launch [ChatScreen] with different
+ * [com.bennyjon.aui.compose.theme.AuiTheme] instances.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,20 +45,28 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = "Choose a theme to see how the same AUI content looks with different styles.",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Live Chat with an LLM",
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
             ThemeCard(
-                title = "Default Theme",
-                subtitle = "Material 3 baseline — clean and familiar",
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                onClick = { onThemeSelected("default") },
+                title = "Live Chat",
+                subtitle = "End-to-end conversation with an LLM, persisted in Room",
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                onClick = { onThemeSelected("live_chat") },
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Themes Showcase (Fake chat)",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             val warmOrganicColors = DemoThemes.warmOrganic().colors
@@ -76,52 +85,6 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
                 containerColor = earthyGreenColors.primaryContainer,
                 contentColor = earthyGreenColors.onPrimaryContainer,
                 onClick = { onThemeSelected("earthy_green") },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Plugin System",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            ThemeCard(
-                title = "Plugin Showcase",
-                subtitle = "Custom FunFact component + Navigate/OpenUrl actions",
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                onClick = { onThemeSelected("plugins") },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Live Chat",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            ThemeCard(
-                title = "Live Chat",
-                subtitle = "End-to-end conversation with an LLM, persisted in Room",
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                onClick = { onThemeSelected("live_chat") },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Complex Demos",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            ThemeCard(
-                title = "All Components Showcase",
-                subtitle = "Sheet flow using all available components and actions",
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                onClick = { onThemeSelected("all_components") },
             )
         }
     }
