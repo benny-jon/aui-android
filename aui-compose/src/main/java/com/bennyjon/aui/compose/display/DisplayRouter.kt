@@ -53,6 +53,9 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * @param onFeedback Called when the user interacts with a block that has feedback configured.
  *   By the time this is called, [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer] has already
  *   applied chain-of-responsibility routing with action plugins.
+ * @param collectingFeedbackEnabled When `false`, blocks that collect conversational feedback
+ *   are rendered at reduced alpha with their feedback suppressed. Pass-through blocks remain
+ *   fully visible and functional. Defaults to `true`.
  * @param onUnknownBlock If provided, called for each unrecognized block type that has no matching
  *   component plugin, in addition to the default warning log.
  */
@@ -62,6 +65,7 @@ fun DisplayRouter(
     modifier: Modifier = Modifier,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
+    collectingFeedbackEnabled: Boolean = true,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     val theme = LocalAuiTheme.current
@@ -87,6 +91,7 @@ fun DisplayRouter(
                         modifier = modifier.padding(16.dp),
                         pluginRegistry = pluginRegistry,
                         onFeedback = onFeedback,
+                        collectingFeedbackEnabled = collectingFeedbackEnabled,
                         onUnknownBlock = onUnknownBlock,
                     )
                 }
@@ -107,6 +112,7 @@ fun DisplayRouter(
                         onFeedback = onFeedback,
                         registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
+                        collectingFeedbackEnabled = collectingFeedbackEnabled,
                         onUnknownBlock = onUnknownBlock,
                     )
                 }
@@ -118,6 +124,7 @@ fun DisplayRouter(
                         onFeedback = onFeedback,
                         registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
+                        collectingFeedbackEnabled = collectingFeedbackEnabled,
                         onUnknownBlock = onUnknownBlock,
                     )
                 }

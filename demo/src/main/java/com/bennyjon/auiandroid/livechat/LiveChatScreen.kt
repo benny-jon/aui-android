@@ -45,7 +45,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -291,7 +290,7 @@ private fun AssistantMessage(
     }
 
     // Text bubble
-    message.text?.let { text ->
+    message.text?.takeIf { it.isNotBlank() }?.let { text ->
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
@@ -325,22 +324,16 @@ private fun AssistantMessage(
     message.auiResponse
         ?.takeIf { shouldRenderAui(it, message.isAuiSpent) }
         ?.let { response ->
-            val spentAlpha = if (message.isAuiSpent) 0.6f else 1f
-            Box(modifier = Modifier.alpha(spentAlpha)) {
-                AuiRenderer(
-                    response = response,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    theme = auiTheme,
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = { feedback ->
-                        if (!message.isAuiSpent) {
-                            onFeedback(feedback)
-                        }
-                    },
-                )
-            }
+            AuiRenderer(
+                response = response,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+                collectingFeedbackEnabled = !message.isAuiSpent,
+            )
         }
 }
 

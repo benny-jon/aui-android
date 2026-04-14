@@ -2,6 +2,7 @@ package com.bennyjon.aui.compose.internal
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -9,6 +10,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import com.bennyjon.aui.compose.components.input.AuiButtonPrimary
 import com.bennyjon.aui.compose.components.input.AuiButtonSecondary
 import com.bennyjon.aui.compose.components.input.AuiCheckboxList
@@ -34,6 +36,7 @@ import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiInputBlock
+import com.bennyjon.aui.core.model.isReadOnly
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -103,6 +106,10 @@ private val pluginJson = Json { ignoreUnknownKeys = true }
  * @param allBlocksForEntries If provided, [buildEntriesFromBlocks] scans this list instead of
  *   [blocks] when building Q+A entries on feedback. Use this when the heading that precedes an
  *   input lives in a sibling renderer (EXPANDED split).
+ * @param collectingFeedbackEnabled When `false`, blocks that collect conversational feedback
+ *   (those with non-read-only feedback) are rendered at reduced alpha with their feedback
+ *   callbacks suppressed. Pass-through blocks (no feedback, or only read-only plugin actions)
+ *   remain fully visible and functional. Defaults to `true`.
  * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] that has no matching
  *   plugin, in addition to the default warning log.
  */
@@ -114,6 +121,7 @@ internal fun BlockRenderer(
     onFeedback: (AuiFeedback) -> Unit = {},
     registryOverride: MutableState<Map<String, String>>? = null,
     allBlocksForEntries: List<AuiBlock>? = null,
+    collectingFeedbackEnabled: Boolean = true,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     val localRegistry = remember { mutableStateOf(emptyMap<String, String>()) }
@@ -133,20 +141,47 @@ internal fun BlockRenderer(
         verticalArrangement = Arrangement.spacedBy(theme.spacing.blockSpacing),
     ) {
         blocks.forEach { block ->
+            // When disabled, check if this specific block is interactive.
+            // Read-only blocks (no feedback or only read-only actions) render normally.
+            // Interactive blocks get alpha'd and their feedback suppressed.
+            val blockEnabled = collectingFeedbackEnabled || block.isReadOnly(pluginRegistry)
+            val blockFeedback: (AuiFeedback) -> Unit = if (blockEnabled) wrappedOnFeedback else { _ -> }
+            val blockModifier = if (!blockEnabled) Modifier.alpha(0.6f) else Modifier
+
             when (block) {
                 is AuiBlock.Text -> AuiText(block = block)
                 is AuiBlock.Heading -> AuiHeading(block = block)
                 is AuiBlock.Caption -> AuiCaption(block = block)
-                is AuiBlock.ChipSelectSingle -> AuiChipSelectSingle(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.ChipSelectMulti -> AuiChipSelectMulti(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.ButtonPrimary -> AuiButtonPrimary(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.ButtonSecondary -> AuiButtonSecondary(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.QuickReplies -> AuiQuickReplies(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.InputRatingStars -> AuiInputRatingStars(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.InputTextSingle -> AuiInputTextSingle(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.InputSlider -> AuiInputSlider(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.RadioList -> AuiRadioList(block = block, onFeedback = wrappedOnFeedback)
-                is AuiBlock.CheckboxList -> AuiCheckboxList(block = block, onFeedback = wrappedOnFeedback)
+                is AuiBlock.ChipSelectSingle -> Box(modifier = blockModifier) {
+                    AuiChipSelectSingle(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.ChipSelectMulti -> Box(modifier = blockModifier) {
+                    AuiChipSelectMulti(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.ButtonPrimary -> Box(modifier = blockModifier) {
+                    AuiButtonPrimary(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.ButtonSecondary -> Box(modifier = blockModifier) {
+                    AuiButtonSecondary(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.QuickReplies -> Box(modifier = blockModifier) {
+                    AuiQuickReplies(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.InputRatingStars -> Box(modifier = blockModifier) {
+                    AuiInputRatingStars(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.InputTextSingle -> Box(modifier = blockModifier) {
+                    AuiInputTextSingle(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.InputSlider -> Box(modifier = blockModifier) {
+                    AuiInputSlider(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.RadioList -> Box(modifier = blockModifier) {
+                    AuiRadioList(block = block, onFeedback = blockFeedback)
+                }
+                is AuiBlock.CheckboxList -> Box(modifier = blockModifier) {
+                    AuiCheckboxList(block = block, onFeedback = blockFeedback)
+                }
                 is AuiBlock.Divider -> AuiDivider()
                 is AuiBlock.StepperHorizontal -> AuiStepperHorizontal(block = block)
                 is AuiBlock.ProgressBar -> AuiProgressBar(block = block)
@@ -155,12 +190,14 @@ internal fun BlockRenderer(
                 is AuiBlock.Unknown -> {
                     val plugin = pluginRegistry.componentPlugin(block.type)
                     if (plugin != null) {
-                        RenderPluginBlock(
-                            plugin = plugin,
-                            block = block,
-                            registry = registry,
-                            onFeedback = wrappedOnFeedback,
-                        )
+                        Box(modifier = blockModifier) {
+                            RenderPluginBlock(
+                                plugin = plugin,
+                                block = block,
+                                registry = registry,
+                                onFeedback = blockFeedback,
+                            )
+                        }
                     } else {
                         Log.w(TAG, "Skipping unknown block type: ${block.type}")
                         onUnknownBlock?.invoke(block)

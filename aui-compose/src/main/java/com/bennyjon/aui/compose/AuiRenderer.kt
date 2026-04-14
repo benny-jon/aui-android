@@ -52,6 +52,10 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *   **not** called. If no plugin matches, or the plugin returns `false`, this callback
  *   **is** called. Hosts using no plugins receive every feedback event (the common case).
  *   For sheets: called once on submit/dismiss with consolidated feedback.
+ * @param collectingFeedbackEnabled When `false`, blocks that collect conversational feedback
+ *   (e.g. submit buttons, polls, chip selects) are rendered at reduced alpha with their
+ *   feedback callbacks suppressed. Pass-through blocks (no feedback, or read-only plugin
+ *   actions like `open_url`) remain fully visible and functional. Defaults to `true`.
  * @param onParseError Called if the JSON cannot be parsed. The error message is passed as the argument.
  * @param onUnknownBlock Called for each unrecognized block type encountered during rendering.
  */
@@ -62,6 +66,7 @@ fun AuiRenderer(
     theme: AuiTheme = AuiTheme.Default,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
+    collectingFeedbackEnabled: Boolean = true,
     onParseError: ((String) -> Unit)? = null,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
@@ -80,6 +85,7 @@ fun AuiRenderer(
             modifier = modifier,
             pluginRegistry = pluginRegistry,
             onFeedback = routedOnFeedback,
+            collectingFeedbackEnabled = collectingFeedbackEnabled,
             onUnknownBlock = onUnknownBlock,
         )
     }
@@ -112,6 +118,10 @@ fun AuiRenderer(
  *   matches the feedback's action and returns `true` from `handle`, this callback is
  *   **not** called. If no plugin matches, or the plugin returns `false`, this callback
  *   **is** called. Hosts using no plugins receive every feedback event (the common case).
+ * @param collectingFeedbackEnabled When `false`, blocks that collect conversational feedback
+ *   (e.g. submit buttons, polls, chip selects) are rendered at reduced alpha with their
+ *   feedback callbacks suppressed. Pass-through blocks (no feedback, or read-only plugin
+ *   actions like `open_url`) remain fully visible and functional. Defaults to `true`.
  */
 @Composable
 fun AuiRenderer(
@@ -120,6 +130,7 @@ fun AuiRenderer(
     theme: AuiTheme = AuiTheme.Default,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
+    collectingFeedbackEnabled: Boolean = true,
 ) {
     val routedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
         val claimed = pluginRegistry.actionPlugin(feedback.action)?.handle(feedback) ?: false
@@ -132,6 +143,7 @@ fun AuiRenderer(
             modifier = modifier,
             pluginRegistry = pluginRegistry,
             onFeedback = routedOnFeedback,
+            collectingFeedbackEnabled = collectingFeedbackEnabled,
         )
     }
 }

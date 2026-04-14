@@ -19,6 +19,31 @@ fun AuiBlock.allFeedbacks(): List<AuiFeedback> = buildList {
 }
 
 /**
+ * Returns `true` if every feedback on this block is either absent or handled
+ * by a read-only action plugin.
+ *
+ * A block with no feedback is always read-only. A block whose only feedbacks use
+ * read-only plugin actions (e.g. `open_url`) is also read-only. A block with a
+ * `"submit"` action or an unknown action with no matching plugin is interactive.
+ *
+ * Host apps use this per-block check to selectively disable interactive blocks
+ * while leaving read-only blocks (text, open_url buttons) fully visible and
+ * functional.
+ *
+ * @see AuiResponse.isReadOnly for the response-level aggregate.
+ */
+fun AuiBlock.isReadOnly(pluginRegistry: AuiPluginRegistry): Boolean {
+    val feedbacks = allFeedbacks()
+    if (feedbacks.isEmpty()) return true
+    return feedbacks.all { feedback ->
+        when (feedback.action) {
+            "submit" -> false
+            else -> pluginRegistry.actionPlugin(feedback.action)?.isReadOnly ?: false
+        }
+    }
+}
+
+/**
  * Returns `true` if every feedback in this response is either absent or handled
  * by a read-only action plugin.
  *
