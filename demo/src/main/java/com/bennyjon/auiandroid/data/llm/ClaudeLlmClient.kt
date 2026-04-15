@@ -16,9 +16,9 @@ import kotlinx.serialization.json.put
 /**
  * [LlmClient] implementation that calls the Anthropic Messages API.
  *
- * Sends conversation history to `POST /v1/messages` and parses the response
- * through [AuiResponseExtractor]. The system prompt instructs the model to
- * respond with the structured JSON envelope `{ "text": "...", "aui": { ... } }`.
+ * Sends conversation history to `POST /v1/messages` and returns the raw
+ * response body as a [LlmRawResult]. Parsing into text/AUI is deferred to
+ * the repository layer via [AuiResponseExtractor].
  *
  * @param apiKey Anthropic API key (x-api-key header).
  * @param httpClient Ktor HTTP client configured with content negotiation.
@@ -33,7 +33,7 @@ class ClaudeLlmClient(
     override suspend fun complete(
         systemPrompt: String,
         history: List<LlmMessage>,
-    ): LlmResponse {
+    ): LlmRawResult {
         return try {
             if (BuildConfig.DEBUG) {
                 Log.d("ClaudeLlmClient", systemPrompt)
@@ -54,9 +54,9 @@ class ClaudeLlmClient(
             if (BuildConfig.DEBUG) {
                 Log.d("ClaudeLlmClient", responseText)
             }
-            AuiResponseExtractor.fromRawResponse(responseText)
+            LlmRawResult(rawContent = responseText)
         } catch (e: Exception) {
-            AuiResponseExtractor.error("Claude API error: ${e.message}", e)
+            LlmRawResult(errorMessage = "Claude API error: ${e.message}", cause = e)
         }
     }
 

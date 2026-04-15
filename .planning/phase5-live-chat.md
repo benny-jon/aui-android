@@ -81,25 +81,21 @@ data class LlmMessage(val role: Role, val content: String) {
 }
 
 /**
- * Flat container for any LLM reply.
+ * Raw result from an LlmClient completion call.
  *
- * [text] is always present for successful responses (the LLM's conversational
- * message). [auiJson] and [auiResponse] are optionally present when the LLM
- * also produced an AUI payload. [errorMessage] is set only on failure, in
- * which case [text] and [auiJson] are null.
- *
- * Constructed only via AuiResponseExtractor.
+ * Carries the unprocessed content string exactly as received from the provider.
+ * Parsing into text, AUI JSON, etc. is deferred to the repository layer when
+ * loading from the database, so the original response is always preserved for
+ * replay and debugging.
  */
-data class LlmResponse(
-    val text: String? = null,
-    val auiJson: String? = null,
-    val auiResponse: AuiResponse? = null,
+data class LlmRawResult(
+    val rawContent: String? = null,
     val errorMessage: String? = null,
     val cause: Throwable? = null,
 )
 ```
 
-### Room schema — self-describing, nullable columns
+### Room schema — raw content storage
 
 ```kotlin
 @Entity(tableName = "chat_messages")
@@ -107,15 +103,15 @@ data class ChatMessageEntity(
     @PrimaryKey val id: String,        // UUID
     val conversationId: String,        // UUID
     val role: String,                  // "user" | "assistant"
-    val text: String? = null,          // user text OR assistant plain-text reply
-    val auiJson: String? = null,       // assistant AUI JSON reply (raw)
+    val rawContent: String? = null,    // unprocessed LLM response (user text for user rows)
     val errorMessage: String? = null,  // assistant error
     val createdAt: Long,
 )
 ```
 
-No discriminator column. Non-null columns describe the row directly. UUIDs
-minted by `DefaultChatRepository` — single mint site.
+Stores the raw LLM response as-is. Parsing into text/AUI happens at load time
+via `AuiResponseExtractor` in `toDomain()`. UUIDs minted by
+`DefaultChatRepository` — single mint site.
 
 ### Domain model
 
@@ -160,11 +156,11 @@ Three methods. Zero imports from `aui-core`. No `recordFeedback` — feedback
 is converted to text in the ViewModel before reaching the repo.
 
 `sendUserMessage` flow:
-1. Insert user row (UUID minted here).
-2. Read all rows; map to `List<LlmMessage>`. `auiJson` rows pass back as
-   `ASSISTANT` with `content = auiJson` (model sees its own prior JSON).
-3. Call `llmClient.complete(systemPrompt, history)`.
-4. Insert assistant row: `LlmResponse` fields map directly to entity columns.
+1. Insert user row (UUID minted here, `rawContent` = user text).
+2. Read all rows; map to `List<LlmMessage>`. Assistant rows run through
+   `AuiResponseExtractor` to rebuild content for history.
+3. Call `llmClient.complete(systemPrompt, history)` → `LlmRawResult`.
+4. Insert assistant row: `rawContent` = raw LLM response, `errorMessage` if failed.
 5. Flow re-emits.
 
 ### ViewModel — the AUI ↔ chat boundary
@@ -251,24 +247,20 @@ Read CLAUDE.md and .planning/phase5-live-chat.md.
 Create the LLM client abstraction in
 demo/src/main/kotlin/com/bennyjon/aui/demo/data/llm/:
 
-1. LlmClient.kt — interface: suspend fun complete(systemPrompt, history): LlmResponse
+1. LlmClient.kt — interface: suspend fun complete(systemPrompt, history): LlmRawResult
 2. LlmMessage.kt — data class with Role enum (USER, ASSISTANT)
-3. LlmResponse.kt — flat data class with nullable fields:
-   text, auiJson, auiResponse, errorMessage, cause.
-   KDoc: text is always present on success, auiJson/auiResponse optionally
-   present alongside text, errorMessage only on failure.
-4. AuiResponseExtractor.kt — internal object:
+3. LlmRawResult.kt — flat data class: rawContent?, errorMessage?, cause?.
+   rawContent carries the unprocessed LLM response string.
+4. LlmResponse.kt — parsed result from AuiResponseExtractor (text, auiJson,
+   auiResponse, errorMessage, cause). Used internally at load time, not by clients.
+5. AuiResponseExtractor.kt — internal object:
    - fromRawResponse(rawText): deserializes the structured JSON envelope
      { "text": "...", "aui": { ... } }. Parses the aui field (if present)
      via AuiParser.parse. Returns LlmResponse with text always set,
      auiJson+auiResponse set when aui field is present.
    - error(message, cause?): returns LlmResponse with errorMessage set
-5. FakeLlmClient.kt — cycles a scripted sequence:
-   1) LlmResponse(text = "Hello! I'm a fake assistant...")
-   2) LlmResponse with text + AUI poll JSON (from spec/examples/)
-   3) LlmResponse with text + AUI sheet step JSON
-   4) LlmResponse with text + confirmation JSON
-   Wraps around at end.
+6. FakeLlmClient.kt — cycles a scripted sequence, returns LlmRawResult
+   with rawContent = scripted JSON strings. Wraps around at end.
 
 Tests:
 - AuiResponseExtractorTest: envelope with text only, envelope with text+aui,
@@ -292,23 +284,24 @@ Add Room to demo:
 
 2. Create demo/data/chat/db/:
    - ChatMessageEntity: @PrimaryKey id (String/UUID), conversationId,
-     role ("user"|"assistant"), text?, auiJson?, errorMessage?, createdAt.
-     No discriminator. Self-describing via nullable columns.
+     role ("user"|"assistant"), rawContent?, errorMessage?, createdAt.
+     Stores unprocessed LLM response. Parsing deferred to load time.
    - ChatMessageDao: observeMessages(Flow), insert, clearConversation
-   - ChatDatabase (version=1, exportSchema=false)
+   - ChatDatabase (version=2, exportSchema=false, destructive migration)
 
 3. Create demo/data/chat/:
    - ChatMessage flat data class: id, createdAt, role (enum USER/ASSISTANT),
-     text?, auiResponse?, rawAuiJson?, errorMessage?, isAuiSpent (default false).
-     Single class, optional fields. Separate from entity (entity has
-     conversationId + Room annotations, domain has parsed auiResponse + isAuiSpent).
+     text?, auiResponse?, rawAuiJson?, rawContent?, errorMessage?,
+     isAuiSpent (default false). text/auiResponse/rawAuiJson derived from
+     rawContent at load time via AuiResponseExtractor.
    - ChatRepository interface: observeMessages, sendUserMessage,
      clearConversation. Three methods. ZERO aui-core imports.
    - DefaultChatRepository(llmClient, dao, systemPrompt, ioDispatcher):
      * Mints UUIDs via UUID.randomUUID().toString()
-     * sendUserMessage: insert user → build history (auiJson rows as
-       ASSISTANT/rawJson) → complete → map LlmResponse to entity → insert
-     * Entity-to-domain mapper: parses auiJson via AuiParser if non-null
+     * sendUserMessage: insert user (rawContent=text) → build history
+       (extract content from rawContent for assistant rows) → complete
+       → store rawContent from LlmRawResult → insert
+     * Entity-to-domain mapper: runs AuiResponseExtractor on rawContent
      * clearConversation delegates to dao
 
 4. Test (Robolectric or in-memory Room):
@@ -473,9 +466,9 @@ DO NOT touch: spec/aui-spec-v1.md, docs/architecture.md, other .planning/ files.
 - [ ] LlmClient interface + flat LlmResponse data class
 - [ ] AuiResponseExtractor (structured envelope parsing, error handling)
 - [ ] FakeLlmClient + unit tests
-- [ ] Room DB: ChatMessageEntity (UUID PK, nullable columns, no discriminator)
-- [ ] DefaultChatRepository: AUI-free, single UUID mint, three methods
-- [ ] ChatMessage flat data class with optional fields (text, auiResponse, rawAuiJson, errorMessage, isAuiSpent)
+- [ ] Room DB: ChatMessageEntity (UUID PK, rawContent column, errorMessage, no discriminator)
+- [ ] DefaultChatRepository: stores raw content, parses at load time via AuiResponseExtractor, single UUID mint, three methods
+- [ ] ChatMessage flat data class with optional fields (text, auiResponse, rawAuiJson, rawContent, errorMessage, isAuiSpent)
 - [ ] LiveChatScreen renders all field combinations; spent AUI grayed out
 - [ ] 5th DemoHomeScreen card "Live Chat"
 - [ ] ViewModel: send(), onFeedback() via toUserMessageText(), markSpentInteractives
@@ -507,12 +500,15 @@ no fence-stripping or heuristic parsing needed.
 `AuiResponse.isReadOnly(pluginRegistry)`. All-but-last AUI messages are marked
 `isAuiSpent = true` unless the response is read-only.
 
-**Flat LlmResponse:** `text` and `auiJson`/`auiResponse` can coexist on
-success. `errorMessage` is the failure case. Invalid states mitigated by
-single construction seam through `AuiResponseExtractor`.
+**Raw content storage:** LlmClient returns `LlmRawResult` with the
+unprocessed response string. DB stores `rawContent` as-is. Parsing into
+text/AUI happens at load time via `AuiResponseExtractor` in `toDomain()`.
+This preserves originals for replay/debugging and allows parsing logic
+updates without data migration.
 
-**Parsing in each client:** providers may use structured-output modes later.
-Keeping extraction behind LlmClient keeps the repo dumb.
+**Deferred parsing per provider:** `AuiResponseExtractor` auto-detects
+Claude API format vs structured envelope. Future providers (OpenAI) add
+new detection paths without changing the storage schema.
 
 **AUI-free repo:** feedback → text conversion in ViewModel via
 `formattedEntries.ifEmpty { label }`. Repo sees only strings. Typed messages and

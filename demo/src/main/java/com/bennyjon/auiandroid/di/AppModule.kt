@@ -53,6 +53,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ChatDatabase =
         Room.databaseBuilder(context, ChatDatabase::class.java, "aui_demo_chat.db")
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 
     @Provides

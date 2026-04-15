@@ -13,10 +13,10 @@ class FakeLlmClient : LlmClient {
     override suspend fun complete(
         systemPrompt: String,
         history: List<LlmMessage>,
-    ): LlmResponse {
+    ): LlmRawResult {
         val rawJson = SCRIPTED_RESPONSES[index % SCRIPTED_RESPONSES.size]
         index++
-        return AuiResponseExtractor.fromRawResponse(rawJson)
+        return LlmRawResult(rawContent = rawJson)
     }
 
     internal companion object {
