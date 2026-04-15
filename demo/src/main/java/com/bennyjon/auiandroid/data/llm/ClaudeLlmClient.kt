@@ -9,8 +9,11 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -54,7 +57,15 @@ class ClaudeLlmClient(
             if (BuildConfig.DEBUG) {
                 Log.d("ClaudeLlmClient", responseText)
             }
-            LlmRawResult(rawContent = responseText)
+            val messageId = try {
+                Json.parseToJsonElement(responseText)
+                    .jsonObject["id"]
+                    ?.jsonPrimitive
+                    ?.content
+            } catch (_: Exception) {
+                null
+            }
+            LlmRawResult(messageId = messageId, rawContent = responseText)
         } catch (e: Exception) {
             LlmRawResult(errorMessage = "Claude API error: ${e.message}", cause = e)
         }

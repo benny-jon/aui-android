@@ -13,6 +13,7 @@ package com.bennyjon.auiandroid.data.llm
  * @property cause Optional throwable for error responses.
  */
 data class LlmRawResult(
+    val messageId: String? = null,
     val rawContent: String? = null,
     val errorMessage: String? = null,
     val cause: Throwable? = null,

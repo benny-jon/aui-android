@@ -58,7 +58,7 @@ class DefaultChatRepository(
 
             // 4. Insert assistant row (rawContent = unprocessed LLM response)
             val assistantEntity = ChatMessageEntity(
-                id = UUID.randomUUID().toString(),
+                id = result.messageId ?: UUID.randomUUID().toString(),
                 conversationId = conversationId,
                 role = ROLE_ASSISTANT,
                 rawContent = result.rawContent,
