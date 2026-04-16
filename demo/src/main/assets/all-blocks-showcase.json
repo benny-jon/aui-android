@@ -1,0 +1,571 @@
+[
+  {
+    "label": "text",
+    "description": "Plain text block",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "text", "data": { "text": "Your subscription renews on May 1st. You can manage billing in your account settings." } }
+      ]
+    }
+  },
+  {
+    "label": "heading",
+    "description": "Section heading",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Service Maintenance Scheduled" } }
+      ]
+    }
+  },
+  {
+    "label": "caption",
+    "description": "Caption with heading context",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Photo Upload Complete" } },
+        { "type": "caption", "data": { "text": "Uploaded 3 minutes ago · 2.4 MB · JPEG" } }
+      ]
+    }
+  },
+  {
+    "label": "button_primary",
+    "description": "Primary action button",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "text", "data": { "text": "The Q1 analytics report has been generated." } },
+        {
+          "type": "button_primary",
+          "data": { "label": "Download Report" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/reports/q1" } }
+        }
+      ]
+    }
+  },
+  {
+    "label": "button_secondary",
+    "description": "Secondary button alongside primary",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "text", "data": { "text": "I can reset your preferences to the defaults." } },
+        {
+          "type": "button_primary",
+          "data": { "label": "Reset Preferences" },
+          "feedback": { "action": "submit", "params": { "confirm": "reset" } }
+        },
+        {
+          "type": "button_secondary",
+          "data": { "label": "Cancel" },
+          "feedback": { "action": "submit", "params": { "confirm": "cancel" } }
+        }
+      ]
+    }
+  },
+  {
+    "label": "quick_replies",
+    "description": "Tappable quick-reply chips",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "quick_replies",
+          "data": {
+            "options": [
+              {
+                "label": "Check order status",
+                "feedback": { "action": "submit", "params": { "topic": "order_status" } }
+              },
+              {
+                "label": "Browse new arrivals",
+                "feedback": { "action": "navigate", "params": { "screen": "catalog", "filter": "new" } }
+              },
+              {
+                "label": "Talk to support",
+                "feedback": { "action": "submit", "params": { "topic": "support" } }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "chip_select_single",
+    "description": "Single-select chip group with submit",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "chip_select_single",
+          "data": {
+            "key": "size",
+            "label": "Select a size",
+            "options": [
+              { "label": "Small", "value": "sm" },
+              { "label": "Medium", "value": "md" },
+              { "label": "Large", "value": "lg" },
+              { "label": "X-Large", "value": "xl" }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Confirm" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  },
+  {
+    "label": "chip_select_multi",
+    "description": "Multi-select chip group",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "chip_select_multi",
+          "data": {
+            "key": "interests",
+            "label": "Pick all that apply",
+            "options": [
+              { "label": "Technology", "value": "tech" },
+              { "label": "Design", "value": "design" },
+              { "label": "Business", "value": "biz" },
+              { "label": "Science", "value": "sci" },
+              { "label": "Arts", "value": "arts" }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Save Interests" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  },
+  {
+    "label": "radio_list",
+    "description": "Radio button list with descriptions",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "radio_list",
+          "data": {
+            "key": "experience",
+            "label": "Choose one",
+            "options": [
+              {
+                "label": "Excellent",
+                "description": "Everything worked perfectly",
+                "value": "excellent"
+              },
+              {
+                "label": "Good",
+                "description": "Minor issues but overall positive",
+                "value": "good"
+              },
+              {
+                "label": "Fair",
+                "description": "Some things need improvement",
+                "value": "fair"
+              },
+              {
+                "label": "Poor",
+                "description": "Significant problems encountered",
+                "value": "poor"
+              }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  },
+  {
+    "label": "checkbox_list",
+    "description": "Checkbox list in expanded display",
+    "aui": {
+      "display": "expanded",
+      "blocks": [
+        {
+          "type": "checkbox_list",
+          "data": {
+            "key": "priorities",
+            "label": "Select all that apply",
+            "options": [
+              {
+                "label": "Faster performance",
+                "description": "Reduce load times and lag",
+                "value": "perf"
+              },
+              {
+                "label": "Better design",
+                "description": "Cleaner layouts and navigation",
+                "value": "design"
+              },
+              {
+                "label": "More features",
+                "description": "New capabilities and integrations",
+                "value": "features"
+              },
+              {
+                "label": "Lower price",
+                "description": "More affordable plans",
+                "value": "price"
+              }
+            ]
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit Priorities" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  },
+  {
+    "label": "input_text_single",
+    "description": "Single-line text input with submit",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "input_text_single",
+          "data": {
+            "key": "nickname",
+            "label": "Your nickname",
+            "placeholder": "e.g. Alex",
+            "submit_label": "Save"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "input_slider",
+    "description": "Slider input with range",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "input_slider",
+          "data": {
+            "key": "energy",
+            "label": "Energy level (1 = exhausted, 10 = unstoppable)",
+            "min": 1,
+            "max": 10,
+            "value": 5,
+            "step": 1
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Log It" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  },
+  {
+    "label": "input_rating_stars",
+    "description": "Star rating input",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "input_rating_stars",
+          "data": {
+            "key": "rating",
+            "label": "Rate your experience"
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Submit Rating" },
+          "feedback": { "action": "submit", "params": {} }
+        }
+      ]
+    }
+  },
+  {
+    "label": "divider",
+    "description": "Visual separator between content",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Order Confirmed" } },
+        { "type": "text", "data": { "text": "2× Wireless Earbuds — $59.98" } },
+        { "type": "divider" },
+        { "type": "text", "data": { "text": "Estimated delivery: April 20" } }
+      ]
+    }
+  },
+  {
+    "label": "stepper_horizontal",
+    "description": "Horizontal step progress indicator",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "stepper_horizontal",
+          "data": {
+            "steps": [
+              { "label": "Cart" },
+              { "label": "Shipping" },
+              { "label": "Payment" },
+              { "label": "Confirm" }
+            ],
+            "current": 2
+          }
+        },
+        { "type": "text", "data": { "text": "Please enter your payment details to continue." } }
+      ]
+    }
+  },
+  {
+    "label": "progress_bar",
+    "description": "Progress bar with caption",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "progress_bar",
+          "data": {
+            "label": "Uploading photos…",
+            "progress": 7,
+            "max": 10
+          }
+        },
+        { "type": "caption", "data": { "text": "7 of 10 files uploaded" } }
+      ]
+    }
+  },
+  {
+    "label": "badge_success",
+    "description": "Success badge with text",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "badge_success", "data": { "text": "Verified" } },
+        { "type": "text", "data": { "text": "Your email address has been confirmed." } }
+      ]
+    }
+  },
+  {
+    "label": "status_banner_success",
+    "description": "Full-width success banner",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "status_banner_success", "data": { "text": "Your changes have been saved successfully." } }
+      ]
+    }
+  },
+  {
+    "label": "demo_fun_fact",
+    "description": "Plugin component: fun fact card",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "demo_fun_fact",
+          "data": {
+            "title": "Did You Know?",
+            "fact": "Honey never spoils. Archaeologists have found 3,000-year-old honey in Egyptian tombs that was still perfectly edible.",
+            "source": "National Geographic"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "Combo: Product Recommendations",
+    "description": "Expanded layout with headings, badges, buttons, and quick replies",
+    "aui": {
+      "display": "expanded",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
+        { "type": "text", "data": { "text": "Industry-leading noise cancellation. 30-hour battery. $348." } },
+        { "type": "badge_success", "data": { "text": "Best Overall" } },
+        {
+          "type": "button_primary",
+          "data": { "label": "View Details" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/sony-xm5" } }
+        },
+        { "type": "divider" },
+        { "type": "heading", "data": { "text": "Apple AirPods Pro 2" } },
+        { "type": "text", "data": { "text": "Seamless Apple ecosystem integration. Adaptive transparency. $249." } },
+        {
+          "type": "button_secondary",
+          "data": { "label": "View Details" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/airpods-pro" } }
+        },
+        { "type": "divider" },
+        {
+          "type": "quick_replies",
+          "data": {
+            "options": [
+              { "label": "Compare these two", "feedback": { "action": "submit", "params": { "compare": ["sony-xm5", "airpods-pro"] } } },
+              { "label": "Show me more options", "feedback": { "action": "submit", "params": { "action": "more_options" } } }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "Combo: Project Status",
+    "description": "Inline status with progress bar, badge, and quick replies",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Sprint 12 Progress" } },
+        {
+          "type": "progress_bar",
+          "data": { "label": "Tasks completed", "progress": 14, "max": 20 }
+        },
+        { "type": "caption", "data": { "text": "6 tasks remaining · 3 days left" } },
+        { "type": "divider" },
+        { "type": "badge_success", "data": { "text": "On Track" } },
+        {
+          "type": "quick_replies",
+          "data": {
+            "options": [
+              { "label": "Show remaining tasks", "feedback": { "action": "submit", "params": { "view": "remaining" } } },
+              { "label": "Team workload", "feedback": { "action": "submit", "params": { "view": "workload" } } }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "Combo: Feedback Survey",
+    "description": "Multi-step sheet with star rating, multi-select chips, and text input",
+    "aui": {
+      "display": "sheet",
+      "sheet_title": "Rate This Chat",
+      "steps": [
+        {
+          "label": "Rating",
+          "question": "How would you rate this conversation?",
+          "skippable": false,
+          "blocks": [
+            {
+              "type": "input_rating_stars",
+              "data": { "key": "chat_rating", "label": "Your rating" }
+            },
+            {
+              "type": "button_primary",
+              "data": { "label": "Next" },
+              "feedback": { "action": "submit", "params": {} }
+            }
+          ]
+        },
+        {
+          "label": "What helped",
+          "question": "What was most helpful?",
+          "skippable": true,
+          "blocks": [
+            {
+              "type": "chip_select_multi",
+              "data": {
+                "key": "helpful_aspects",
+                "options": [
+                  { "label": "Accuracy", "value": "accuracy" },
+                  { "label": "Speed", "value": "speed" },
+                  { "label": "Clarity", "value": "clarity" },
+                  { "label": "Friendliness", "value": "tone" }
+                ]
+              }
+            },
+            {
+              "type": "button_primary",
+              "data": { "label": "Next" },
+              "feedback": { "action": "submit", "params": {} }
+            }
+          ]
+        },
+        {
+          "label": "Comments",
+          "question": "Any additional thoughts?",
+          "skippable": true,
+          "blocks": [
+            {
+              "type": "input_text_single",
+              "data": {
+                "key": "comments",
+                "label": "Your feedback",
+                "placeholder": "What could be better?"
+              }
+            },
+            {
+              "type": "button_primary",
+              "data": { "label": "Submit" },
+              "feedback": { "action": "submit", "params": {} }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "label": "Combo: Article Example",
+    "description": "Here's the full write-up on how AUI works:",
+    "aui": {
+      "display": "sheet",
+      "sheet_title": "About AUI",
+      "steps": [
+        {
+          "label": "Article",
+          "skippable": false,
+          "blocks": [
+            { "type": "heading", "data": { "text": "What is Adaptive UI?" } },
+            { "type": "caption", "data": { "text": "5 min read · Updated April 2026" } },
+            { "type": "text", "data": { "text": "Adaptive UI (AUI) is a catalog-driven format that lets AI assistants respond with native interactive components inside a chat conversation — not just plain text. Instead of designing UI, the AI picks from a pre-built catalog of components, fills in the data, and the library renders them natively." } },
+
+            { "type": "divider" },
+
+            { "type": "heading", "data": { "text": "Why a catalog, not a layout language?" } },
+            { "type": "text", "data": { "text": "Letting an AI design arbitrary UI from scratch creates two problems: inconsistent visual quality, and unbounded token cost. A catalog flips both. The AI picks from a finite set of components that the host app has already designed, themed, and tested. The AI's job shrinks from *designing* to *choosing*." } },
+            { "type": "text", "data": { "text": "The trade-off is expressiveness — you can only show what the catalog supports. In practice, this is the right constraint for chat. A well-designed catalog of 30-50 components covers the vast majority of useful chat interactions: polls, forms, product cards, confirmations, rich status updates." } },
+
+            { "type": "divider" },
+
+            { "type": "heading", "data": { "text": "Three display levels" } },
+            { "type": "text", "data": { "text": "**Inline** — renders inside the AI's chat bubble. Quick confirmations, simple status, a button or two." } },
+            { "type": "text", "data": { "text": "**Expanded** — renders full-width in the chat feed, below the bubble. Product cards, galleries, rich lists." } },
+            { "type": "text", "data": { "text": "**Sheet** — renders as a bottom sheet overlay. Multi-step surveys, forms, focused input flows. Also works for long-form content like this article." } },
+            { "type": "caption", "data": { "text": "The AI picks the display level per response based on what's appropriate." } },
+
+            { "type": "divider" },
+
+            { "type": "heading", "data": { "text": "Closing the loop" } },
+            { "type": "text", "data": { "text": "When a user interacts with a rendered component — taps a button, selects a chip, submits a form — the result becomes the next user message in the conversation. This is what makes AUI *conversational*: every interaction feeds back into the dialogue, and the AI responds to the interaction just like it would to typed text." } },
+
+            { "type": "divider" },
+
+            { "type": "caption", "data": { "text": "AUI is open-source and available at github.com/bennyjon/aui" } },
+
+            {
+              "type": "button_primary",
+              "data": { "label": "Got it" },
+              "feedback": { "action": "submit", "params": { "article": "about_aui", "read": true } }
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

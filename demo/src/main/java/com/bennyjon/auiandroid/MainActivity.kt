@@ -17,6 +17,8 @@ import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 import com.bennyjon.auiandroid.livechat.LiveChatScreen
 import com.bennyjon.auiandroid.livechat.LiveChatViewModel
+import com.bennyjon.auiandroid.showcase.ShowcaseScreen
+import com.bennyjon.auiandroid.showcase.ShowcaseViewModel
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
 import com.bennyjon.auiandroid.ui.theme.green.GreenTheme
@@ -42,40 +44,52 @@ class MainActivity : ComponentActivity() {
 private fun DemoNavHost() {
     val navController = rememberNavController()
 
+    val vm: LiveChatViewModel = hiltViewModel()
+    val selectedTheme by vm.selectedTheme.collectAsState()
+    val auiTheme = when (selectedTheme) {
+        DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
+        DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
+        DemoAuiTheme.EARTHY_GREEN -> DemoThemes.earthyGreen()
+    }
+    val typography = when (selectedTheme) {
+        DemoAuiTheme.DEFAULT -> MaterialTheme.typography
+        DemoAuiTheme.WARM_ORGANIC -> WarmTheme.WarmTypography
+        DemoAuiTheme.EARTHY_GREEN -> GreenTheme.GreenTypography
+    }
+    val colorScheme = auiTheme.colors.toMaterialColorScheme(
+        base = MaterialTheme.colorScheme,
+    )
+
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
             DemoHomeScreen(
                 onThemeSelected = { themeKey ->
-                    if (themeKey == "live_chat") {
-                        navController.navigate("live_chat")
-                    } else {
-                        navController.navigate("chat/$themeKey")
+                    when (themeKey) {
+                        "live_chat" -> navController.navigate("live_chat")
+                        "showcase" -> navController.navigate("showcase")
+                        else -> navController.navigate("chat/$themeKey")
                     }
                 },
             )
         }
         composable("live_chat") {
-            val vm: LiveChatViewModel = hiltViewModel()
-            val selectedTheme by vm.selectedTheme.collectAsState()
-            val auiTheme = when (selectedTheme) {
-                DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
-                DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
-                DemoAuiTheme.EARTHY_GREEN -> DemoThemes.earthyGreen()
-            }
-            val typography = when (selectedTheme) {
-                DemoAuiTheme.DEFAULT -> MaterialTheme.typography
-                DemoAuiTheme.WARM_ORGANIC -> WarmTheme.WarmTypography
-                DemoAuiTheme.EARTHY_GREEN -> GreenTheme.GreenTypography
-            }
-            val colorScheme = auiTheme.colors.toMaterialColorScheme(
-                base = MaterialTheme.colorScheme,
-            )
             MaterialTheme(colorScheme = colorScheme, typography = typography) {
                 LiveChatScreen(
                     viewModel = vm,
                     pluginRegistry = vm.pluginRegistry,
                     theme = selectedTheme,
                     onChangeTheme = { vm.switchTheme(it) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+        }
+        composable("showcase") {
+            val vm: ShowcaseViewModel = hiltViewModel()
+            MaterialTheme(colorScheme = colorScheme, typography = typography) {
+                ShowcaseScreen(
+                    viewModel = vm,
+                    auiTheme = auiTheme,
+                    pluginRegistry = vm.pluginRegistry,
                     onBack = { navController.popBackStack() },
                 )
             }

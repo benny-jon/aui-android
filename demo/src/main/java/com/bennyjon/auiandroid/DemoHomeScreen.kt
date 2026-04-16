@@ -64,6 +64,22 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
+                text = "Component Showcase",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            ThemeCard(
+                title = "All Blocks Showcase",
+                subtitle = "Every AUI component in one scrollable list",
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                onClick = { onThemeSelected("showcase") },
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
                 text = "Themes Showcase (Fake chat)",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
