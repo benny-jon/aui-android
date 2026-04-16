@@ -15,6 +15,74 @@ AUI parses the JSON and renders native Compose UI — cards, forms, chips, butto
 | The AI builds a multi-step survey from JSON and presents it as a native bottom sheet. Each step collects user input and the consolidated result is delivered to your app via a single callback. | The AI renders interactive components with actions tied to plugins your app registers. When the user taps a button, the matching plugin handles the side effect — navigation, opening a URL, or any custom logic — without the AI knowing your app's internals. |
 | <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <img src="docs/assets/ai-generated-actions-example.gif" width="300" /> |
 
+## How It Works
+
+AUI connects your app and an AI assistant through three steps:
+
+```
+┌──────────┐          ┌─────────┐          ┌─────────────┐
+│ AUI      │  prompt  │   AI    │   JSON   │ AUI         │
+│ Core     │ ───────▶ │ (Cloud) │ ───────▶ │ Compose     │
+│ (prompt) │          │         │          │ (renderer)  │
+└──────────┘          └─────────┘          └──────┬──────┘
+                                                  │
+                                           native Compose UI
+                                                  │
+                                                  ▼
+                                           ┌──────────────┐
+                                           │   Your App   │◀── user taps
+                                           └──────────────┘    (AuiFeedback)
+```
+
+**Step 1 — AUI generates a prompt describing its components.** Your app includes it in the AI's system prompt.
+
+```kotlin
+val systemPrompt = "You are a helpful assistant.\n\n" +
+    AuiCatalogPrompt.generate()
+```
+
+The generated prompt tells the AI what components exist (buttons, chips, forms, rating inputs, etc.) and how to format responses. It stays in sync with the library automatically.
+
+**Step 2 — The AI responds with structured JSON.** Instead of plain text, the AI returns a JSON envelope with an optional `aui` field containing native UI components:
+
+```json
+{
+  "text": "Which feature should we build next?",
+  "aui": {
+    "display": "inline",
+    "blocks": [
+      { "type": "radio_list", "data": {
+          "key": "feature",
+          "options": [
+            { "label": "Dark mode", "value": "dark_mode" },
+            { "label": "Export to PDF", "value": "export_pdf" }
+          ]
+      }},
+      { "type": "button_primary", "data": { "label": "Vote" },
+        "feedback": { "action": "submit", "params": {} }
+      }
+    ]
+  }
+}
+```
+
+For text-only replies, the AI simply omits the `aui` field: `{ "text": "Sure, happy to help!" }`.
+
+**Step 3 — AUI renders native Compose UI.** Your app passes the JSON to `AuiRenderer`, which parses it and renders native components. When the user interacts (taps a button, submits a form), your app receives an `AuiFeedback` callback:
+
+```kotlin
+AuiRenderer(
+    json = auiJson,
+    onFeedback = { feedback ->
+        // feedback.action  → "submit"
+        // feedback.params  → { "feature": "dark_mode" }
+        sendToAI(feedback)
+    }
+)
+```
+
+The library is a **pure renderer with a callback**. It does not manage chat history, conversation state, networking, or message models — those are your app's domain.
+
 ## Quick Start
 
 ### 1. Add the dependency
@@ -96,24 +164,6 @@ Most LLM providers support this by marking the system prompt as cacheable:
 
 - **Anthropic (Claude):** [Prompt Caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) — send the system prompt as a content block with `cache_control` and add the `anthropic-beta: prompt-caching-2024-07-31` header. Cached tokens cost 90% less.
 - **OpenAI:** [Prompt Caching](https://platform.openai.com/docs/guides/prompt-caching) — caching is automatic for prompts longer than 1,024 tokens. No code changes needed. Cached tokens cost 50% less.
-
-## How It Works
-
-```
-Your App                          AUI Library
-─────────                         ───────────
-AI Client  ──JSON string──▶  AuiRenderer (Composable)
-                                   ├── Parses JSON
-                                   ├── Routes to display level
-                                   │   (inline / expanded / sheet)
-                                   ├── Renders native Compose components
-                                   └── Reports interactions via callback
-                                          │
-Chat UI  ◀──AuiFeedback────────────────────┘
-```
-
-The library is a **pure renderer with a callback**. It does not manage chat history,
-conversation state, networking, or message models. Those are your app's domain.
 
 ## Display Levels
 
