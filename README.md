@@ -13,7 +13,7 @@ AUI parses the JSON and renders native Compose UI — cards, forms, chips, butto
 | AI-Generated Survey | All Blocks Showcase |
 |:---:|:---:|
 | The AI builds a multi-step survey from JSON and presents it as a native bottom sheet. Each step collects user input and the consolidated result is delivered to your app via a single callback. | A scrollable gallery of every built-in AUI component — text, cards, lists, inputs, status, media, and layout blocks — rendered from JSON in their inline, expanded, and sheet display modes. Use it to preview the catalog, switch themes on the fly, and see how each block reacts to user interaction. |
-| <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <video src="docs/assets/all-blocks-show-case.mp4 width="300" /> |
+| <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <video src="docs/assets/all-blocks-show-case.mp4" width="300" /> |
 
 ## How It Works
 
