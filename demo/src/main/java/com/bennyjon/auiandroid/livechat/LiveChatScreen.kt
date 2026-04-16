@@ -56,6 +56,7 @@ import com.bennyjon.aui.core.model.AuiResponse
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.chat.ChatMessage
 import com.bennyjon.auiandroid.data.llm.LlmProvider
+import com.bennyjon.auiandroid.ui.ThemeDropdown
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
 
 /**
@@ -231,39 +232,6 @@ private fun resolveAuiTheme(theme: DemoAuiTheme): AuiTheme = when (theme) {
     DemoAuiTheme.DEFAULT -> AuiTheme.fromMaterialTheme()
     DemoAuiTheme.WARM_ORGANIC -> DemoThemes.warmOrganic()
     DemoAuiTheme.EARTHY_GREEN -> DemoThemes.earthyGreen()
-}
-
-/**
- * Dropdown button in the top bar for selecting the active [AuiTheme].
- *
- * Displays the current theme name. Tapping opens a menu with all [DemoAuiTheme] entries.
- */
-@Composable
-private fun ThemeDropdown(
-    currentTheme: DemoAuiTheme,
-    onThemeSelected: (DemoAuiTheme) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        TextButton(onClick = { expanded = true }) {
-            Text(currentTheme.displayName)
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            DemoAuiTheme.entries.forEach { theme ->
-                DropdownMenuItem(
-                    text = { Text(theme.displayName) },
-                    onClick = {
-                        expanded = false
-                        onThemeSelected(theme)
-                    },
-                )
-            }
-        }
-    }
 }
 
 @Composable

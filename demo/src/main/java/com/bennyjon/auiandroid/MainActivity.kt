@@ -84,12 +84,14 @@ private fun DemoNavHost() {
             }
         }
         composable("showcase") {
-            val vm: ShowcaseViewModel = hiltViewModel()
+            val showcaseVm: ShowcaseViewModel = hiltViewModel()
             MaterialTheme(colorScheme = colorScheme, typography = typography) {
                 ShowcaseScreen(
-                    viewModel = vm,
+                    viewModel = showcaseVm,
+                    pluginRegistry = showcaseVm.pluginRegistry,
                     auiTheme = auiTheme,
-                    pluginRegistry = vm.pluginRegistry,
+                    selectedThemeName = selectedTheme,
+                    onChangeTheme = { vm.switchTheme(it) },
                     onBack = { navController.popBackStack() },
                 )
             }

@@ -2,14 +2,12 @@ package com.bennyjon.auiandroid.showcase
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,6 +34,7 @@ import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.livechat.DemoAuiTheme
+import com.bennyjon.auiandroid.ui.ThemeDropdown
 
 /**
  * Scrollable showcase screen that renders every AUI component type.
@@ -51,8 +50,10 @@ import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 @Composable
 fun ShowcaseScreen(
     viewModel: ShowcaseViewModel,
-    auiTheme: AuiTheme,
     pluginRegistry: AuiPluginRegistry,
+    auiTheme: AuiTheme,
+    selectedThemeName: DemoAuiTheme = DemoAuiTheme.DEFAULT,
+    onChangeTheme: (DemoAuiTheme) -> Unit,
     onBack: () -> Unit,
 ) {
     val entries by viewModel.entries.collectAsState()
@@ -68,6 +69,12 @@ fun ShowcaseScreen(
                             contentDescription = "Back",
                         )
                     }
+                },
+                actions = {
+                    ThemeDropdown(
+                        currentTheme = selectedThemeName,
+                        onThemeSelected = onChangeTheme,
+                    )
                 },
             )
         },
