@@ -10,7 +10,7 @@ class ShouldRenderAuiTest {
 
     @Test
     fun `not spent inline is rendered`() {
-        val response = AuiResponse(display = AuiDisplay.INLINE)
+        val response = AuiResponse(display = AuiDisplay.EXPANDED)
         assertTrue(shouldRenderAui(response, isSpent = false))
     }
 
@@ -22,7 +22,7 @@ class ShouldRenderAuiTest {
 
     @Test
     fun `spent inline is rendered grayed out`() {
-        val response = AuiResponse(display = AuiDisplay.INLINE)
+        val response = AuiResponse(display = AuiDisplay.EXPANDED)
         assertTrue(shouldRenderAui(response, isSpent = true))
     }
 

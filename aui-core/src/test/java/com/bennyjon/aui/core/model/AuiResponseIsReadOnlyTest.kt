@@ -32,7 +32,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `no feedback blocks are read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.Text(data = TextData(text = "Hello")),
             ),
@@ -43,7 +43,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `submit action is not read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.ButtonPrimary(
                     data = ButtonPrimaryData(label = "Submit"),
@@ -57,7 +57,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `only read-only plugin actions are read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.ButtonPrimary(
                     data = ButtonPrimaryData(label = "Open"),
@@ -71,7 +71,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `mixed read-only and submit is not read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.ButtonPrimary(
                     data = ButtonPrimaryData(label = "Open"),
@@ -89,7 +89,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `unknown action with no plugin is not read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.ButtonPrimary(
                     data = ButtonPrimaryData(label = "Mystery"),
@@ -103,7 +103,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `interactive plugin action is not read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.ButtonPrimary(
                     data = ButtonPrimaryData(label = "Add"),
@@ -117,7 +117,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `empty response is read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = emptyList(),
         )
         assertTrue(response.isReadOnly(registry))
@@ -126,7 +126,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `empty registry with no-feedback blocks is read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(AuiBlock.Text(data = TextData(text = "Hello"))),
         )
         assertTrue(response.isReadOnly(AuiPluginRegistry.Empty))
@@ -137,7 +137,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `quick replies with submit options is not read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.QuickReplies(
                     data = QuickRepliesData(
@@ -155,7 +155,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `quick replies with only read-only options is read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.QuickReplies(
                     data = QuickRepliesData(
@@ -173,7 +173,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `quick replies with no feedback on options is read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.QuickReplies(
                     data = QuickRepliesData(
@@ -191,7 +191,7 @@ class AuiResponseIsReadOnlyTest {
     @Test
     fun `quick replies mixed with submit block-level feedback is not read-only`() {
         val response = AuiResponse(
-            display = AuiDisplay.INLINE,
+            display = AuiDisplay.EXPANDED,
             blocks = listOf(
                 AuiBlock.Text(data = TextData(text = "Pick one:")),
                 AuiBlock.QuickReplies(

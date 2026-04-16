@@ -49,7 +49,7 @@ The generated prompt tells the AI what components exist (buttons, chips, forms, 
 {
   "text": "Which feature should we build next?",
   "aui": {
-    "display": "inline",
+    "display": "expanded",
     "blocks": [
       { "type": "radio_list", "data": {
           "key": "feature",
@@ -171,8 +171,7 @@ The AI chooses how prominently to present each response:
 
 | Level | When to use | Behavior |
 |-------|-------------|----------|
-| **inline** | Quick info, status badges, simple replies | Renders inside the chat bubble |
-| **expanded** | Rich content, polls, product cards | Full-width in the chat feed |
+| **expanded** | Quick info, status badges, polls, rich content, product cards | Full-width in the chat feed |
 | **sheet** | Multi-step surveys, forms, bookings | Bottom sheet overlay with step navigation |
 
 ## Handling Sheets

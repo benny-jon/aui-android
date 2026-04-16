@@ -1,6 +1,6 @@
 [
   {
-    "display": "inline",
+    "display": "expanded",
     "blocks": [
       {
         "type": "heading",
@@ -21,7 +21,7 @@
     ]
   },
   {
-    "display": "inline",
+    "display": "expanded",
     "blocks": [
       {
         "type": "heading",
@@ -50,7 +50,7 @@
     ]
   },
   {
-    "display": "inline",
+    "display": "expanded",
     "blocks": [
       {
         "type": "demo_fun_fact",

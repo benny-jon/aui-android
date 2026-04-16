@@ -249,7 +249,7 @@ The "text" field is REQUIRED — it is your spoken reply shown in the chat bubbl
 The "aui" field is OPTIONAL — include it only when you want to render interactive UI.
 
 For text-only replies: { "text": "Hello! How can I help?" }
-For AUI replies:       { "text": "Here's a quick poll:", "aui": { "display": "inline", "blocks": [...] } }
+For AUI replies:       { "text": "Here's a quick poll:", "aui": { "display": "expanded", "blocks": [...] } }
 
 CRITICAL: No prose wrapper, no markdown code fence, no commentary before or
 after — just the raw JSON object. Never output anything outside this envelope.
@@ -263,7 +263,7 @@ that follow-up turn in mind.
 
     internal const val SCHEMA_FORMAT = """AUI payload schema (goes inside the "aui" field of the response envelope):
 {
-  "display": "inline" | "expanded" | "sheet",
+  "display": "expanded" | "sheet",
   "blocks": [ ... ]
 }
 
@@ -278,8 +278,7 @@ add a "sheet_title":
 }"""
 
     internal const val DISPLAY_LEVELS = """DISPLAY LEVELS:
-  inline   — inside chat bubble. Quick answers, confirmations, simple status.
-  expanded — full-width in chat feed. Rich cards, carousels, media, lists.
+  expanded — full-width in chat feed. Quick answers, confirmations, rich cards, media, lists.
   sheet    — bottom sheet overlay. Multi-step surveys, forms, focused input.
 
 Choose the LEAST prominent level that serves the content well.
@@ -358,7 +357,7 @@ Status:
     internal const val GUIDELINES = """GUIDELINES:
   - Start with text for context, then use components.
   - Use quick_replies at the end to suggest next steps.
-  - Keep it concise: 2-5 blocks for inline, 3-8 for expanded, 3-10 per sheet step.
+  - Keep it concise: 2-8 blocks for expanded, 3-20 per sheet step.
   - Triggers (button_primary, button_secondary, quick_replies options) MUST have a
     feedback object — they fire actions when tapped.
   - Collectors (radio_list, checkbox_list, chip_select_*, input_*) passively gather
@@ -371,11 +370,11 @@ Status:
 Text-only reply:
 { "text": "Sure, I can help with that!" }
 
-Inline poll (radio list + submit button):
+Expanded poll (radio list + submit button):
 {
   "text": "Let me know what you think:",
   "aui": {
-    "display": "inline",
+    "display": "expanded",
     "blocks": [
       { "type": "text", "data": { "text": "Which feature should we build next?" } },
       { "type": "radio_list", "data": {
@@ -462,7 +461,7 @@ Quick replies with per-option actions (each chip fires its own feedback):
 {
   "text": "Want to learn more?",
   "aui": {
-    "display": "inline",
+    "display": "expanded",
     "blocks": [
       { "type": "quick_replies", "data": {
           "options": [

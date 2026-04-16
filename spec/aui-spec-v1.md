@@ -15,13 +15,12 @@ The AI chooses **how prominently** to present its response based on what it's sh
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                                                              │
-│  INLINE                  EXPANDED              SHEET         │
-│  ─────────               ────────              ─────         │
+│  EXPANDED                              SHEET                 │
+│  ────────                              ─────                 │
 │                                                              │
-│  Inside the chat         Breaks out of the     Bottom sheet  │
-│  bubble. Light,          bubble. Full-width     overlay.      │
-│  conversational.         in the chat feed.      Focused,      │
-│                          Rich content.          actionable.   │
+│  Full-width in the chat feed.          Bottom sheet overlay. │
+│  Quick answers, confirmations,         Focused, actionable.  │
+│  rich content.                                               │
 │                                                              │
 │  ┌──────────────┐       ┌──────────────────┐                 │
 │  │ AI bubble    │       │                  │   ┌───────────┐ │
@@ -54,7 +53,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 
 1. **Catalog, not language.** The AI picks from pre-built components. It never designs UI.
 2. **One type = one component.** No variants. `button_primary` and `button_secondary` are separate types.
-3. **Three presentation levels.** The AI picks `inline`, `expanded`, or `sheet` per response based on content.
+3. **Two presentation levels.** The AI picks `expanded` or `sheet` per response based on content.
 4. **Interactions close the loop.** Every user interaction produces a feedback event that feeds back into the conversation.
 5. **Text is always an option.** The AI can respond with plain text, components, or both. Components are additive.
 6. **Progressive enrichment.** Start with a small catalog. Add components over time. The format never changes.
@@ -86,7 +85,6 @@ The AI chooses **how prominently** to present its response based on what it's sh
 │   ┌──────────────────────────────────────────────────────┐   │
 │   │  Presentation Router                                 │   │
 │   │                                                      │   │
-│   │  "inline"   → render inside chat bubble              │   │
 │   │  "expanded" → render full-width in chat feed         │   │
 │   │  "sheet"    → render in bottom sheet overlay         │   │
 │   └──────────────────────────────────────────────────────┘   │
@@ -102,7 +100,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 
 ```json
 {
-  "display": "inline | expanded | sheet",
+  "display": "expanded | sheet",
   "blocks": [ ... ]
 }
 ```
@@ -111,32 +109,16 @@ That's the entire top-level structure. Two fields.
 
 | Field     | Required | Description                                                           |
 |-----------|----------|-----------------------------------------------------------------------|
-| `display` | yes      | Presentation level: `inline`, `expanded`, or `sheet`                  |
+| `display` | yes      | Presentation level: `expanded` or `sheet`                             |
 | `blocks`  | yes      | Array of content blocks (text + catalog components)                   |
 
 ### Presentation Levels
 
-#### `inline`
-
-Rendered **inside the AI's chat bubble**, just like rich text. The bubble may grow to accommodate the content, but it stays visually contained as "the AI's message."
-
-Best for: quick answers, short status, a button or two, simple confirmations.
-
-```json
-{
-  "display": "inline",
-  "blocks": [
-    { "type": "text", "data": { "text": "Your order #4812 shipped! ETA April 5." } },
-    { "type": "quick_replies", "data": { "options": [{ "label": "Track" }, { "label": "Help" }] } }
-  ]
-}
-```
-
 #### `expanded`
 
-Rendered **full-width in the chat feed**, breaking out of the bubble. Appears below the AI's text bubble (if any) as a distinct rich content block — similar to how link previews or media attachments appear in messaging apps.
+Rendered **full-width in the chat feed**. Leading text/heading/caption blocks appear as the AI's chat bubble, and the remaining content blocks render full-width below — similar to how link previews or media attachments appear in messaging apps.
 
-Best for: product cards, image galleries, scrollable carousels, rich lists, data displays.
+Best for: quick answers, confirmations, rich cards, media, lists, product cards, image galleries, scrollable carousels, data displays.
 
 ```json
 {
@@ -268,7 +250,6 @@ This means the AI doesn't need to think about "what goes in the bubble vs outsid
 
 | Display    | `text` blocks                  | Other blocks                         |
 |------------|--------------------------------|--------------------------------------|
-| `inline`   | In the bubble                  | In the bubble                        |
 | `expanded` | In the bubble                  | Full-width below the bubble          |
 | `sheet`    | Uses `steps` array (not `blocks`) — each step rendered in the persistent bottom sheet |
 
@@ -337,11 +318,11 @@ Consumers can use `feedback.formattedEntries` directly as the chat bubble text, 
   { "role": "user", "content": { "feedback": { "action": "select_restaurant", "params": { "id": "nonnas" } } } },
   { "role": "assistant", "content": { "display": "sheet", "steps": [ ... ] } },
   { "role": "user", "content": { "feedback": { "action": "confirm_booking", "params": { "restaurant": "nonnas", "time": "19:30", "party_size": "2" } } } },
-  { "role": "assistant", "content": { "display": "inline", "blocks": [ ... ] } }
+  { "role": "assistant", "content": { "display": "expanded", "blocks": [ ... ] } }
 ]
 ```
 
-Note how the AI escalated from `expanded` (showing options) → `sheet` (booking form) → `inline` (confirmation). The presentation level changes per response based on what's appropriate.
+Note how the AI escalated from `expanded` (showing options) → `sheet` (booking form) → `expanded` (confirmation). The presentation level changes per response based on what's appropriate.
 
 ### Items with Individual Feedback
 
@@ -787,13 +768,13 @@ Optional: feedback (for the trailing action)
 
 ## Complete Examples
 
-### Example 1: Quick Status (inline)
+### Example 1: Quick Status (expanded)
 
 **User:** "Did my payment go through?"
 
 ```json
 {
-  "display": "inline",
+  "display": "expanded",
   "blocks": [
     {
       "type": "text",
@@ -1008,11 +989,11 @@ Optional: feedback (for the trailing action)
 
 **User selects time + party size + taps Confirm → sheet closes → feedback sent**
 
-**AI Response 3 — inline (confirmation):**
+**AI Response 3 — expanded (confirmation):**
 
 ```json
 {
-  "display": "inline",
+  "display": "expanded",
   "blocks": [
     {
       "type": "status_banner_success",
@@ -1091,13 +1072,13 @@ Optional: feedback (for the trailing action)
 }
 ```
 
-### Example 5: Simple Conversational (inline)
+### Example 5: Simple Conversational (expanded)
 
 **User:** "What's the weather like?"
 
 ```json
 {
-  "display": "inline",
+  "display": "expanded",
   "blocks": [
     {
       "type": "text",
@@ -1123,9 +1104,9 @@ Optional: feedback (for the trailing action)
 You are a helpful assistant. You respond with rich UI when it enhances
 the experience, and plain text when it doesn't.
 
-Response format (inline/expanded):
+Response format (expanded):
 {
-  "display": "inline" | "expanded",
+  "display": "expanded" | "expanded",
   "blocks": [ ... ]
 }
 
@@ -1139,8 +1120,7 @@ Response format (sheet — multi-step):
 }
 
 DISPLAY LEVELS:
-  inline   — inside chat bubble. Quick answers, confirmations, simple status.
-  expanded — full-width in chat feed. Rich cards, carousels, media, lists.
+  expanded — full-width in chat feed. Quick answers, confirmations, rich cards, media, lists.
   sheet    — bottom sheet overlay. Multi-step surveys, forms, focused input.
 
 Choose the LEAST prominent level that serves the content well.
@@ -1225,10 +1205,10 @@ Sheet-only fields (top-level):
 GUIDELINES:
   - Start with text for context, then use components
   - Use quick_replies at the end to suggest next steps
-  - Keep it concise: 2-5 blocks for inline, 3-8 for expanded, 3-10 for sheet
+  - Keep it concise: 3-8 blocks for expanded, 3-10 for sheet
   - Use text-only when components add no value
   - Every interactive component MUST have a feedback object
-  - Prefer inline. Escalate to expanded for rich content. Use sheet for focused input.
+  - Prefer expanded. Use sheet only for focused multi-step input.
 ```
 
 ---
@@ -1237,8 +1217,8 @@ GUIDELINES:
 
 | Response Type                          | Display  | Tokens   | Blocks |
 |----------------------------------------|----------|----------|--------|
-| Simple text answer                     | inline   | ~30-50   | 1-2    |
-| Status + quick replies                 | inline   | ~100-150 | 3-4    |
+| Simple text answer                     | expanded | ~30-50   | 1-2    |
+| Status + quick replies                 | expanded | ~100-150 | 3-4    |
 | Product recommendations (carousel)     | expanded | ~250-350 | 3-4    |
 | Restaurant listings (3 cards)          | expanded | ~250-350 | 4-5    |
 | Booking flow (form)                    | sheet    | ~200-300 | 5-7    |

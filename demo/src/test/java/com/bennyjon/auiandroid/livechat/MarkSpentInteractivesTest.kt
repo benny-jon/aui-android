@@ -31,7 +31,7 @@ class MarkSpentInteractivesTest {
     )
 
     private fun interactiveAuiResponse() = AuiResponse(
-        display = AuiDisplay.INLINE,
+        display = AuiDisplay.EXPANDED,
         blocks = listOf(
             AuiBlock.ButtonPrimary(
                 data = ButtonPrimaryData(label = "Submit"),
@@ -41,7 +41,7 @@ class MarkSpentInteractivesTest {
     )
 
     private fun readOnlyAuiResponse() = AuiResponse(
-        display = AuiDisplay.INLINE,
+        display = AuiDisplay.EXPANDED,
         blocks = listOf(
             AuiBlock.ButtonPrimary(
                 data = ButtonPrimaryData(label = "Open"),
@@ -51,7 +51,7 @@ class MarkSpentInteractivesTest {
     )
 
     private fun textOnlyAuiResponse() = AuiResponse(
-        display = AuiDisplay.INLINE,
+        display = AuiDisplay.EXPANDED,
         blocks = listOf(
             AuiBlock.Text(data = TextData(text = "Hello")),
         ),

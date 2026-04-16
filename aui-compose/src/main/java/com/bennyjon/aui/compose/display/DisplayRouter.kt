@@ -3,21 +3,13 @@ package com.bennyjon.aui.compose.display
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
-import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
-import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
-import com.bennyjon.aui.compose.theme.LocalAuiHeadingColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
@@ -34,14 +26,13 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 /**
  * Routes an [AuiResponse] to the appropriate display mode.
  *
- * - **INLINE**: All blocks rendered in a [Column]. Suitable for chat bubbles.
  * - **EXPANDED**: Leading text/heading/caption blocks rendered inline; remaining content
  *   blocks rendered full-width below.
  * - **SHEET**: Renders a persistent bottom sheet that navigates through each [AuiStep]
  *   without closing between steps. The library manages step navigation, the stepper indicator,
  *   and accumulation — emitting a single [AuiFeedback] with all Q+A entries at the end.
  *
- * The split logic for INLINE/EXPANDED: blocks are scanned from the start. Contiguous leading
+ * The split logic for EXPANDED: blocks are scanned from the start. Contiguous leading
  * `text`, `heading`, and `caption` blocks accumulate into the "bubble" list. The first
  * non-text block and everything after it form the "content" list.
  *
@@ -68,37 +59,18 @@ fun DisplayRouter(
     collectingFeedbackEnabled: Boolean = true,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
-    val theme = LocalAuiTheme.current
     when (response.display) {
-        AuiDisplay.INLINE -> {
-            Surface(
-                shape = RoundedCornerShape(
-                    topStart = 4.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp,
-                ),
-                color = theme.colors.surfaceVariant,
-                modifier = Modifier.widthIn(max = 300.dp),
-            ) {
-                CompositionLocalProvider(
-                    LocalAuiHeadingColor provides theme.colors.onSurface,
-                    LocalAuiBodyColor provides theme.colors.onSurfaceVariant,
-                    LocalAuiCaptionColor provides theme.colors.onSurfaceVariant,
-                ) {
-                    BlockRenderer(
-                        blocks = response.blocks,
-                        modifier = modifier.padding(16.dp),
-                        pluginRegistry = pluginRegistry,
-                        onFeedback = onFeedback,
-                        collectingFeedbackEnabled = collectingFeedbackEnabled,
-                        onUnknownBlock = onUnknownBlock,
-                    )
-                }
-            }
+        AuiDisplay.SHEET -> {
+            SheetFlowDisplay(
+                steps = response.steps,
+                sheetTitle = response.sheetTitle,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+                onUnknownBlock = onUnknownBlock,
+            )
         }
 
-        AuiDisplay.EXPANDED -> {
+        else -> {
             val (bubbleBlocks, contentBlocks) = splitBlocks(response.blocks)
             // Shared registry so all inputs across both split renderers are visible to
             // buildEntriesFromBlocks. allBlocksForEntries = response.blocks ensures headings in
@@ -130,16 +102,6 @@ fun DisplayRouter(
                 }
             }
         }
-
-        AuiDisplay.SHEET -> {
-            SheetFlowDisplay(
-                steps = response.steps,
-                sheetTitle = response.sheetTitle,
-                pluginRegistry = pluginRegistry,
-                onFeedback = onFeedback,
-                onUnknownBlock = onUnknownBlock,
-            )
-        }
     }
 }
 
@@ -155,32 +117,6 @@ internal fun splitBlocks(blocks: List<AuiBlock>): Pair<List<AuiBlock>, List<AuiB
         Pair(blocks, emptyList())
     } else {
         Pair(blocks.subList(0, splitIndex), blocks.subList(splitIndex, blocks.size))
-    }
-}
-
-@Preview(showBackground = true, name = "DisplayRouter — Inline")
-@Composable
-private fun DisplayRouterInlinePreview() {
-    AuiThemeProvider {
-        DisplayRouter(
-            response = AuiResponse(
-                display = AuiDisplay.INLINE,
-                blocks = listOf(
-                    AuiBlock.Text(data = TextData(text = "Was this response helpful?")),
-                    AuiBlock.ChipSelectSingle(
-                        data = ChipSelectSingleData(
-                            key = "helpful",
-                            options = listOf(
-                                ChipOption(label = "Yes", value = "yes"),
-                                ChipOption(label = "No", value = "no"),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-            onFeedback = {},
-        )
     }
 }
 

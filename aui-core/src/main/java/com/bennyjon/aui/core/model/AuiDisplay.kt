@@ -10,9 +10,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class AuiDisplay {
-    /** Rendered inside the AI chat bubble. Best for quick, conversational responses. */
-    @SerialName("inline") INLINE,
-
     /** Rendered full-width in the chat feed, below the AI bubble. Best for rich content. */
     @SerialName("expanded") EXPANDED,
 

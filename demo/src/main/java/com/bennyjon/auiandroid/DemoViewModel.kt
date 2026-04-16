@@ -231,7 +231,7 @@ private val SHEET_JSON = """
 
 private val CONFIRMATION_JSON = """
 {
-  "display": "inline",
+  "display": "expanded",
   "blocks": [
     {
       "type": "status_banner_success",

@@ -23,7 +23,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * Renders an AUI JSON string as native Compose UI.
  *
  * Parses [json] and delegates to [DisplayRouter], which selects the appropriate layout
- * (inline, expanded, or bottom sheet) based on the `display` field. The host app supplies
+ * (expanded or bottom sheet) based on the `display` field. The host app supplies
  * [onFeedback] to receive interaction events.
  *
  * For sheet responses: the renderer opens a [ModalBottomSheet] overlay and emits no visible
@@ -95,8 +95,7 @@ fun AuiRenderer(
  * Renders a pre-parsed [AuiResponse] as native Compose UI.
  *
  * Wraps all content in an [AuiThemeProvider] and delegates routing to [DisplayRouter], which
- * selects the appropriate layout (inline, expanded, or bottom sheet) based on
- * [AuiResponse.display]. The host app supplies [onFeedback] to receive interaction events.
+ * selects the appropriate layout (expanded or bottom sheet) based on [AuiResponse.display]. The host app supplies [onFeedback] to receive interaction events.
  *
  * Example:
  * ```kotlin
@@ -148,11 +147,11 @@ fun AuiRenderer(
     }
 }
 
-@Preview(showBackground = true, name = "AuiRenderer — Inline Confirmation")
+@Preview(showBackground = true, name = "AuiRenderer — Expanded Confirmation")
 @Composable
 private fun AuiRendererPreview() {
     val response = AuiResponse(
-        display = AuiDisplay.INLINE,
+        display = AuiDisplay.EXPANDED,
         blocks = listOf(
             AuiBlock.StatusBannerSuccess(
                 data = StatusBannerSuccessData(text = "Survey complete!"),

@@ -34,7 +34,7 @@ class FakeLlmClient : LlmClient {
             {
               "text": "Great question! Here's a quick poll for you:",
               "aui": {
-                "display": "inline",
+                "display": "expanded",
                 "blocks": [
                   {
                     "type": "text",
@@ -130,7 +130,7 @@ class FakeLlmClient : LlmClient {
             {
               "text": "Thanks for completing the survey! Here's your confirmation:",
               "aui": {
-                "display": "inline",
+                "display": "expanded",
                 "blocks": [
                   {
                     "type": "status_banner_success",

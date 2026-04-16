@@ -41,7 +41,7 @@ data class AuiFeedback(
      * Ordered list of question–answer pairs captured from user input.
      *
      * For [AuiDisplay.SHEET], one entry per step that had both a question and a non-empty answer.
-     * For [AuiDisplay.INLINE] and [AuiDisplay.EXPANDED], one entry per heading→input pair.
+     * For [AuiDisplay.EXPANDED], one entry per heading→input pair.
      *
      * Use this when you want to build a custom summary instead of using [formattedEntries].
      */

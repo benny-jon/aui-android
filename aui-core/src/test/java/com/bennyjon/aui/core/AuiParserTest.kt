@@ -27,7 +27,7 @@ class AuiParserTest {
         val json = loadResource("examples/poll-inline-rating.json")
         val response = parser.parse(json)
 
-        assertEquals(AuiDisplay.INLINE, response.display)
+        assertEquals(AuiDisplay.EXPANDED, response.display)
         assertEquals(3, response.blocks.size)
         assertTrue(response.blocks[0] is AuiBlock.Heading)
         assertTrue(response.blocks[1] is AuiBlock.Text)
@@ -46,7 +46,7 @@ class AuiParserTest {
         val json = loadResource("examples/poll-inline-yes-no.json")
         val response = parser.parse(json)
 
-        assertEquals(AuiDisplay.INLINE, response.display)
+        assertEquals(AuiDisplay.EXPANDED, response.display)
         assertEquals(2, response.blocks.size)
         assertTrue(response.blocks[0] is AuiBlock.Text)
         val replies = response.blocks[1] as AuiBlock.QuickReplies
@@ -126,7 +126,7 @@ class AuiParserTest {
         val json = loadResource("examples/poll-confirmation.json")
         val response = parser.parse(json)
 
-        assertEquals(AuiDisplay.INLINE, response.display)
+        assertEquals(AuiDisplay.EXPANDED, response.display)
         assertEquals(3, response.blocks.size)
         assertTrue(response.blocks[0] is AuiBlock.StatusBannerSuccess)
         assertTrue(response.blocks[1] is AuiBlock.Text)
@@ -208,7 +208,7 @@ class AuiParserTest {
     fun `unknown type produces Unknown block instead of throwing`() {
         val json = """
             {
-              "display": "inline",
+              "display": "expanded",
               "blocks": [
                 { "type": "text", "data": { "text": "Hello" } },
                 { "type": "future_component_v9", "data": { "foo": "bar" } }
@@ -227,7 +227,7 @@ class AuiParserTest {
     fun `unknown block preserves rawData for plugin parsing`() {
         val json = """
             {
-              "display": "inline",
+              "display": "expanded",
               "blocks": [
                 { "type": "custom_widget", "data": { "title": "Hello", "count": 42 } }
               ]
@@ -246,7 +246,7 @@ class AuiParserTest {
     fun `unknown block without data field has null rawData`() {
         val json = """
             {
-              "display": "inline",
+              "display": "expanded",
               "blocks": [
                 { "type": "no_data_block" }
               ]
@@ -263,7 +263,7 @@ class AuiParserTest {
     fun `unknown block preserves feedback alongside rawData`() {
         val json = """
             {
-              "display": "inline",
+              "display": "expanded",
               "blocks": [
                 {
                   "type": "plugin_button",
@@ -290,7 +290,7 @@ class AuiParserTest {
     fun `unknown fields on known blocks are ignored`() {
         val json = """
             {
-              "display": "inline",
+              "display": "expanded",
               "blocks": [
                 { "type": "text", "data": { "text": "Hi" }, "future_field": "ignored", "id": "blk1" }
               ]
@@ -313,7 +313,7 @@ class AuiParserTest {
 
     @Test
     fun `parseOrNull returns response for valid JSON`() {
-        val json = """{"display":"inline","blocks":[]}"""
+        val json = """{"display":"expanded","blocks":[]}"""
         assertNotNull(parser.parseOrNull(json))
     }
 

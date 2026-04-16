@@ -94,7 +94,7 @@ class AuiCatalogPromptTest {
     fun `generate includes examples section with envelope format`() {
         assertTrue(output.contains("EXAMPLES:"))
         assertTrue(output.contains("Text-only reply:"))
-        assertTrue(output.contains("Inline poll (radio list + submit button):"))
+        assertTrue(output.contains("Expanded poll (radio list + submit button):"))
         assertTrue(output.contains("Sheet survey (2-step feedback flow, second step skippable):"))
         assertTrue(output.contains("\"action\": \"submit\""))
         // Examples use envelope format with "text" and "aui" fields
@@ -120,7 +120,6 @@ class AuiCatalogPromptTest {
     @Test
     fun `generate includes display levels`() {
         assertTrue(output.contains("DISPLAY LEVELS:"))
-        assertTrue(output.contains("inline"))
         assertTrue(output.contains("expanded"))
         assertTrue(output.contains("sheet"))
     }

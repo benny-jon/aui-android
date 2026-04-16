@@ -11,12 +11,12 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class AuiResponse(
-    /** How to present this response (inline, expanded, or sheet). */
+    /** How to present this response (expanded or sheet). */
     val display: AuiDisplay,
 
     /**
-     * Ordered list of content blocks to render. Used for [AuiDisplay.INLINE] and
-     * [AuiDisplay.EXPANDED]. Empty by default — [AuiDisplay.SHEET] uses [steps] instead.
+     * Ordered list of content blocks to render. Used for [AuiDisplay.EXPANDED].
+     * Empty by default — [AuiDisplay.SHEET] uses [steps] instead.
      */
     val blocks: List<AuiBlock> = emptyList(),
 

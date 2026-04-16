@@ -28,7 +28,7 @@ class AuiResponseExtractorTest {
         {
           "text": "Here's a poll:",
           "aui": {
-            "display": "inline",
+            "display": "expanded",
             "blocks": [
               { "type": "text", "data": { "text": "Hello" } }
             ]
@@ -41,7 +41,7 @@ class AuiResponseExtractorTest {
         assertEquals("Here's a poll:", result.text)
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
-        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
         assertEquals(1, result.auiResponse!!.blocks.size)
         assertNull(result.errorMessage)
     }
@@ -73,7 +73,7 @@ class AuiResponseExtractorTest {
 
     @Test
     fun `missing text field returns error`() {
-        val raw = """{ "aui": { "display": "inline", "blocks": [] } }"""
+        val raw = """{ "aui": { "display": "expanded", "blocks": [] } }"""
         val result = AuiResponseExtractor.fromRawResponse(raw)
 
         assertNull(result.text)
@@ -166,7 +166,7 @@ class AuiResponseExtractorTest {
           "content": [
             {
               "type": "text",
-              "text": "{\"text\": \"Here's a poll:\", \"aui\": {\"display\": \"inline\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Vote!\"}}]}}"
+              "text": "{\"text\": \"Here's a poll:\", \"aui\": {\"display\": \"expanded\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Vote!\"}}]}}"
             }
           ],
           "stop_reason": "end_turn"
@@ -179,7 +179,7 @@ class AuiResponseExtractorTest {
         assertEquals("Here's a poll:", result.text)
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
-        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
     }
 
     @Test
@@ -296,7 +296,7 @@ class AuiResponseExtractorTest {
           "content": [
             {
               "type": "text",
-              "text": "```json\n{\"text\": \"Here's a poll:\", \"aui\": {\"display\": \"inline\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Vote!\"}}]}}\n```"
+              "text": "```json\n{\"text\": \"Here's a poll:\", \"aui\": {\"display\": \"expanded\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Vote!\"}}]}}\n```"
             }
           ]
         }
@@ -308,7 +308,7 @@ class AuiResponseExtractorTest {
         assertEquals("Here's a poll:", result.text)
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
-        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
     }
 
     @Test
@@ -341,7 +341,7 @@ class AuiResponseExtractorTest {
           "content": [
             {
               "type": "text",
-              "text": "{\"display\": \"inline\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hello\"}}]}"
+              "text": "{\"display\": \"expanded\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hello\"}}]}"
             }
           ]
         }
@@ -353,7 +353,7 @@ class AuiResponseExtractorTest {
         assertEquals("", result.text)
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
-        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
     }
 
     @Test
@@ -396,7 +396,7 @@ class AuiResponseExtractorTest {
           "content": [
             {
               "type": "text",
-              "text": "Sure, here you go!\n\n{\"text\": \"A poll for you:\", \"aui\": {\"display\": \"inline\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hello\"}}]}}"
+              "text": "Sure, here you go!\n\n{\"text\": \"A poll for you:\", \"aui\": {\"display\": \"expanded\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hello\"}}]}}"
             }
           ]
         }
@@ -408,7 +408,7 @@ class AuiResponseExtractorTest {
         assertEquals("A poll for you:", result.text)
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
-        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
     }
 
     @Test

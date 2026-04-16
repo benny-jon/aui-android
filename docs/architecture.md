@@ -56,7 +56,7 @@ AuiRenderer(
 │  │  │                                                 │     │   │
 │  │  │  AuiRenderer composable                         │     │   │
 │  │  │  ├── Theme system (AuiTheme)                    │     │   │
-│  │  │  ├── Display router (inline/expanded/sheet)     │     │   │
+│  │  │  ├── Display router (expanded/sheet)             │     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
 │  │  │  ├── Component catalog (50+ composables)        │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -143,7 +143,7 @@ data class AuiResponse(
     val sheetDismissable: Boolean = true
 )
 
-enum class AuiDisplay { INLINE, EXPANDED, SHEET }
+enum class AuiDisplay { EXPANDED, SHEET }
 
 sealed class AuiBlock {
     abstract val id: String?
@@ -489,7 +489,7 @@ aui/
 │       │   │   └── MaterialThemeAdapter.kt  # fromMaterialTheme()
 │       │   │
 │       │   ├── display/
-│       │   │   ├── DisplayRouter.kt   # Routes to inline/expanded/sheet
+│       │   │   ├── DisplayRouter.kt   # Routes to expanded/sheet
 │       │   │   ├── InlineDisplay.kt
 │       │   │   ├── ExpandedDisplay.kt
 │       │   │   └── SheetDisplay.kt
@@ -628,7 +628,7 @@ The AUI JSON spec version is separate from the library version:
 The library MUST handle unknown component types gracefully:
 - Unknown `type` → `AuiBlock.Unknown` → skipped in rendering (or custom handler)
 - Unknown fields in known types → ignored (JSON parser configured to ignore unknowns)
-- Unknown `display` value → falls back to `inline`
+- Unknown `display` value → falls back to `expanded`
 - This allows newer AI models to use newer components without crashing older clients
 
 ### Backward Compatibility

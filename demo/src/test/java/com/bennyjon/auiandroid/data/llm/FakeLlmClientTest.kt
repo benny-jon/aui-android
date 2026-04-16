@@ -36,7 +36,7 @@ class FakeLlmClientTest {
 
         assertNotNull(parsed.text)
         assertNotNull(parsed.auiResponse)
-        assertEquals(AuiDisplay.INLINE, parsed.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, parsed.auiResponse!!.display)
     }
 
     @Test
@@ -59,7 +59,7 @@ class FakeLlmClientTest {
 
         assertNotNull(parsed.text)
         assertNotNull(parsed.auiResponse)
-        assertEquals(AuiDisplay.INLINE, parsed.auiResponse!!.display)
+        assertEquals(AuiDisplay.EXPANDED, parsed.auiResponse!!.display)
     }
 
     @Test

@@ -17,7 +17,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * ```json
  * {
  *   "text": "Conversational message",
- *   "aui": { "display": "inline", "blocks": [ ... ] }
+ *   "aui": { "display": "expanded", "blocks": [ ... ] }
  * }
  * ```
  *

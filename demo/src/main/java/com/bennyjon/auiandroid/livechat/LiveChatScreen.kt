@@ -391,7 +391,7 @@ private fun LiveChatInput(
  * Whether an AUI response should be rendered in the chat list.
  *
  * Spent sheet responses are hidden entirely (they've already been submitted and
- * re-rendering would re-open the sheet). Spent inline/expanded responses are
+ * re-rendering would re-open the sheet). Spent expanded responses are
  * still shown (grayed out) so the user can see what was there.
  */
 internal fun shouldRenderAui(response: AuiResponse, isSpent: Boolean): Boolean =
