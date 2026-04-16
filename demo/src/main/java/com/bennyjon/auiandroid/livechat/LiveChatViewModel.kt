@@ -75,6 +75,17 @@ class LiveChatViewModel @Inject constructor(
     /** The currently active LLM provider. */
     val currentProvider: StateFlow<LlmProvider> = _currentProvider.asStateFlow()
 
+    private val _selectedDetailMessageId = MutableStateFlow<String?>(null)
+
+    /**
+     * Message id selected by the user for detail surfacing. Null when the user has not pinned
+     * a specific expanded message — the detail pane (if visible) falls back to sticky-latest.
+     */
+    val selectedDetailMessageId: StateFlow<String?> = _selectedDetailMessageId.asStateFlow()
+
+    private val _windowWidthDp = MutableStateFlow(0)
+    private val _windowHeightDp = MutableStateFlow(0)
+
     /** Whether the Claude provider is available (API key configured). */
     val isClaudeAvailable: Boolean = anthropicApiKey.isNotBlank()
 
@@ -108,7 +119,7 @@ class LiveChatViewModel @Inject constructor(
         viewModelScope.launch {
             _isSending.value = true
             try {
-                repository.sendUserMessage(conversationId, text)
+                repository.sendUserMessage(conversationId, text, contextHints = buildContextHints())
             } finally {
                 _isSending.value = false
             }
@@ -118,6 +129,39 @@ class LiveChatViewModel @Inject constructor(
     /** Converts AUI feedback to text and sends it as a user message. */
     fun onFeedback(feedback: AuiFeedback) {
         send(feedback.toUserMessageText())
+    }
+
+    /**
+     * Records the latest measured window size from the screen. Called on every composition; the
+     * value is read by [send] when dispatching the next user message so the AI sees current
+     * device context.
+     */
+    fun updateWindowSize(widthDp: Int, heightDp: Int) {
+        _windowWidthDp.value = widthDp
+        _windowHeightDp.value = heightDp
+    }
+
+    /** Pins [messageId] as the active detail message, opening it in the sheet/detail pane. */
+    fun openDetail(messageId: String) {
+        _selectedDetailMessageId.value = messageId
+    }
+
+    /** Clears the user's detail-pane pin so the sticky-latest expanded message takes over. */
+    fun closeDetail() {
+        _selectedDetailMessageId.value = null
+    }
+
+    private fun buildContextHints(): String {
+        val width = _windowWidthDp.value
+        val height = _windowHeightDp.value
+        if (width <= 0 || height <= 0) return ""
+        val layout = if (width >= TWO_PANE_BREAKPOINT_DP) "two_pane" else "single_column"
+        return buildString {
+            append("DEVICE: width=").append(width).append("dp, height=").append(height)
+                .append("dp, layout=").append(layout).append(".\n")
+            append("Prefer \"inline\" for chat-flow messages; use \"expanded\" when the ")
+            append("response is focused content the user may want to linger on.")
+        }
     }
 
     /** Clears all messages in the current conversation. */
@@ -171,4 +215,8 @@ class LiveChatViewModel @Inject constructor(
             dao = dao,
             systemPrompt = systemPrompt,
         )
+
+    private companion object {
+        const val TWO_PANE_BREAKPOINT_DP = 600
+    }
 }

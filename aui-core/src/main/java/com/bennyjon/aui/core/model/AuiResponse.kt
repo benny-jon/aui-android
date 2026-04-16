@@ -11,12 +11,12 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class AuiResponse(
-    /** How to present this response (expanded or sheet). */
+    /** How to present this response (inline, expanded, or sheet). */
     val display: AuiDisplay,
 
     /**
-     * Ordered list of content blocks to render. Used for [AuiDisplay.EXPANDED].
-     * Empty by default — [AuiDisplay.SHEET] uses [steps] instead.
+     * Ordered list of content blocks to render. Used for [AuiDisplay.INLINE] and
+     * [AuiDisplay.EXPANDED]. Empty by default — [AuiDisplay.SHEET] uses [steps] instead.
      */
     val blocks: List<AuiBlock> = emptyList(),
 
@@ -34,4 +34,20 @@ data class AuiResponse(
      * Defaults to `true`. Only relevant when [display] is [AuiDisplay.SHEET].
      */
     @SerialName("sheet_dismissable") val sheetDismissable: Boolean = true,
+
+    /**
+     * Short title for a host-rendered card stub when [display] is [AuiDisplay.EXPANDED].
+     * Hosts that surface EXPANDED content through a tappable stub use this as the stub
+     * heading. If null, hosts may fall back to the first `heading` or `text` block in
+     * [blocks].
+     */
+    @SerialName("card_title") val cardTitle: String? = null,
+
+    /**
+     * Short description for a host-rendered card stub when [display] is [AuiDisplay.EXPANDED].
+     * Hosts that surface EXPANDED content through a tappable stub use this as the stub
+     * subtitle. If null, hosts may fall back to the first `text` block (after any heading)
+     * in [blocks].
+     */
+    @SerialName("card_description") val cardDescription: String? = null,
 )

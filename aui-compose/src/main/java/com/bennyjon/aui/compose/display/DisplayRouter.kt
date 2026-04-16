@@ -26,13 +26,18 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 /**
  * Routes an [AuiResponse] to the appropriate display mode.
  *
- * - **EXPANDED**: Leading text/heading/caption blocks rendered inline; remaining content
- *   blocks rendered full-width below.
+ * - **INLINE** and **EXPANDED**: Rendered identically by the library. Leading
+ *   text/heading/caption blocks are rendered inline; remaining content blocks are rendered
+ *   full-width below. The two levels carry the AI's *intent* — `INLINE` means "belongs in
+ *   the chat flow," `EXPANDED` means "focused content the user may want to study." Host
+ *   apps decide whether to surface EXPANDED responses in a separate detail surface (a
+ *   bottom sheet on narrow windows, a side detail pane on wider windows). The library
+ *   does not enforce this — both render the same here.
  * - **SHEET**: Renders a persistent bottom sheet that navigates through each [AuiStep]
  *   without closing between steps. The library manages step navigation, the stepper indicator,
  *   and accumulation — emitting a single [AuiFeedback] with all Q+A entries at the end.
  *
- * The split logic for EXPANDED: blocks are scanned from the start. Contiguous leading
+ * The split logic for INLINE/EXPANDED: blocks are scanned from the start. Contiguous leading
  * `text`, `heading`, and `caption` blocks accumulate into the "bubble" list. The first
  * non-text block and everything after it form the "content" list.
  *

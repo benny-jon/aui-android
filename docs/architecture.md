@@ -56,7 +56,7 @@ AuiRenderer(
 │  │  │                                                 │     │   │
 │  │  │  AuiRenderer composable                         │     │   │
 │  │  │  ├── Theme system (AuiTheme)                    │     │   │
-│  │  │  ├── Display router (expanded/sheet)             │     │   │
+│  │  │  ├── Display router (inline/expanded/sheet)      │     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
 │  │  │  ├── Component catalog (50+ composables)        │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -143,7 +143,11 @@ data class AuiResponse(
     val sheetDismissable: Boolean = true
 )
 
-enum class AuiDisplay { EXPANDED, SHEET }
+enum class AuiDisplay { INLINE, EXPANDED, SHEET }
+// Library renders INLINE and EXPANDED identically. Hosts may surface EXPANDED responses
+// via a separate detail surface (card stub → bottom sheet on narrow windows, side detail
+// pane on wide windows ≥ 600 dp). Use card_title / card_description on AuiResponse to
+// supply preview text for the host-rendered stub.
 
 sealed class AuiBlock {
     abstract val id: String?

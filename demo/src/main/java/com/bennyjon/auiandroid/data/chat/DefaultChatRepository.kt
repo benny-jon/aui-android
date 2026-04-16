@@ -37,7 +37,11 @@ class DefaultChatRepository(
             entities.map { it.toDomain() }
         }
 
-    override suspend fun sendUserMessage(conversationId: String, text: String) {
+    override suspend fun sendUserMessage(
+        conversationId: String,
+        text: String,
+        contextHints: String,
+    ) {
         withContext(ioDispatcher) {
             // 1. Insert user row (rawContent = user's input text)
             val userEntity = ChatMessageEntity(
@@ -53,8 +57,13 @@ class DefaultChatRepository(
             val allEntities = dao.getMessages(conversationId)
             val history = allEntities.map { it.toLlmMessage() }
 
-            // 3. Call LLM
-            val result = llmClient.complete(systemPrompt, history)
+            // 3. Call LLM, appending per-turn context hints to the static prompt
+            val effectivePrompt = if (contextHints.isBlank()) {
+                systemPrompt
+            } else {
+                "$systemPrompt\n\n$contextHints"
+            }
+            val result = llmClient.complete(effectivePrompt, history)
 
             // 4. Insert assistant row (rawContent = unprocessed LLM response)
             val assistantEntity = ChatMessageEntity(

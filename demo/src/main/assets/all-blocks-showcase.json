@@ -390,10 +390,31 @@
     }
   },
   {
+    "label": "Combo: Inline Quick Replies",
+    "description": "Inline display — chat-flow follow-up with quick-reply chips",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "quick_replies",
+          "data": {
+            "options": [
+              { "label": "Tell me more", "feedback": { "action": "submit", "params": { "topic": "more" } } },
+              { "label": "Sounds good", "feedback": { "action": "submit", "params": { "topic": "agree" } } },
+              { "label": "Not now", "feedback": { "action": "submit", "params": { "topic": "later" } } }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
     "label": "Combo: Product Recommendations",
-    "description": "Expanded layout with headings, badges, buttons, and quick replies",
+    "description": "Expanded layout with card stub fields, headings, badges, buttons, and quick replies",
     "aui": {
       "display": "expanded",
+      "card_title": "Headphone picks",
+      "card_description": "Three top noise-cancelling models compared",
       "blocks": [
         { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
         { "type": "text", "data": { "text": "Industry-leading noise cancellation. 30-hour battery. $348." } },

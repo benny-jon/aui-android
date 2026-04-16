@@ -29,17 +29,13 @@ class FakeLlmClient : LlmClient {
             }
             """.trimIndent(),
 
-            // 2) Text + inline poll (yes/no quick replies)
+            // 2) Text + inline quick replies (yes/no)
             """
             {
-              "text": "Great question! Here's a quick poll for you:",
+              "text": "Great question! Was this response helpful?",
               "aui": {
-                "display": "expanded",
+                "display": "inline",
                 "blocks": [
-                  {
-                    "type": "text",
-                    "data": { "text": "Was this response helpful?" }
-                  },
                   {
                     "type": "quick_replies",
                     "data": {
@@ -125,20 +121,54 @@ class FakeLlmClient : LlmClient {
             }
             """.trimIndent(),
 
-            // 4) Text + confirmation (inline status)
+            // 4) Text + expanded product recommendations (with card_title/card_description so
+            //    hosts can show a stub on narrow windows or a side pane on wide windows).
             """
             {
-              "text": "Thanks for completing the survey! Here's your confirmation:",
+              "text": "Here are some headphones I'd recommend looking at:",
               "aui": {
                 "display": "expanded",
+                "card_title": "Headphone picks",
+                "card_description": "Three top noise-cancelling models compared",
+                "blocks": [
+                  { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
+                  { "type": "text", "data": { "text": "Top-tier noise cancellation. 30-hour battery. Around ${'$'}348." } },
+                  {
+                    "type": "button_primary",
+                    "data": { "label": "View on Amazon" },
+                    "feedback": { "action": "open_url", "params": { "url": "https://example.com/sony" } }
+                  },
+                  { "type": "divider" },
+                  { "type": "heading", "data": { "text": "Bose QuietComfort Ultra" } },
+                  { "type": "text", "data": { "text": "Excellent comfort for long wear. Around ${'$'}379." } },
+                  {
+                    "type": "button_secondary",
+                    "data": { "label": "View on Amazon" },
+                    "feedback": { "action": "open_url", "params": { "url": "https://example.com/bose" } }
+                  },
+                  { "type": "divider" },
+                  { "type": "heading", "data": { "text": "Apple AirPods Pro 2" } },
+                  { "type": "text", "data": { "text": "Best for the Apple ecosystem. Around ${'$'}249." } },
+                  {
+                    "type": "button_secondary",
+                    "data": { "label": "View on Amazon" },
+                    "feedback": { "action": "open_url", "params": { "url": "https://example.com/airpods" } }
+                  }
+                ]
+              }
+            }
+            """.trimIndent(),
+
+            // 5) Text + inline confirmation (compact status)
+            """
+            {
+              "text": "Thanks for completing the survey!",
+              "aui": {
+                "display": "inline",
                 "blocks": [
                   {
                     "type": "status_banner_success",
                     "data": { "text": "Survey complete!" }
-                  },
-                  {
-                    "type": "text",
-                    "data": { "text": "Thanks for your feedback. This helps us make the app better for you." }
                   },
                   {
                     "type": "badge_success",

@@ -1,26 +1,31 @@
 package com.bennyjon.auiandroid.livechat
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,12 +35,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,12 +60,16 @@ import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.text.parseInlineMarkdown
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.model.AuiDisplay
+import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiResponse
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.chat.ChatMessage
 import com.bennyjon.auiandroid.data.llm.LlmProvider
 import com.bennyjon.auiandroid.ui.ThemeDropdown
 import com.bennyjon.auiandroid.ui.theme.DemoThemes
+
+/** Width breakpoint at which the chat splits into a chat list + side detail pane. */
+private val TwoPaneBreakpointDp = 600.dp
 
 /**
  * Available AUI themes in the demo app.
@@ -73,10 +85,17 @@ enum class DemoAuiTheme(val displayName: String) {
 /**
  * Full-screen chat UI for live conversations with an LLM.
  *
- * Renders [ChatMessage]s from [LiveChatViewModel.messages]. User messages appear as
- * right-aligned bubbles, assistant messages as left-aligned bubbles with optional
- * [AuiRenderer] content. Spent AUI responses are grayed out. A text input bar at
- * the bottom allows the user to send messages.
+ * Routes assistant messages by their AUI [AuiDisplay] level:
+ * - **INLINE** renders directly in the chat list via [AuiRenderer].
+ * - **EXPANDED** renders as a tappable [ExpandedResponseCard] stub. On narrow windows the
+ *   stub opens a [ModalBottomSheet] containing the full render; on wide windows
+ *   ([TwoPaneBreakpointDp]+), the full render is shown in a persistent right-side detail
+ *   pane and the stub stays visible in chat for navigation.
+ * - **SHEET** renders via [AuiRenderer] (which manages its own bottom sheet).
+ *
+ * The screen pushes the current window size to the [LiveChatViewModel] on every composition
+ * so the AI sees a `DEVICE` hint with width/height/layout in its system prompt for the next
+ * message.
  *
  * The top app bar includes a theme dropdown for switching AUI themes, a provider
  * dropdown for switching between LLM backends, and a clear button.
@@ -97,13 +116,7 @@ fun LiveChatScreen(
     val messages by viewModel.messages.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
     val currentProvider by viewModel.currentProvider.collectAsState()
-    val listState = rememberLazyListState()
-
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
-        }
-    }
+    val selectedDetailMessageId by viewModel.selectedDetailMessageId.collectAsState()
 
     Scaffold(
         topBar = {
@@ -141,38 +154,256 @@ fun LiveChatScreen(
         },
         contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPadding ->
-        LazyColumn(
-            state = listState,
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            items(items = messages, key = { it.id }) { message ->
-                when (message.role) {
-                    ChatMessage.Role.USER -> UserBubble(text = message.text ?: "")
-                    ChatMessage.Role.ASSISTANT -> AssistantMessage(
-                        message = message,
+            val widthDp = maxWidth
+            val heightDp = maxHeight
+            LaunchedEffect(widthDp, heightDp) {
+                viewModel.updateWindowSize(widthDp.value.toInt(), heightDp.value.toInt())
+            }
+            val isTwoPane = widthDp >= TwoPaneBreakpointDp
+            val auiTheme = resolveAuiTheme(theme)
+
+            // In two-pane mode, the detail pane shows the user-pinned message if one is set,
+            // otherwise the latest expanded message (sticky-latest behavior).
+            val detailPaneMessage = if (isTwoPane) {
+                messages.firstOrNull { it.id == selectedDetailMessageId }
+                    ?: messages.lastOrNull { it.auiResponse?.display == AuiDisplay.EXPANDED }
+            } else {
+                null
+            }
+
+            // In single-column mode, the modal bottom sheet shows the user-pinned message.
+            val sheetMessage = if (!isTwoPane) {
+                messages.firstOrNull { it.id == selectedDetailMessageId }
+            } else {
+                null
+            }
+
+            if (isTwoPane) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    ChatList(
+                        messages = messages,
+                        isSending = isSending,
                         pluginRegistry = pluginRegistry,
-                        auiTheme = resolveAuiTheme(theme),
+                        auiTheme = auiTheme,
                         onFeedback = viewModel::onFeedback,
+                        onOpenDetail = viewModel::openDetail,
+                        activeDetailMessageId = detailPaneMessage?.id,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                    )
+                    VerticalDivider()
+                    DetailPane(
+                        message = detailPaneMessage,
+                        pluginRegistry = pluginRegistry,
+                        auiTheme = auiTheme,
+                        onFeedback = viewModel::onFeedback,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                    )
+                }
+            } else {
+                ChatList(
+                    messages = messages,
+                    isSending = isSending,
+                    pluginRegistry = pluginRegistry,
+                    auiTheme = auiTheme,
+                    onFeedback = viewModel::onFeedback,
+                    onOpenDetail = viewModel::openDetail,
+                    activeDetailMessageId = null,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+
+            if (sheetMessage?.auiResponse != null) {
+                ExpandedDetailSheet(
+                    message = sheetMessage,
+                    pluginRegistry = pluginRegistry,
+                    auiTheme = auiTheme,
+                    onFeedback = { feedback ->
+                        viewModel.onFeedback(feedback)
+                        viewModel.closeDetail()
+                    },
+                    onDismiss = viewModel::closeDetail,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatList(
+    messages: List<ChatMessage>,
+    isSending: Boolean,
+    pluginRegistry: AuiPluginRegistry,
+    auiTheme: AuiTheme,
+    onFeedback: (AuiFeedback) -> Unit,
+    onOpenDetail: (String) -> Unit,
+    activeDetailMessageId: String?,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
+    }
+    LazyColumn(
+        state = listState,
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        items(items = messages, key = { it.id }) { message ->
+            when (message.role) {
+                ChatMessage.Role.USER -> UserBubble(text = message.text ?: "")
+                ChatMessage.Role.ASSISTANT -> AssistantMessage(
+                    message = message,
+                    pluginRegistry = pluginRegistry,
+                    auiTheme = auiTheme,
+                    onFeedback = onFeedback,
+                    onOpenDetail = onOpenDetail,
+                    isActiveDetail = message.id == activeDetailMessageId,
+                )
+            }
+        }
+        if (isSending) {
+            item(key = "sending_indicator") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
                     )
                 }
             }
+        }
+    }
+}
 
-            if (isSending) {
-                item(key = "sending_indicator") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    }
-                }
+/**
+ * Right-side detail pane shown in two-pane mode. Renders the full AUI of the active
+ * EXPANDED message (user-pinned or sticky-latest), with feedback wired to the parent.
+ */
+@Composable
+private fun DetailPane(
+    message: ChatMessage?,
+    pluginRegistry: AuiPluginRegistry,
+    auiTheme: AuiTheme,
+    onFeedback: (AuiFeedback) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        val response = message?.auiResponse
+        if (message == null || response == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Detail content will appear here.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            return@Box
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+        ) {
+            response.cardTitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            response.cardDescription?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            AuiRenderer(
+                response = response,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+                collectingFeedbackEnabled = !message.isAuiSpent,
+            )
+        }
+    }
+}
+
+/**
+ * Modal bottom sheet for showing an EXPANDED response on narrow windows.
+ *
+ * Distinct from AUI-authored [AuiDisplay.SHEET] flows — this is a host-side display affordance
+ * that wraps a single [AuiRenderer] in a sheet and dismisses when feedback fires.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExpandedDetailSheet(
+    message: ChatMessage,
+    pluginRegistry: AuiPluginRegistry,
+    auiTheme: AuiTheme,
+    onFeedback: (AuiFeedback) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    BackHandler(enabled = true, onBack = onDismiss)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            message.auiResponse?.cardTitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            message.auiResponse?.cardDescription?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            message.auiResponse?.let { response ->
+                AuiRenderer(
+                    response = response,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 24.dp),
+                    theme = auiTheme,
+                    pluginRegistry = pluginRegistry,
+                    onFeedback = onFeedback,
+                    collectingFeedbackEnabled = !message.isAuiSpent,
+                )
             }
         }
     }
@@ -239,7 +470,9 @@ private fun AssistantMessage(
     message: ChatMessage,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
-    onFeedback: (com.bennyjon.aui.core.model.AuiFeedback) -> Unit,
+    onFeedback: (AuiFeedback) -> Unit,
+    onOpenDetail: (String) -> Unit,
+    isActiveDetail: Boolean,
 ) {
     // Error banner
     message.errorMessage?.let { error ->
@@ -288,21 +521,34 @@ private fun AssistantMessage(
         }
     }
 
-    // AUI content
-    message.auiResponse
-        ?.takeIf { shouldRenderAui(it, message.isAuiSpent) }
-        ?.let { response ->
-            AuiRenderer(
+    // AUI content — branch on display level
+    val response = message.auiResponse ?: return
+    when (response.display) {
+        AuiDisplay.EXPANDED -> {
+            ExpandedResponseCard(
                 response = response,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                theme = auiTheme,
-                pluginRegistry = pluginRegistry,
-                onFeedback = onFeedback,
-                collectingFeedbackEnabled = !message.isAuiSpent,
+                onClick = { onOpenDetail(message.id) },
+                modifier = Modifier.padding(top = 16.dp),
+                isSpent = message.isAuiSpent,
+                isActive = isActiveDetail,
             )
         }
+        AuiDisplay.INLINE,
+        AuiDisplay.SHEET -> {
+            if (shouldRenderAui(response, message.isAuiSpent)) {
+                AuiRenderer(
+                    response = response,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    theme = auiTheme,
+                    pluginRegistry = pluginRegistry,
+                    onFeedback = onFeedback,
+                    collectingFeedbackEnabled = !message.isAuiSpent,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -388,11 +634,12 @@ private fun LiveChatInput(
 }
 
 /**
- * Whether an AUI response should be rendered in the chat list.
+ * Whether an AUI response should be rendered in the chat list (for INLINE / SHEET).
  *
- * Spent sheet responses are hidden entirely (they've already been submitted and
- * re-rendering would re-open the sheet). Spent expanded responses are
- * still shown (grayed out) so the user can see what was there.
+ * EXPANDED responses are surfaced as a [ExpandedResponseCard] stub instead, so this
+ * helper is not consulted for them. Spent SHEET responses are hidden entirely (they've
+ * already been submitted and re-rendering would re-open the sheet). Spent INLINE
+ * responses are still shown (grayed out via `collectingFeedbackEnabled`).
  */
 internal fun shouldRenderAui(response: AuiResponse, isSpent: Boolean): Boolean =
     !isSpent || response.display != AuiDisplay.SHEET

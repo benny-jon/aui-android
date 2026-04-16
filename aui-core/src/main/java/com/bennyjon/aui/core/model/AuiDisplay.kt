@@ -6,11 +6,27 @@ import kotlinx.serialization.Serializable
 /**
  * The presentation level for an [AuiResponse].
  *
- * Controls how the renderer surfaces the content to the user.
+ * Describes the AI's intent for *where* the response belongs in the conversation. The library
+ * itself renders [INLINE] and [EXPANDED] identically — the host app decides whether to surface
+ * an [EXPANDED] response in a separate detail surface (a sheet on narrow windows, a side
+ * detail pane on wider windows) based on its own layout.
  */
 @Serializable
 enum class AuiDisplay {
-    /** Rendered full-width in the chat feed, below the AI bubble. Best for rich content. */
+    /**
+     * Belongs in the chat flow. Best for quick replies, short confirmations, small polls,
+     * and other "keep the conversation moving" content. Hosts always render inline regardless
+     * of screen size.
+     */
+    @SerialName("inline") INLINE,
+
+    /**
+     * Focused / detail content the user may want to study. Best for rich cards, long lists,
+     * comparisons, and multi-block content. Hosts may surface this through a tappable card
+     * stub in chat that opens a bottom sheet (narrow windows) or shows the full render in a
+     * side detail pane (wide windows). The library itself renders [EXPANDED] identically to
+     * [INLINE]; routing is the host's responsibility.
+     */
     @SerialName("expanded") EXPANDED,
 
     /**

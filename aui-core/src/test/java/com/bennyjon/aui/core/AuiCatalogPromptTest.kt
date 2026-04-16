@@ -120,8 +120,39 @@ class AuiCatalogPromptTest {
     @Test
     fun `generate includes display levels`() {
         assertTrue(output.contains("DISPLAY LEVELS:"))
+        assertTrue(output.contains("inline"))
         assertTrue(output.contains("expanded"))
         assertTrue(output.contains("sheet"))
+    }
+
+    @Test
+    fun `generate documents inline as belonging in chat flow`() {
+        assertTrue(output.contains("inline"))
+        assertTrue(output.contains("belongs in the chat flow"))
+    }
+
+    @Test
+    fun `generate documents card_title and card_description for expanded stub`() {
+        assertTrue(output.contains("card_title"))
+        assertTrue(output.contains("card_description"))
+        assertTrue(output.contains("card stub"))
+    }
+
+    @Test
+    fun `schema format documents inline as a display option`() {
+        assertTrue(output.contains("\"display\": \"inline\" | \"expanded\" | \"sheet\""))
+    }
+
+    @Test
+    fun `examples include an inline display example`() {
+        assertTrue(output.contains("Inline quick replies"))
+        assertTrue(output.contains("\"display\": \"inline\""))
+    }
+
+    @Test
+    fun `expanded link buttons example shows card_title and card_description`() {
+        assertTrue(output.contains("\"card_title\": \"Headphone picks\""))
+        assertTrue(output.contains("\"card_description\":"))
     }
 
     @Test

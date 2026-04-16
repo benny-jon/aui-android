@@ -249,7 +249,7 @@ The "text" field is REQUIRED — it is your spoken reply shown in the chat bubbl
 The "aui" field is OPTIONAL — include it only when you want to render interactive UI.
 
 For text-only replies: { "text": "Hello! How can I help?" }
-For AUI replies:       { "text": "Here's a quick poll:", "aui": { "display": "expanded", "blocks": [...] } }
+For AUI replies:       { "text": "Here's a quick poll:", "aui": { "display": "inline", "blocks": [...] } }
 
 CRITICAL: No prose wrapper, no markdown code fence, no commentary before or
 after — just the raw JSON object. Never output anything outside this envelope.
@@ -263,7 +263,16 @@ that follow-up turn in mind.
 
     internal const val SCHEMA_FORMAT = """AUI payload schema (goes inside the "aui" field of the response envelope):
 {
-  "display": "expanded" | "sheet",
+  "display": "inline" | "expanded" | "sheet",
+  "blocks": [ ... ]
+}
+
+For "expanded" display, you may also include an optional card stub used by hosts
+that show EXPANDED content as a tappable card opening into a detail surface:
+{
+  "display": "expanded",
+  "card_title": "Short stub title",
+  "card_description": "One-line stub subtitle",
   "blocks": [ ... ]
 }
 
@@ -278,11 +287,18 @@ add a "sheet_title":
 }"""
 
     internal const val DISPLAY_LEVELS = """DISPLAY LEVELS:
-  expanded — full-width in chat feed. Quick answers, confirmations, rich cards, media, lists.
+  inline   — belongs in the chat flow. Quick replies, short confirmations, small polls,
+             single-button prompts. Always renders directly in the chat list.
+  expanded — focused content the user may want to linger on. Rich cards, long lists,
+             comparisons, multi-block content. Hosts may surface this as a tappable
+             card stub that opens a bottom sheet (small screens) or a side detail
+             pane (large screens). Add a short "card_title" and "card_description"
+             so the stub is meaningful when shown.
   sheet    — bottom sheet overlay. Multi-step surveys, forms, focused input.
 
 Choose the LEAST prominent level that serves the content well.
-Use "sheet" only when multi-step user input is needed or focused attention is required."""
+Prefer "inline" for chat-flow turns; reach for "expanded" when the user may want to
+study the content. Use "sheet" only when multi-step user input is needed."""
 
     internal const val BLOCK_FORMAT = """BLOCK FORMAT:
   { "type": "<component>", "data": { ... }, "feedback": { ... } }
@@ -346,8 +362,11 @@ Status:
     internal const val COMPONENT_CHEAT_SHEET = """WHEN TO REACH FOR WHICH COMPONENT:
   - Links / URLs → button_primary or button_secondary with action=open_url.
     Never render a URL as plain text when a tappable button is available.
+  - Quick conversational branches / single-tap confirmations → inline display
+    with quick_replies or a single button.
   - Lists of products / places / options → expanded display with a block per
-    item, each with its own action button(s).
+    item, each with its own action button(s). Add card_title + card_description
+    so hosts that show a stub have meaningful preview text.
   - Comparing or picking between options → radio_list or chip_select_single + submit.
   - Multi-select preferences → checkbox_list or chip_select_multi + submit.
   - Rating or feedback collection → sheet with input_rating_stars.
@@ -369,6 +388,24 @@ Status:
 
 Text-only reply:
 { "text": "Sure, I can help with that!" }
+
+Inline quick replies (chat-flow follow-up):
+{
+  "text": "Anything else I can do?",
+  "aui": {
+    "display": "inline",
+    "blocks": [
+      { "type": "quick_replies", "data": {
+          "options": [
+            { "label": "Yes",
+              "feedback": { "action": "submit", "params": { "value": "yes" } } },
+            { "label": "No thanks",
+              "feedback": { "action": "submit", "params": { "value": "no" } } }
+          ]
+      }}
+    ]
+  }
+}
 
 Expanded poll (radio list + submit button):
 {
@@ -439,6 +476,8 @@ Expanded response with tappable link buttons (product recommendations):
   "text": "Here are three solid options:",
   "aui": {
     "display": "expanded",
+    "card_title": "Headphone picks",
+    "card_description": "Three top noise-cancelling models compared",
     "blocks": [
       { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
       { "type": "text", "data": { "text": "Top-tier noise cancellation, around $348." } },

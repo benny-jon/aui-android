@@ -36,7 +36,7 @@ class FakeLlmClientTest {
 
         assertNotNull(parsed.text)
         assertNotNull(parsed.auiResponse)
-        assertEquals(AuiDisplay.EXPANDED, parsed.auiResponse!!.display)
+        assertEquals(AuiDisplay.INLINE, parsed.auiResponse!!.display)
     }
 
     @Test
@@ -52,7 +52,7 @@ class FakeLlmClientTest {
     }
 
     @Test
-    fun `fourth response parses to text and inline confirmation AUI`() = runTest {
+    fun `fourth response parses to expanded AUI with card stub fields`() = runTest {
         repeat(3) { client.complete("system", emptyList()) }
         val result = client.complete("system", emptyList())
         val parsed = AuiResponseExtractor.fromRawResponse(result.rawContent!!)
@@ -60,11 +60,24 @@ class FakeLlmClientTest {
         assertNotNull(parsed.text)
         assertNotNull(parsed.auiResponse)
         assertEquals(AuiDisplay.EXPANDED, parsed.auiResponse!!.display)
+        assertEquals("Headphone picks", parsed.auiResponse!!.cardTitle)
+        assertNotNull(parsed.auiResponse!!.cardDescription)
     }
 
     @Test
-    fun `responses cycle back to first after fourth`() = runTest {
+    fun `fifth response parses to text and inline confirmation AUI`() = runTest {
         repeat(4) { client.complete("system", emptyList()) }
+        val result = client.complete("system", emptyList())
+        val parsed = AuiResponseExtractor.fromRawResponse(result.rawContent!!)
+
+        assertNotNull(parsed.text)
+        assertNotNull(parsed.auiResponse)
+        assertEquals(AuiDisplay.INLINE, parsed.auiResponse!!.display)
+    }
+
+    @Test
+    fun `responses cycle back to first after the last scripted response`() = runTest {
+        repeat(FakeLlmClient.SCRIPTED_RESPONSES.size) { client.complete("system", emptyList()) }
         val result = client.complete("system", emptyList())
         val parsed = AuiResponseExtractor.fromRawResponse(result.rawContent!!)
 

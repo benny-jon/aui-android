@@ -317,6 +317,57 @@ class AuiParserTest {
         assertNotNull(parser.parseOrNull(json))
     }
 
+    // ── Inline display + card stub fields ─────────────────────────────────────
+
+    @Test
+    fun `parse inline display roundtrips to AuiDisplay INLINE`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                { "type": "text", "data": { "text": "Quick reply" } }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertEquals(AuiDisplay.INLINE, response.display)
+        assertEquals(1, response.blocks.size)
+        assertTrue(response.blocks[0] is AuiBlock.Text)
+    }
+
+    @Test
+    fun `parse expanded with card_title and card_description populates fields`() {
+        val json = """
+            {
+              "display": "expanded",
+              "card_title": "Headphone picks",
+              "card_description": "Three top noise-cancelling models",
+              "blocks": [
+                { "type": "heading", "data": { "text": "Sony WH-1000XM5" } }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertEquals(AuiDisplay.EXPANDED, response.display)
+        assertEquals("Headphone picks", response.cardTitle)
+        assertEquals("Three top noise-cancelling models", response.cardDescription)
+    }
+
+    @Test
+    fun `parse expanded without card fields leaves them null`() {
+        val json = """
+            {
+              "display": "expanded",
+              "blocks": [
+                { "type": "text", "data": { "text": "Hello" } }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertNull(response.cardTitle)
+        assertNull(response.cardDescription)
+    }
+
     // ── Sheet flow defaults ───────────────────────────────────────────────────
 
     @Test

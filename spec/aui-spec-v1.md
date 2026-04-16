@@ -53,7 +53,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 
 1. **Catalog, not language.** The AI picks from pre-built components. It never designs UI.
 2. **One type = one component.** No variants. `button_primary` and `button_secondary` are separate types.
-3. **Two presentation levels.** The AI picks `expanded` or `sheet` per response based on content.
+3. **Three presentation levels.** The AI picks `inline`, `expanded`, or `sheet` per response based on content.
 4. **Interactions close the loop.** Every user interaction produces a feedback event that feeds back into the conversation.
 5. **Text is always an option.** The AI can respond with plain text, components, or both. Components are additive.
 6. **Progressive enrichment.** Start with a small catalog. Add components over time. The format never changes.
@@ -85,7 +85,8 @@ The AI chooses **how prominently** to present its response based on what it's sh
 │   ┌──────────────────────────────────────────────────────┐   │
 │   │  Presentation Router                                 │   │
 │   │                                                      │   │
-│   │  "expanded" → render full-width in chat feed         │   │
+│   │  "inline"   → render in the chat list, in place      │   │
+│   │  "expanded" → render full-width; host may show stub  │   │
 │   │  "sheet"    → render in bottom sheet overlay         │   │
 │   └──────────────────────────────────────────────────────┘   │
 │                                                              │
@@ -100,25 +101,33 @@ The AI chooses **how prominently** to present its response based on what it's sh
 
 ```json
 {
-  "display": "expanded | sheet",
+  "display": "inline | expanded | sheet",
   "blocks": [ ... ]
 }
 ```
 
 That's the entire top-level structure. Two fields.
 
-| Field     | Required | Description                                                           |
-|-----------|----------|-----------------------------------------------------------------------|
-| `display` | yes      | Presentation level: `expanded` or `sheet`                             |
-| `blocks`  | yes      | Array of content blocks (text + catalog components)                   |
+| Field              | Required | Description                                                                     |
+|--------------------|----------|---------------------------------------------------------------------------------|
+| `display`          | yes      | Presentation level: `inline`, `expanded`, or `sheet`                            |
+| `blocks`           | yes      | Array of content blocks (text + catalog components)                             |
+| `card_title`       | no       | Short title for the host-rendered card stub used to surface `expanded` content. |
+| `card_description` | no       | Short subtitle for the host-rendered card stub.                                 |
 
 ### Presentation Levels
 
+#### `inline`
+
+Rendered directly **in the chat list**, alongside the AI's text bubble. Best for chat-flow content: quick replies, short confirmations, small polls, single-button prompts. Hosts always render `inline` content in place — there is no separate detail surface.
+
 #### `expanded`
 
-Rendered **full-width in the chat feed**. Leading text/heading/caption blocks appear as the AI's chat bubble, and the remaining content blocks render full-width below — similar to how link previews or media attachments appear in messaging apps.
+Focused content the user may want to study. The library still renders `expanded` content the same way as `inline` (leading text/heading/caption blocks appear as the AI's chat bubble, and the remaining content blocks render full-width below), but **hosts may surface `expanded` responses through a separate detail surface**: a tappable card stub in the chat list that opens a bottom sheet on narrow windows, or a persistent side detail pane on wider windows.
 
-Best for: quick answers, confirmations, rich cards, media, lists, product cards, image galleries, scrollable carousels, data displays.
+When using `expanded`, include `card_title` and `card_description` so the stub has meaningful preview text. If omitted, hosts fall back to the first heading and first text block in `blocks`.
+
+Best for: rich product cards, long lists, comparisons, multi-block content, media galleries, anything the user may want to linger on.
 
 ```json
 {
@@ -250,7 +259,8 @@ This means the AI doesn't need to think about "what goes in the bubble vs outsid
 
 | Display    | `text` blocks                  | Other blocks                         |
 |------------|--------------------------------|--------------------------------------|
-| `expanded` | In the bubble                  | Full-width below the bubble          |
+| `inline`   | In the bubble                  | Below the bubble, in the chat list   |
+| `expanded` | In the bubble                  | Full-width below the bubble; hosts may surface via a tappable card stub |
 | `sheet`    | Uses `steps` array (not `blocks`) — each step rendered in the persistent bottom sheet |
 
 ---
@@ -1205,10 +1215,10 @@ Sheet-only fields (top-level):
 GUIDELINES:
   - Start with text for context, then use components
   - Use quick_replies at the end to suggest next steps
-  - Keep it concise: 3-8 blocks for expanded, 3-10 for sheet
+  - Keep it concise: 1-3 blocks for inline, 3-8 for expanded, 3-10 for sheet
   - Use text-only when components add no value
   - Every interactive component MUST have a feedback object
-  - Prefer expanded. Use sheet only for focused multi-step input.
+  - Prefer inline for chat-flow content; expanded for content the user may want to study; sheet only for focused multi-step input.
 ```
 
 ---
