@@ -64,21 +64,23 @@ class AuiResponseExtractorTest {
     }
 
     @Test
-    fun `malformed JSON returns error`() {
+    fun `plain text with no JSON falls back to text`() {
         val result = AuiResponseExtractor.fromRawResponse("not json at all")
 
-        assertNull(result.text)
-        assertNotNull(result.errorMessage)
+        assertEquals("not json at all", result.text)
+        assertNull(result.auiJson)
+        assertNull(result.auiResponse)
+        assertNull(result.errorMessage)
     }
 
     @Test
-    fun `missing text field returns error`() {
+    fun `envelope-like JSON without text field falls back to raw text`() {
         val raw = """{ "aui": { "display": "expanded", "blocks": [] } }"""
         val result = AuiResponseExtractor.fromRawResponse(raw)
 
-        assertNull(result.text)
-        assertNotNull(result.errorMessage)
-        assertEquals("Missing 'text' field in LLM response", result.errorMessage)
+        assertEquals(raw, result.text)
+        assertNull(result.auiJson)
+        assertNull(result.errorMessage)
     }
 
     @Test
@@ -409,6 +411,26 @@ class AuiResponseExtractorTest {
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
         assertEquals(AuiDisplay.EXPANDED, result.auiResponse!!.display)
+    }
+
+    @Test
+    fun `content text with preamble and fenced envelope extracts embedded JSON`() {
+        val raw = "I'd be happy to help you find the perfect books! " +
+            "Let me ask you a few quick questions:\n\n" +
+            "```json\n" +
+            "{\"text\": \"Let me learn about your preferences:\", " +
+            "\"aui\": {\"display\": \"survey\", \"survey_title\": \"Book preferences\", " +
+            "\"steps\": [{\"question\": \"What genres?\", \"blocks\": [" +
+            "{\"type\": \"text\", \"data\": {\"text\": \"Pick one\"}}]}]}}\n" +
+            "```"
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals("Let me learn about your preferences:", result.text)
+        assertNotNull(result.auiJson)
+        assertNotNull(result.auiResponse)
+        assertEquals(AuiDisplay.SURVEY, result.auiResponse!!.display)
+        assertNull(result.errorMessage)
     }
 
     @Test

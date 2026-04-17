@@ -12,6 +12,7 @@ import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -19,9 +20,9 @@ import kotlinx.serialization.json.put
 /**
  * [LlmClient] implementation that calls the Anthropic Messages API.
  *
- * Sends conversation history to `POST /v1/messages` and returns the raw
- * response body as a [LlmRawResult]. Parsing into text/AUI is deferred to
- * the repository layer via [AuiResponseExtractor].
+ * Sends conversation history to `POST /v1/messages` and extracts the text
+ * from the first `text`-type content block, returning it as [LlmRawResult.rawContent].
+ * Parsing into text/AUI is deferred to the repository layer via [AuiResponseExtractor].
  *
  * @param apiKey Anthropic API key (x-api-key header).
  * @param httpClient Ktor HTTP client configured with content negotiation.
@@ -57,15 +58,20 @@ class ClaudeLlmClient(
             if (BuildConfig.DEBUG) {
                 Log.d("ClaudeLlmClient", responseText)
             }
-            val messageId = try {
-                Json.parseToJsonElement(responseText)
-                    .jsonObject["id"]
-                    ?.jsonPrimitive
-                    ?.content
-            } catch (_: Exception) {
-                null
-            }
-            LlmRawResult(messageId = messageId, rawContent = responseText)
+            val root = Json.parseToJsonElement(responseText).jsonObject
+            val messageId = root["id"]?.jsonPrimitive?.content
+            val contentText = root["content"]
+                ?.jsonArray
+                ?.firstOrNull { it.jsonObject["type"]?.jsonPrimitive?.content == "text" }
+                ?.jsonObject
+                ?.get("text")
+                ?.jsonPrimitive
+                ?.content
+                ?: return LlmRawResult(
+                    messageId = messageId,
+                    errorMessage = "Claude response missing text content",
+                )
+            LlmRawResult(messageId = messageId, rawContent = contentText)
         } catch (e: Exception) {
             LlmRawResult(errorMessage = "Claude API error: ${e.message}", cause = e)
         }

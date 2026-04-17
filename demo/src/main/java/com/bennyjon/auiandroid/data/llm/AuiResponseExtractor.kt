@@ -40,20 +40,26 @@ internal object AuiResponseExtractor {
     private val auiParser = AuiParser()
 
     /**
-     * Parses [rawText] as either a structured envelope or a Claude Messages API
-     * response and returns an [LlmResponse].
+     * Parses [rawText] and returns an [LlmResponse].
      *
-     * Returns an error [LlmResponse] if [rawText] is not valid JSON or if
-     * neither format yields a text value.
+     * [rawText] may be any of:
+     *  - A structured envelope `{ "text": "...", "aui": { ... } }`
+     *  - Raw AUI JSON (has `display`), optionally wrapped in a ```json fence
+     *  - A Claude Messages API response (detected by the `content` array)
+     *  - Mixed content: preamble text followed by a fenced or unfenced JSON block
+     *  - Plain text — returned as [LlmResponse.text] with no AUI
      */
     fun fromRawResponse(rawText: String): LlmResponse {
         return try {
-            val root = json.parseToJsonElement(rawText).jsonObject
-
-            if (isClaudeApiResponse(root)) {
+            val root = try {
+                json.parseToJsonElement(rawText).jsonObject
+            } catch (_: Exception) {
+                null
+            }
+            if (root != null && isClaudeApiResponse(root)) {
                 parseClaudeApiResponse(root)
             } else {
-                parseEnvelope(root)
+                parseContentText(rawText)
             }
         } catch (e: Exception) {
             error("Failed to parse LLM response: ${e.message}", e)
@@ -111,26 +117,24 @@ internal object AuiResponseExtractor {
         val id = root["id"]?.jsonPrimitive?.content
         val contentText = extractContentText(root)
             ?: return error("No text content in Claude response")
+        val parsed = parseContentText(contentText)
+        return parsed.copy(id = id ?: parsed.id)
+    }
 
+    /**
+     * Parses the text content of an assistant message, which may be:
+     *
+     *  1. A structured envelope `{ "text": "...", "aui": { ... } }`
+     *  2. Raw AUI JSON (has `display`, no `text`) — optionally wrapped in a ```json fence
+     *  3. Mixed content: preamble text followed by a fenced or unfenced JSON block
+     *  4. Plain text
+     */
+    private fun parseContentText(contentText: String): LlmResponse {
         val stripped = stripMarkdownCodeFence(contentText)
 
-        // Try to unwrap a structured envelope inside the content text.
-        val inner = tryParseEnvelope(stripped)
-        if (inner != null) {
-            return inner.copy(id = id ?: inner.id)
-        }
-
-        // Try to detect raw AUI JSON (has "display" field but no "text" field).
-        val rawAui = tryParseRawAui(stripped)
-        if (rawAui != null) {
-            return rawAui.copy(id = id ?: rawAui.id)
-        }
-
-        // Try to find embedded JSON within mixed content (model added text before/after).
-        val embedded = tryExtractEmbeddedJson(stripped)
-        if (embedded != null) {
-            return embedded.copy(id = id ?: embedded.id)
-        }
+        tryParseEnvelope(stripped)?.let { return it }
+        tryParseRawAui(stripped)?.let { return it }
+        tryExtractEmbeddedJson(contentText)?.let { return it }
 
         if (stripped.contains("\"aui\"")) {
             logWarning(
@@ -139,7 +143,7 @@ internal object AuiResponseExtractor {
             )
         }
 
-        return LlmResponse(id = id, text = contentText)
+        return LlmResponse(text = contentText)
     }
 
     /**
