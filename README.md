@@ -6,13 +6,13 @@
 An open-source Kotlin library for rendering AI-driven interactive UI in Jetpack Compose.
 
 AI assistants respond with JSON describing pre-built native components instead of plain text.
-AUI parses the JSON and renders native Compose UI — cards, forms, chips, buttons, sheets — inside your app.
+AUI parses the JSON and renders native Compose UI — cards, forms, chips, buttons, surveys — inside your app.
 
 ## Visual Examples
 
 | AI-Generated Survey | All Blocks Showcase |
 |:---:|:---:|
-| The AI builds a multi-step survey from JSON and presents it as a native bottom sheet. Each step collects user input and the consolidated result is delivered to your app via a single callback. | A scrollable gallery of every built-in AUI component — text, cards, lists, inputs, status, media, and layout blocks — rendered from JSON in their inline, expanded, and sheet display modes. Use it to preview the catalog, switch themes on the fly, and see how each block reacts to user interaction. |
+| The AI builds a multi-step survey from JSON and presents it as a native bottom sheet. Each step collects user input and the consolidated result is delivered to your app via a single callback. | A scrollable gallery of every built-in AUI component — text, cards, lists, inputs, status, media, and layout blocks — rendered from JSON in their inline, expanded, and survey display modes. Use it to preview the catalog, switch themes on the fly, and see how each block reacts to user interaction. |
 | <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <img src="docs/assets/all-blocks-show-case.gif" width="300" /> |
 
 ## How It Works
@@ -172,19 +172,20 @@ The AI chooses how prominently to present each response:
 | Level | When to use | Behavior |
 |-------|-------------|----------|
 | **expanded** | Quick info, status badges, polls, rich content, product cards | Full-width in the chat feed |
-| **sheet** | Multi-step surveys, forms, bookings | Bottom sheet overlay with step navigation |
+| **survey** | Multi-step surveys, forms, bookings | Bottom sheet overlay with library-injected Back/Next/Submit |
 
-## Handling Sheets
+## Handling Surveys
 
-Sheets open automatically and handle their own step navigation. When the user submits
-or dismisses, `onFeedback` fires once with the consolidated result.
+Surveys open automatically and the library injects Back/Next/Submit navigation around
+each step. When the user submits or dismisses, `onFeedback` fires once with the
+consolidated result.
 
-**Important:** After `onFeedback` fires for a sheet, set the AUI JSON to `null` so it
+**Important:** After `onFeedback` fires for a survey, set the AUI JSON to `null` so it
 doesn't re-open if the user scrolls back:
 
 ```kotlin
 fun onAuiFeedback(messageId: String, feedback: AuiFeedback) {
-    // Mark sheet as consumed
+    // Mark survey as consumed
     if (feedback.stepsTotal != null) {
         markAuiConsumed(messageId)  // e.g., set auiJson = null
     }
@@ -195,7 +196,7 @@ fun onAuiFeedback(messageId: String, feedback: AuiFeedback) {
 }
 ```
 
-If the host app forgets to consume the sheet, it won't crash or re-open — the composable
+If the host app forgets to consume the survey, it won't crash or re-open — the composable
 is inert after the first submission (provided you use stable `LazyColumn` keys).
 
 ## Theming

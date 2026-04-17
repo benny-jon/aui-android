@@ -56,7 +56,7 @@ AuiRenderer(
 │  │  │                                                 │     │   │
 │  │  │  AuiRenderer composable                         │     │   │
 │  │  │  ├── Theme system (AuiTheme)                    │     │   │
-│  │  │  ├── Display router (inline/expanded/sheet)      │     │   │
+│  │  │  ├── Display router (inline/expanded/survey)     │     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
 │  │  │  ├── Component catalog (50+ composables)        │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -139,11 +139,11 @@ sealed class AuiParseResult<T> {
 data class AuiResponse(
     val display: AuiDisplay,
     val blocks: List<AuiBlock>,
-    val sheetTitle: String? = null,
-    val sheetDismissable: Boolean = true
+    val surveyTitle: String? = null,
+    val steps: List<AuiStep>? = null
 )
 
-enum class AuiDisplay { INLINE, EXPANDED, SHEET }
+enum class AuiDisplay { INLINE, EXPANDED, SURVEY }
 // Library renders INLINE and EXPANDED identically. Hosts may surface EXPANDED responses
 // via a separate detail surface (card stub → bottom sheet on narrow windows, side detail
 // pane on wide windows ≥ 600 dp). Use card_title / card_description on AuiResponse to
@@ -440,8 +440,8 @@ aui/
 │       ├── inline-badges.json
 │       ├── expanded-products.json
 │       ├── expanded-restaurants.json
-│       ├── sheet-booking.json
-│       ├── sheet-form.json
+│       ├── survey-booking.json
+│       ├── survey-form.json
 │       └── full-conversation.json    # Multi-turn example
 │
 ├── aui-core/                         # Kotlin library: models + parser
@@ -493,10 +493,10 @@ aui/
 │       │   │   └── MaterialThemeAdapter.kt  # fromMaterialTheme()
 │       │   │
 │       │   ├── display/
-│       │   │   ├── DisplayRouter.kt   # Routes to expanded/sheet
+│       │   │   ├── DisplayRouter.kt   # Routes to expanded/survey
 │       │   │   ├── InlineDisplay.kt
 │       │   │   ├── ExpandedDisplay.kt
-│       │   │   └── SheetDisplay.kt
+│       │   │   └── SurveyFlowDisplay.kt
 │       │   │
 │       │   ├── components/            # One file per component
 │       │   │   ├── text/
@@ -575,7 +575,7 @@ aui/
 │           ├── display/
 │           │   ├── InlineDisplayTest.kt
 │           │   ├── ExpandedDisplayTest.kt
-│           │   └── SheetDisplayTest.kt
+│           │   └── SurveyFlowDisplayTest.kt
 │           └── components/
 │               └── ... (snapshot tests per component)
 │

@@ -82,41 +82,35 @@ class AuiParserTest {
         assertEquals("poll_submit", button.feedback?.action)
     }
 
-    // ── Sheet flow ────────────────────────────────────────────────────────────
+    // ── Survey flow ───────────────────────────────────────────────────────────
 
     @Test
-    fun `parse poll-sheet-flow`() {
-        val json = loadResource("examples/poll-sheet-flow.json")
+    fun `parse poll-survey-flow`() {
+        val json = loadResource("examples/poll-survey-flow.json")
         val response = parser.parse(json)
 
-        assertEquals(AuiDisplay.SHEET, response.display)
-        assertEquals("Quick Survey", response.sheetTitle)
+        assertEquals(AuiDisplay.SURVEY, response.display)
+        assertEquals("Quick Survey", response.surveyTitle)
         assertEquals(3, response.steps.size)
 
         val step1 = response.steps[0]
-        assertEquals("Experience", step1.label)
         assertEquals("How was your experience?", step1.question)
-        assertTrue(step1.skippable)
+        assertEquals(1, step1.blocks.size)
         val chips = step1.blocks[0] as AuiBlock.ChipSelectSingle
         assertEquals("experience", chips.data.key)
         assertEquals(4, chips.data.options.size)
-        val next1 = step1.blocks[1] as AuiBlock.ButtonPrimary
-        assertEquals("poll_next_step", next1.feedback?.action)
 
         val step2 = response.steps[1]
-        assertEquals("Features", step2.label)
+        assertEquals("What would you like to see improved?", step2.question)
         val multiChips = step2.blocks[0] as AuiBlock.ChipSelectMulti
         assertEquals("improvements", multiChips.data.key)
         assertEquals(5, multiChips.data.options.size)
 
         val step3 = response.steps[2]
-        assertEquals("Feedback", step3.label)
         assertEquals("Anything else you'd like to tell us?", step3.question)
+        assertEquals(1, step3.blocks.size)
         val textInput = step3.blocks[0] as AuiBlock.InputTextSingle
         assertEquals("open_feedback", textInput.data.key)
-        val submit = step3.blocks[1] as AuiBlock.ButtonPrimary
-        assertEquals("poll_complete", submit.feedback?.action)
-        assertEquals("onboarding_survey", submit.feedback?.params?.get("poll_id"))
     }
 
     // ── Confirmation ──────────────────────────────────────────────────────────
@@ -166,21 +160,19 @@ class AuiParserTest {
         assertEquals("feature_survey_v2", button.feedback?.params?.get("poll_id"))
     }
 
-    // ── Sheet flow v2 (radio_list + checkbox_list in steps) ──────────────────
+    // ── Survey flow v2 (radio_list + checkbox_list in steps) ─────────────────
 
     @Test
-    fun `parse poll-sheet-radio-v2`() {
-        val json = loadResource("examples/poll-sheet-radio-v2.json")
+    fun `parse poll-survey-radio-v2`() {
+        val json = loadResource("examples/poll-survey-radio-v2.json")
         val response = parser.parse(json)
 
-        assertEquals(AuiDisplay.SHEET, response.display)
-        assertEquals("Quick Survey", response.sheetTitle)
+        assertEquals(AuiDisplay.SURVEY, response.display)
+        assertEquals("Quick Survey", response.surveyTitle)
         assertEquals(3, response.steps.size)
 
         val step1 = response.steps[0]
-        assertEquals("Experience", step1.label)
         assertEquals("How was your overall experience?", step1.question)
-        assertTrue(step1.skippable)
         val radioList = step1.blocks[0] as AuiBlock.RadioList
         assertEquals("experience", radioList.data.key)
         assertEquals(5, radioList.data.options.size)
@@ -188,18 +180,16 @@ class AuiParserTest {
         assertEquals("excellent", radioList.data.options[0].value)
 
         val step2 = response.steps[1]
-        assertEquals("Improvements", step2.label)
+        assertEquals("What should we focus on improving?", step2.question)
         val checkboxList = step2.blocks[0] as AuiBlock.CheckboxList
         assertEquals("improvements", checkboxList.data.key)
         assertEquals(4, checkboxList.data.options.size)
         assertEquals("Response speed", checkboxList.data.options[0].label)
 
         val step3 = response.steps[2]
-        assertEquals("Comments", step3.label)
+        assertEquals("Anything else you'd like to tell us?", step3.question)
+        assertEquals(1, step3.blocks.size)
         assertTrue(step3.blocks[0] is AuiBlock.InputTextSingle)
-        val submit = step3.blocks[1] as AuiBlock.ButtonPrimary
-        assertEquals("poll_complete", submit.feedback?.action)
-        assertEquals("radio_survey", submit.feedback?.params?.get("poll_id"))
     }
 
     // ── Unknown type handling ─────────────────────────────────────────────────
@@ -368,20 +358,76 @@ class AuiParserTest {
         assertNull(response.cardDescription)
     }
 
-    // ── Sheet flow defaults ───────────────────────────────────────────────────
+    // ── Survey parsing ────────────────────────────────────────────────────────
 
     @Test
-    fun `sheetDismissable defaults to true when absent`() {
+    fun `parse survey with survey_title populates surveyTitle`() {
         val json = """
             {
-              "display": "sheet",
-              "sheet_title": "My Sheet",
-              "steps": []
+              "display": "survey",
+              "survey_title": "My Survey",
+              "steps": [
+                {
+                  "question": "Rate us?",
+                  "blocks": [
+                    { "type": "input_rating_stars", "data": { "key": "rating" } }
+                  ]
+                }
+              ]
             }
         """.trimIndent()
         val response = parser.parse(json)
-        assertTrue(response.sheetDismissable)
-        assertEquals("My Sheet", response.sheetTitle)
+        assertEquals(AuiDisplay.SURVEY, response.display)
+        assertEquals("My Survey", response.surveyTitle)
+        assertEquals(1, response.steps.size)
+        assertEquals("Rate us?", response.steps[0].question)
+    }
+
+    @Test
+    fun `parse survey step without question leaves it null`() {
+        val json = """
+            {
+              "display": "survey",
+              "survey_title": "Quick",
+              "steps": [
+                {
+                  "blocks": [
+                    { "type": "input_rating_stars", "data": { "key": "rating" } }
+                  ]
+                }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertNull(response.steps[0].question)
+    }
+
+    @Test
+    fun `parse survey step preserves optional label and defaults to null when absent`() {
+        val json = """
+            {
+              "display": "survey",
+              "survey_title": "Labeled",
+              "steps": [
+                {
+                  "label": "Rating",
+                  "question": "How was it?",
+                  "blocks": [
+                    { "type": "input_rating_stars", "data": { "key": "rating" } }
+                  ]
+                },
+                {
+                  "question": "Anything else?",
+                  "blocks": [
+                    { "type": "input_text_single", "data": { "key": "comment", "label": "Comment" } }
+                  ]
+                }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertEquals("Rating", response.steps[0].label)
+        assertNull(response.steps[1].label)
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

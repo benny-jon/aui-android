@@ -3,27 +3,29 @@ package com.bennyjon.aui.core.model
 import kotlinx.serialization.Serializable
 
 /**
- * A single step within a [AuiDisplay.SHEET] response.
+ * A single step within a [AuiDisplay.SURVEY] response.
  *
- * The library renders each step inside a persistent bottom sheet, automatically advancing
- * through steps as the user interacts. Step blocks should contain the input components and
- * a single `button_primary` as the submission trigger; navigation and accumulation are handled
- * by the library.
+ * The library renders each step inside a persistent bottom sheet and injects all navigation
+ * controls (Back / Next on intermediate steps, Submit on the final step). The AI only declares
+ * the [question] and the collector [blocks] for that question — never navigation buttons,
+ * submit actions, or skip controls.
  *
- * @param blocks The content blocks to render for this step. Include a `button_primary` as
- *   the action trigger. For single-input steps, the library derives one entry using [question]
- *   as the heading. For multi-input steps, each input's `label` (or `key`) becomes its own
- *   entry question.
- * @param label Short label shown in the auto-rendered stepper indicator (e.g. "Experience").
- *   Defaults to the step number if absent.
- * @param question Full question text stored in [AuiEntry.question] when the user answers
- *   this step. If null no entry is recorded for this step.
- * @param skippable When true the library renders a "Skip" button beneath the step content.
+ * Every step is implicitly optional: users can advance past any step without answering, and
+ * steps without a collected answer are simply omitted from [AuiFeedback.entries].
+ *
+ * @param blocks The collector component(s) for this question. Should contain input
+ *   components only (radio_list, checkbox_list, chip_select_*, input_*). The library
+ *   provides its own Back / Next / Submit buttons — do not add button_primary blocks here.
+ * @param question Full question text shown at the top of the step and used as the question
+ *   text for any entry captured from a single-input step. If null the library falls back to
+ *   the input's `label` or `key`.
+ * @param label Optional short label shown inside the stepper indicator (e.g. `"Rating"`,
+ *   `"Details"`). Purely cosmetic — does not affect entries or feedback. When null the
+ *   stepper falls back to the step number.
  */
 @Serializable
 data class AuiStep(
     val blocks: List<AuiBlock>,
-    val label: String? = null,
     val question: String? = null,
-    val skippable: Boolean = true,
+    val label: String? = null,
 )

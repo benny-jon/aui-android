@@ -15,7 +15,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                                                              │
-│  EXPANDED                              SHEET                 │
+│  EXPANDED                              SURVEY                │
 │  ────────                              ─────                 │
 │                                                              │
 │  Full-width in the chat feed.          Bottom sheet overlay. │
@@ -53,7 +53,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 
 1. **Catalog, not language.** The AI picks from pre-built components. It never designs UI.
 2. **One type = one component.** No variants. `button_primary` and `button_secondary` are separate types.
-3. **Three presentation levels.** The AI picks `inline`, `expanded`, or `sheet` per response based on content.
+3. **Three presentation levels.** The AI picks `inline`, `expanded`, or `survey` per response based on content.
 4. **Interactions close the loop.** Every user interaction produces a feedback event that feeds back into the conversation.
 5. **Text is always an option.** The AI can respond with plain text, components, or both. Components are additive.
 6. **Progressive enrichment.** Start with a small catalog. Add components over time. The format never changes.
@@ -87,7 +87,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 │   │                                                      │   │
 │   │  "inline"   → render in the chat list, in place      │   │
 │   │  "expanded" → render full-width; host may show stub  │   │
-│   │  "sheet"    → render in bottom sheet overlay         │   │
+│   │  "survey"   → render in bottom sheet survey overlay  │   │
 │   └──────────────────────────────────────────────────────┘   │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
@@ -101,7 +101,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 
 ```json
 {
-  "display": "inline | expanded | sheet",
+  "display": "inline | expanded | survey",
   "blocks": [ ... ]
 }
 ```
@@ -110,7 +110,7 @@ That's the entire top-level structure. Two fields.
 
 | Field              | Required | Description                                                                     |
 |--------------------|----------|---------------------------------------------------------------------------------|
-| `display`          | yes      | Presentation level: `inline`, `expanded`, or `sheet`                            |
+| `display`          | yes      | Presentation level: `inline`, `expanded`, or `survey`                           |
 | `blocks`           | yes      | Array of content blocks (text + catalog components)                             |
 | `card_title`       | no       | Short title for the host-rendered card stub used to surface `expanded` content. |
 | `card_description` | no       | Short subtitle for the host-rendered card stub.                                 |
@@ -148,96 +148,66 @@ Best for: rich product cards, long lists, comparisons, multi-block content, medi
 }
 ```
 
-#### `sheet`
+#### `survey`
 
-Rendered as a **bottom sheet overlay** on top of the chat. The chat is still visible behind it (dimmed). The sheet demands attention — the user should interact with it or dismiss it before continuing.
+Rendered as a **bottom sheet survey overlay** on top of the chat. The chat is still visible behind it (dimmed). The survey demands attention — the user should complete or dismiss it before continuing.
 
-Best for: booking flows, multi-field forms, confirmations with consequences, multi-step processes, detailed views.
+Best for: multi-question feedback, booking flows, multi-field forms, confirmations with consequences, multi-step processes.
 
-Sheet responses use a `steps` array instead of `blocks`. Each step is rendered inside the same persistent bottom sheet — the sheet stays open as the user advances. The library automatically renders a stepper indicator when there is more than one step.
+Survey responses use a `steps` array instead of `blocks`. Each step is rendered inside the same persistent bottom sheet — it stays open as the user advances. **The library injects Back / Next / Submit navigation around each step**, so the AI only declares the questions — no `button_primary` or `submit` blocks belong inside a step. The library also renders a stepper indicator when there are multiple steps.
 
 ```json
 {
-  "display": "sheet",
-  "sheet_title": "Quick Survey",
+  "display": "survey",
+  "survey_title": "Quick Feedback",
   "steps": [
     {
-      "label": "Experience",
-      "question": "How was your experience?",
-      "skippable": true,
+      "question": "How would you rate your experience?",
       "blocks": [
-        {
-          "type": "chip_select_single",
-          "data": {
-            "key": "experience",
-            "options": [
-              { "label": "😊 Great", "value": "great" },
-              { "label": "🙂 Good", "value": "good" },
-              { "label": "😐 Okay", "value": "okay" },
-              { "label": "😞 Poor", "value": "poor" }
-            ]
-          }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": { "action": "poll_next_step", "params": { "poll_id": "survey" } }
-        }
+        { "type": "input_rating_stars", "data": { "key": "rating", "max": 5 } }
       ]
     },
     {
-      "label": "Feedback",
       "question": "Anything else you'd like to tell us?",
-      "skippable": true,
       "blocks": [
-        {
-          "type": "input_text_single",
-          "data": { "key": "open_feedback", "label": "Your feedback", "placeholder": "Optional" }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Submit" },
-          "feedback": { "action": "poll_complete", "params": { "poll_id": "survey" } }
-        }
+        { "type": "input_text_multi", "data": { "key": "comment", "placeholder": "Optional" } }
       ]
     }
   ]
 }
 ```
 
-Sheet-specific fields:
+Survey-specific fields:
 
-| Field               | Required | Description                                                                 |
-|---------------------|----------|-----------------------------------------------------------------------------|
-| `sheet_title`       | no       | Title shown in the sheet header area                                        |
-| `sheet_dismissable` | no       | Can the user swipe down to dismiss? Default: `true`                         |
-| `steps`             | yes      | Ordered list of steps. Each step has its own `blocks`, `label`, `question`, and `skippable` |
+| Field          | Required | Description                                                                |
+|----------------|----------|----------------------------------------------------------------------------|
+| `survey_title` | no       | Title shown at the top of the survey                                       |
+| `steps`        | yes      | Ordered list of steps (minimum 2). Each step has `question` and `blocks`   |
 
 Step fields:
 
-| Field       | Required | Description                                                                                    |
-|-------------|----------|------------------------------------------------------------------------------------------------|
-| `blocks`    | yes      | Blocks to render for this step. Include a `button_primary` as the advance/submit trigger.      |
-| `label`     | no       | Short label shown in the stepper indicator (e.g. `"Experience"`). Defaults to the step number. |
-| `question`  | no       | Full question text recorded in the `formattedEntries` summary when the user answers.           |
-| `skippable` | no       | When `true`, the library renders a "Skip" button. Skipped steps are excluded from entries.     |
+| Field      | Required | Description                                                                                                         |
+|------------|----------|---------------------------------------------------------------------------------------------------------------------|
+| `blocks`   | yes      | The collector component(s) for this question. Do not include `button_primary` or submit.                            |
+| `question` | no       | Full question text recorded in the `formattedEntries` summary when the user answers.                                |
+| `label`    | no       | Short label shown inside the stepper indicator (e.g. `"Rating"`). Purely cosmetic. Defaults to the step number.      |
 
-The library emits a single consolidated `AuiFeedback` when the last step is submitted or skipped. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all steps, plus two additional keys:
+No optional flags, no navigation buttons. The library injects **Back**, **Next**, and **Submit** controls. Users can submit any subset of answers; unanswered steps are excluded from `formattedEntries` and `entries`.
 
-| Key              | Type   | Description                                                  |
-|------------------|--------|--------------------------------------------------------------|
-| `steps_total`    | string | Total number of steps in the sheet (e.g. `"3"`)              |
-| `steps_skipped`  | string | Number of steps the user skipped (e.g. `"1"`)                |
+The library emits a single consolidated `AuiFeedback` when the user taps Submit or dismisses the survey. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all answered steps, plus two additional keys:
 
-When a sheet is dismissed without interaction, the client sends a feedback event: `{ "action": "sheet_dismissed" }`. The `steps_total` key is included but `steps_skipped` is not (skip buttons were not used).
+| Key              | Type   | Description                                                   |
+|------------------|--------|---------------------------------------------------------------|
+| `steps_total`    | string | Total number of steps in the survey (e.g. `"3"`)              |
+| `steps_skipped`  | string | Number of steps the user left unanswered (e.g. `"1"`)         |
 
-When a sheet interaction triggers feedback, the sheet closes automatically and the feedback appears as the next user message.
+When a survey is dismissed without interaction, the client sends a feedback event: `{ "action": "survey_dismissed" }`. When submitted, the feedback appears as the next user message.
 
 ---
 
 ### Mixed Presentation
 
-In many cases, the AI wants to say something inline AND show rich content outside the bubble. This is handled naturally because `text` blocks at the start of an `expanded` or `sheet` response are rendered as the AI's chat bubble, and the remaining blocks appear in the expanded/sheet area:
+In many cases, the AI wants to say something inline AND show rich content outside the bubble. This is handled naturally because `text` blocks at the start of an `expanded` response are rendered as the AI's chat bubble, and the remaining blocks appear in the expanded area:
 
 ```json
 {
@@ -261,7 +231,7 @@ This means the AI doesn't need to think about "what goes in the bubble vs outsid
 |------------|--------------------------------|--------------------------------------|
 | `inline`   | In the bubble                  | Below the bubble, in the chat list   |
 | `expanded` | In the bubble                  | Full-width below the bubble; hosts may surface via a tappable card stub |
-| `sheet`    | Uses `steps` array (not `blocks`) — each step rendered in the persistent bottom sheet |
+| `survey`   | Uses `steps` array (not `blocks`) — each step rendered in the persistent bottom-sheet survey; library injects Back/Next/Submit |
 
 ---
 
@@ -291,7 +261,7 @@ User interactions with components become conversation input.
 3. The client generates a feedback event
 4. The event is sent as the next user message in the conversation
 5. The AI receives it and responds
-6. If the component was in a sheet, the sheet closes automatically
+6. If the component was in a survey, the survey closes automatically
 
 ### Feedback Object
 
@@ -307,7 +277,7 @@ User interactions with components become conversation input.
 - `action` — what happened (for the AI to understand)
 - `params` — structured data about the interaction
 
-The AI does **not** set a display label. The library computes one automatically (`formattedEntries`) from the heading→input pairs it finds in the rendered blocks. For a multi-step sheet, this is built from each step's `question` and the user's answer, joined by blank lines:
+The AI does **not** set a display label. The library computes one automatically (`formattedEntries`) from the heading→input pairs it finds in the rendered blocks. For a multi-step survey, this is built from each step's `question` and the user's answer, joined by blank lines:
 
 ```
 How was your experience?
@@ -326,13 +296,13 @@ Consumers can use `feedback.formattedEntries` directly as the chat bubble text, 
   { "role": "user", "content": "Book me a table tonight" },
   { "role": "assistant", "content": { "display": "expanded", "blocks": [ ... ] } },
   { "role": "user", "content": { "feedback": { "action": "select_restaurant", "params": { "id": "nonnas" } } } },
-  { "role": "assistant", "content": { "display": "sheet", "steps": [ ... ] } },
+  { "role": "assistant", "content": { "display": "survey", "steps": [ ... ] } },
   { "role": "user", "content": { "feedback": { "action": "confirm_booking", "params": { "restaurant": "nonnas", "time": "19:30", "party_size": "2" } } } },
   { "role": "assistant", "content": { "display": "expanded", "blocks": [ ... ] } }
 ]
 ```
 
-Note how the AI escalated from `expanded` (showing options) → `sheet` (booking form) → `expanded` (confirmation). The presentation level changes per response based on what's appropriate.
+Note how the AI escalated from `expanded` (showing options) → `survey` (booking form) → `expanded` (confirmation). The presentation level changes per response based on what's appropriate.
 
 ### Items with Individual Feedback
 
@@ -883,7 +853,7 @@ Optional: feedback (for the trailing action)
 }
 ```
 
-### Example 3: Browsing Restaurants (expanded → sheet)
+### Example 3: Browsing Restaurants (expanded → survey)
 
 **User:** "Find me Italian restaurants nearby"
 
@@ -939,15 +909,14 @@ Optional: feedback (for the trailing action)
 
 **User taps "Nonna's Kitchen" → feedback sent**
 
-**AI Response 2 — sheet (booking flow):**
+**AI Response 2 — survey (booking flow):**
 
 ```json
 {
-  "display": "sheet",
-  "sheet_title": "Book a Table",
+  "display": "survey",
+  "survey_title": "Book a Table",
   "steps": [
     {
-      "label": "Time",
       "question": "What time works for you?",
       "blocks": [
         {
@@ -961,16 +930,10 @@ Optional: feedback (for the trailing action)
               { "label": "8:45 PM", "value": "20:45" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": { "action": "booking_step", "params": { "restaurant": "nonnas" } }
         }
       ]
     },
     {
-      "label": "Party size",
       "question": "How many guests?",
       "blocks": [
         {
@@ -985,11 +948,6 @@ Optional: feedback (for the trailing action)
               { "label": "5+", "value": "5" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Confirm Reservation" },
-          "feedback": { "action": "confirm_booking", "params": { "restaurant": "nonnas" } }
         }
       ]
     }
@@ -997,7 +955,7 @@ Optional: feedback (for the trailing action)
 }
 ```
 
-**User selects time + party size + taps Confirm → sheet closes → feedback sent**
+**User picks time + party size + taps library-injected Submit → survey closes → feedback sent**
 
 **AI Response 3 — expanded (confirmation):**
 
@@ -1036,47 +994,43 @@ Optional: feedback (for the trailing action)
 }
 ```
 
-### Example 4: Filing an Issue (sheet with form)
+### Example 4: Filing an Issue (survey)
 
 **User:** "I need to report a problem with my delivery"
 
 ```json
 {
-  "display": "sheet",
-  "sheet_title": "Report an Issue",
-  "blocks": [
+  "display": "survey",
+  "survey_title": "Report an Issue",
+  "steps": [
     {
-      "type": "text",
-      "data": { "text": "Sorry to hear that. Please describe the issue and we'll get it resolved." }
-    },
-    {
-      "type": "form_group",
-      "data": {
-        "fields": [
-          {
-            "type": "input_select",
+      "question": "What happened?",
+      "blocks": [
+        {
+          "type": "input_select",
+          "data": {
             "key": "issue_type",
-            "label": "What happened?",
             "options": [
               { "label": "Package damaged", "value": "damaged" },
               { "label": "Wrong item received", "value": "wrong_item" },
               { "label": "Package not received", "value": "not_received" },
               { "label": "Item missing from order", "value": "missing_item" }
             ]
-          },
-          {
-            "type": "input_text_multi",
+          }
+        }
+      ]
+    },
+    {
+      "question": "Any additional details?",
+      "blocks": [
+        {
+          "type": "input_text_multi",
+          "data": {
             "key": "description",
-            "label": "Additional details (optional)",
             "placeholder": "Describe what happened..."
           }
-        ],
-        "submit_label": "Submit Report"
-      },
-      "feedback": {
-        "action": "submitted_issue_report",
-        "params": { "order_id": "4812" }
-      }
+        }
+      ]
     }
   ]
 }
@@ -1114,27 +1068,29 @@ Optional: feedback (for the trailing action)
 You are a helpful assistant. You respond with rich UI when it enhances
 the experience, and plain text when it doesn't.
 
-Response format (expanded):
+Response format (inline | expanded):
 {
-  "display": "expanded" | "expanded",
+  "display": "inline" | "expanded",
   "blocks": [ ... ]
 }
 
-Response format (sheet — multi-step):
+Response format (survey — multi-step):
 {
-  "display": "sheet",
-  "sheet_title": "...",
+  "display": "survey",
+  "survey_title": "...",
   "steps": [
-    { "label": "Step name", "question": "Full question text?", "skippable": true, "blocks": [ ... ] }
+    { "label": "Short stepper label (optional)", "question": "Full question text?", "blocks": [ ... ] }
   ]
 }
 
 DISPLAY LEVELS:
-  expanded — full-width in chat feed. Quick answers, confirmations, rich cards, media, lists.
-  sheet    — bottom sheet overlay. Multi-step surveys, forms, focused input.
+  inline   — rendered in the chat list. Quick replies, short confirmations, single-button prompts.
+  expanded — full-width focused content. Rich cards, media galleries, product lists.
+  survey   — bottom-sheet overlay. Multi-question structured input (min 2 steps). The library
+             injects Back / Next / Submit controls — do NOT add button_primary inside steps.
 
 Choose the LEAST prominent level that serves the content well.
-Use "sheet" only when user input is needed or focused attention is required.
+Use "survey" only when collecting multiple rounds of structured input.
 
 BLOCK FORMAT:
   { "type": "<component>", "data": { ... }, "feedback": { ... } }
@@ -1203,22 +1159,26 @@ Input:
 Utility:
   divider() · loading(message?) · section_header(title, action_label?)
 
-Sheet-only fields (top-level):
-  sheet_title: string — title in the sheet header
-  sheet_dismissable: boolean — can user swipe to dismiss (default true)
-  steps[]: array of steps (use instead of blocks for sheet)
-    step.label: string — short label for the stepper indicator
-    step.question: string — question recorded in the feedback summary
-    step.skippable: boolean — show a Skip button (default false)
-    step.blocks[]: blocks for this step
+Survey structure (when display = "survey"):
+  survey_title: string — title shown at the top of the survey
+  steps[]: one entry per question (minimum 2)
+    step.question: string — the question being asked on this page
+    step.blocks[]: the collector component(s) for this question
+    step.label: string (optional) — short label shown inside the stepper
+      indicator (e.g. "Rating", "Details"). Purely cosmetic — it does not
+      affect entries, feedback, or navigation. Omit to fall back to the
+      step number.
+  No optional flags, no navigation buttons. Do NOT add button_primary or
+  submit inside a step — the library injects Back / Next / Submit around
+  each step.
 
 GUIDELINES:
   - Start with text for context, then use components
   - Use quick_replies at the end to suggest next steps
-  - Keep it concise: 1-3 blocks for inline, 3-8 for expanded, 3-10 for sheet
+  - Keep it concise: 1-3 blocks for inline, 3-8 for expanded, 1-2 blocks per survey step
   - Use text-only when components add no value
   - Every interactive component MUST have a feedback object
-  - Prefer inline for chat-flow content; expanded for content the user may want to study; sheet only for focused multi-step input.
+  - Prefer inline for chat-flow content; expanded for content the user may want to study; survey only for multi-question structured input.
 ```
 
 ---
@@ -1231,9 +1191,9 @@ GUIDELINES:
 | Status + quick replies                 | expanded | ~100-150 | 3-4    |
 | Product recommendations (carousel)     | expanded | ~250-350 | 3-4    |
 | Restaurant listings (3 cards)          | expanded | ~250-350 | 4-5    |
-| Booking flow (form)                    | sheet    | ~200-300 | 5-7    |
-| Issue report (form)                    | sheet    | ~150-250 | 3-4    |
-| Full multi-step (expanded → sheet)     | mixed    | ~400-600 | 8-12   |
+| Booking flow (survey)                  | survey   | ~200-300 | 2-4    |
+| Issue report (survey)                  | survey   | ~150-250 | 2-3    |
+| Full multi-step (expanded → survey)    | mixed    | ~400-600 | 4-8    |
 
 ---
 
@@ -1267,8 +1227,8 @@ list_numbered, button_row_primary_secondary, button_row_primary_ghost,
 ## Open Questions
 
 - [ ] **Streaming**: Can blocks stream in one at a time? (text first, then cards appear)
-- [ ] **Sheet from expanded**: Can a card in expanded view open a sheet? (e.g., tap product → sheet with details)
-- [ ] **Sheet stacking**: Can a sheet trigger another sheet, or only one at a time?
+- [ ] **Survey from expanded**: Can a card in expanded view open a survey? (e.g., tap product → survey with details)
+- [ ] **Survey stacking**: Can a survey trigger another survey, or only one at a time?
 - [ ] **Block updates**: Can the AI update a previously sent message's blocks? (e.g., mark a step complete)
 - [ ] **Component expiration**: Should interactive components disable after use?
 - [ ] **Client-side actions**: Some feedback (copy, open URL, call phone) could be handled locally without round-tripping to the AI.

@@ -15,8 +15,8 @@ class ShouldRenderAuiTest {
     }
 
     @Test
-    fun `not spent sheet is rendered`() {
-        val response = AuiResponse(display = AuiDisplay.SHEET)
+    fun `not spent survey is rendered`() {
+        val response = AuiResponse(display = AuiDisplay.SURVEY)
         assertTrue(shouldRenderAui(response, isSpent = false))
     }
 
@@ -33,8 +33,8 @@ class ShouldRenderAuiTest {
     }
 
     @Test
-    fun `spent sheet is hidden`() {
-        val response = AuiResponse(display = AuiDisplay.SHEET)
+    fun `spent survey is hidden`() {
+        val response = AuiResponse(display = AuiDisplay.SURVEY)
         assertFalse(shouldRenderAui(response, isSpent = false.not()))
     }
 }

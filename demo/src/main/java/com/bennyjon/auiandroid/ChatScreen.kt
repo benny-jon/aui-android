@@ -49,7 +49,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *
  * Renders a scrollable list of [DemoMessage]s. AI messages with `auiJson` are rendered via
  * [AuiRenderer] using the raw JSON overload — the library parses JSON internally. User
- * interactions trigger [DemoViewModel.onAuiFeedback], which handles sheet consumption
+ * interactions trigger [DemoViewModel.onAuiFeedback], which handles survey consumption
  * (setting `auiJson = null`) and appending the feedback as a user bubble.
  *
  * @param viewModel Drives the demo chat sequence.
@@ -133,7 +133,7 @@ fun ChatScreen(
 /**
  * Renders an AI message: optional text bubble followed by AUI content.
  *
- * When [DemoMessage.Ai.auiJson] is `null` (consumed sheet or no AUI), only the text is shown.
+ * When [DemoMessage.Ai.auiJson] is `null` (consumed survey or no AUI), only the text is shown.
  * When present, the raw JSON is passed to [AuiRenderer] which handles parsing and display
  * mode routing internally.
  */
@@ -170,7 +170,7 @@ private fun AiMessageItem(
         }
     }
 
-    // AUI portion (if any — null after sheet consumption)
+    // AUI portion (if any — null after survey consumption)
     message.auiJson?.let { json ->
         AuiRenderer(
             json = json,

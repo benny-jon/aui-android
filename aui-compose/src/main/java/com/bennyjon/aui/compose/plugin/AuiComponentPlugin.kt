@@ -53,7 +53,7 @@ abstract class AuiComponentPlugin<T : Any> : AuiPlugin {
      * If this plugin renders an input component, return its registry key.
      *
      * Returning non-null tells the feedback pipeline (both [BlockRenderer][com.bennyjon.aui.compose.internal.BlockRenderer]
-     * and [SheetFlowDisplay][com.bennyjon.aui.compose.display.SheetFlowDisplay]) to include this
+     * and [SurveyFlowDisplay][com.bennyjon.aui.compose.display.SurveyFlowDisplay]) to include this
      * component's value in entry accumulation. `null` means this plugin is not an input.
      */
     open val inputKey: String? get() = null

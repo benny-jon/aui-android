@@ -18,8 +18,8 @@ import kotlinx.coroutines.launch
  * [com.bennyjon.aui.compose.AuiRenderer], which handles parsing internally.
  *
  * Key integration patterns demonstrated:
- * - **Sheet consumption:** When [onAuiFeedback] is called for a sheet response
- *   (`stepsTotal != null`), the message's `auiJson` is set to `null` so the sheet
+ * - **Survey consumption:** When [onAuiFeedback] is called for a survey response
+ *   (`stepsTotal != null`), the message's `auiJson` is set to `null` so the survey
  *   cannot re-open if the user scrolls back to it.
  * - **Feedback as user message:** The library's [AuiFeedback.formattedEntries] is displayed
  *   as a user chat bubble, showing the Q&A summary without any custom formatting.
@@ -47,7 +47,7 @@ class DemoViewModel(
      * @param feedback The structured feedback from the AUI library.
      */
     fun onAuiFeedback(messageId: String, feedback: AuiFeedback) {
-        // For sheet responses: mark the AUI as consumed so it doesn't re-open on scroll-back.
+        // For survey responses: mark the AUI as consumed so it doesn't re-open on scroll-back.
         if (feedback.stepsTotal != null) {
             _messages.update { messages ->
                 messages.map { msg ->
@@ -88,7 +88,7 @@ class DemoViewModel(
         /** Default sequence used by the theme showcase screens. */
         val DEFAULT_SEQUENCE = listOf(
             EXPANDED_ACTION_JSON,
-            SHEET_JSON,
+            SURVEY_JSON,
             CONFIRMATION_JSON,
         )
     }
@@ -142,15 +142,13 @@ private val EXPANDED_ACTION_JSON = """
 }
 """.trimIndent()
 
-private val SHEET_JSON = """
+private val SURVEY_JSON = """
 {
-  "display": "sheet",
-  "sheet_title": "Quick Survey",
+  "display": "survey",
+  "survey_title": "Quick Survey",
   "steps": [
     {
-      "label": "Experience",
       "question": "How was your overall experience?",
-      "skippable": true,
       "blocks": [
         {
           "type": "radio_list",
@@ -164,21 +162,11 @@ private val SHEET_JSON = """
               { "label": "Poor", "description": "Significantly below what I expected", "value": "poor" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": {
-            "action": "poll_next_step",
-            "params": { "poll_id": "radio_survey" }
-          }
         }
       ]
     },
     {
-      "label": "Improvements",
       "question": "What should we focus on improving?",
-      "skippable": true,
       "blocks": [
         {
           "type": "checkbox_list",
@@ -191,21 +179,11 @@ private val SHEET_JSON = """
               { "label": "More features", "description": "Additional capabilities and tools", "value": "features" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": {
-            "action": "poll_next_step",
-            "params": { "poll_id": "radio_survey" }
-          }
         }
       ]
     },
     {
-      "label": "Comments",
       "question": "Anything else you'd like to tell us?",
-      "skippable": true,
       "blocks": [
         {
           "type": "input_text_single",
@@ -213,14 +191,6 @@ private val SHEET_JSON = """
             "key": "comments",
             "label": "Your feedback",
             "placeholder": "Optional — type anything here..."
-          }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Submit" },
-          "feedback": {
-            "action": "poll_complete",
-            "params": { "poll_id": "radio_survey" }
           }
         }
       ]

@@ -39,8 +39,8 @@ import com.bennyjon.auiandroid.ui.ThemeDropdown
 /**
  * Scrollable showcase screen that renders every AUI component type.
  *
- * Inline and expanded entries are rendered directly. Sheet entries render as tappable
- * preview cards that open the bottom sheet when clicked.
+ * Inline and expanded entries are rendered directly. Survey entries render as tappable
+ * preview cards that open the survey when clicked.
  *
  * @param viewModel The [ShowcaseViewModel] that provides the parsed showcase entries.
  * @param pluginRegistry Plugin registry passed to each [AuiRenderer] instance.
@@ -103,7 +103,7 @@ private fun ShowcaseItem(
     auiTheme: AuiTheme,
     pluginRegistry: AuiPluginRegistry,
 ) {
-    var activeSheetJson by remember { mutableStateOf<String?>(null) }
+    var activeSurveyJson by remember { mutableStateOf<String?>(null) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -118,9 +118,9 @@ private fun ShowcaseItem(
             )
         }
 
-        if (entry.isSheet) {
+        if (entry.isSurvey) {
             Card(
-                onClick = { activeSheetJson = entry.auiJson },
+                onClick = { activeSurveyJson = entry.auiJson },
                 modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 50.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 colors = CardDefaults.cardColors(
@@ -128,20 +128,20 @@ private fun ShowcaseItem(
                 ),
             ) {
                 Text(
-                    text = "Tap to preview sheet",
+                    text = "Tap to preview survey",
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            activeSheetJson?.let { json ->
+            activeSurveyJson?.let { json ->
                 AuiRenderer(
                     json = json,
                     theme = auiTheme,
                     pluginRegistry = pluginRegistry,
                     onFeedback = {
-                        Log.d("Showcase", "Sheet feedback: ${it.action}")
-                        activeSheetJson = null
+                        Log.d("Showcase", "Survey feedback: ${it.action}")
+                        activeSurveyJson = null
                     },
                 )
             }

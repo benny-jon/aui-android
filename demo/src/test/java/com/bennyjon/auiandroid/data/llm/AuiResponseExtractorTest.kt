@@ -419,7 +419,7 @@ class AuiResponseExtractorTest {
           "content": [
             {
               "type": "text",
-              "text": "```json\n{\"display\": \"sheet\", \"sheet_title\": \"Survey\", \"steps\": [{\"label\": \"Q1\", \"question\": \"How?\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hi\"}}]}]}\n```"
+              "text": "```json\n{\"display\": \"survey\", \"survey_title\": \"Survey\", \"steps\": [{\"question\": \"How?\", \"blocks\": [{\"type\": \"text\", \"data\": {\"text\": \"Hi\"}}]}]}\n```"
             }
           ]
         }
@@ -431,7 +431,7 @@ class AuiResponseExtractorTest {
         assertEquals("", result.text)
         assertNotNull(result.auiJson)
         assertNotNull(result.auiResponse)
-        assertEquals(AuiDisplay.SHEET, result.auiResponse!!.display)
+        assertEquals(AuiDisplay.SURVEY, result.auiResponse!!.display)
     }
 
     // ── Helpers ─────────────────────────────────────────────────────

@@ -11,29 +11,23 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class AuiResponse(
-    /** How to present this response (inline, expanded, or sheet). */
+    /** How to present this response (inline, expanded, or survey). */
     val display: AuiDisplay,
 
     /**
      * Ordered list of content blocks to render. Used for [AuiDisplay.INLINE] and
-     * [AuiDisplay.EXPANDED]. Empty by default — [AuiDisplay.SHEET] uses [steps] instead.
+     * [AuiDisplay.EXPANDED]. Empty by default — [AuiDisplay.SURVEY] uses [steps] instead.
      */
     val blocks: List<AuiBlock> = emptyList(),
 
     /**
-     * Ordered list of steps for [AuiDisplay.SHEET]. The library renders each step inside
+     * Ordered list of steps for [AuiDisplay.SURVEY]. The library renders each step inside
      * a persistent bottom sheet, navigating between them without closing.
      */
     val steps: List<AuiStep> = emptyList(),
 
-    /** Title shown in the sheet header when [display] is [AuiDisplay.SHEET]. */
-    @SerialName("sheet_title") val sheetTitle: String? = null,
-
-    /**
-     * Whether the sheet can be dismissed by swiping down.
-     * Defaults to `true`. Only relevant when [display] is [AuiDisplay.SHEET].
-     */
-    @SerialName("sheet_dismissable") val sheetDismissable: Boolean = true,
+    /** Title shown in the survey header when [display] is [AuiDisplay.SURVEY]. */
+    @SerialName("survey_title") val surveyTitle: String? = null,
 
     /**
      * Short title for a host-rendered card stub when [display] is [AuiDisplay.EXPANDED].

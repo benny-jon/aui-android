@@ -62,16 +62,15 @@ class FakeLlmClient : LlmClient {
             }
             """.trimIndent(),
 
-            // 3) Text + sheet survey (multi-step)
+            // 3) Text + survey (multi-page — library injects Back/Next/Submit)
             """
             {
               "text": "I'd love to learn more about you! Here's a quick survey:",
               "aui": {
-                "display": "sheet",
-                "sheet_title": "Quick Survey",
+                "display": "survey",
+                "survey_title": "Quick Survey",
                 "steps": [
                   {
-                    "label": "Role",
                     "question": "What best describes your role?",
                     "blocks": [
                       {
@@ -85,16 +84,10 @@ class FakeLlmClient : LlmClient {
                             { "label": "Other", "value": "other" }
                           ]
                         }
-                      },
-                      {
-                        "type": "button_primary",
-                        "data": { "label": "Next" },
-                        "feedback": { "action": "submit", "params": {} }
                       }
                     ]
                   },
                   {
-                    "label": "Source",
                     "question": "How did you hear about us?",
                     "blocks": [
                       {
@@ -108,11 +101,6 @@ class FakeLlmClient : LlmClient {
                             { "label": "Other", "value": "other" }
                           ]
                         }
-                      },
-                      {
-                        "type": "button_primary",
-                        "data": { "label": "Submit" },
-                        "feedback": { "action": "submit", "params": {} }
                       }
                     ]
                   }

@@ -3,7 +3,7 @@ package com.bennyjon.aui.core.model
 import kotlinx.serialization.Serializable
 
 /**
- * A single question–answer pair captured during a [AuiDisplay.SHEET] interaction.
+ * A single question–answer pair captured during a [AuiDisplay.SURVEY] interaction.
  *
  * The library builds and populates [AuiFeedback.entries] from these as the user moves through
  * each step. The host app can format [entries] into a summary string for display or pass them

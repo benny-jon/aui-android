@@ -54,7 +54,7 @@ class ShowcaseViewModel @Inject constructor(
                 label = label,
                 description = description,
                 auiJson = auiObj.toString(),
-                isSheet = display == "sheet",
+                isSurvey = display == "survey",
             )
         }
     }

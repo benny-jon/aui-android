@@ -1,6 +1,6 @@
 package com.bennyjon.aui.compose
 
-import com.bennyjon.aui.compose.display.buildSheetFormattedEntries
+import com.bennyjon.aui.compose.display.buildSurveyFormattedEntries
 import com.bennyjon.aui.compose.internal.buildEntriesFromBlocks
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
 import com.bennyjon.aui.core.model.AuiBlock
@@ -118,58 +118,58 @@ class FeedbackBuildingTest {
         assertEquals("Rate your experience", result[0].question)
     }
 
-    // ── buildSheetFormattedEntries ────────────────────────────────────────────
+    // ── buildSurveyFormattedEntries ────────────────────────────────────────────
 
     @Test
-    fun `buildSheetFormattedEntries with all steps answered returns full QA pairs`() {
+    fun `buildSurveyFormattedEntries with all steps answered returns full QA pairs`() {
         val entries = listOf(
             AuiEntry(question = "How was it?", answer = "Great"),
             AuiEntry(question = "What to improve?", answer = "Speed, Design"),
         )
-        val result = buildSheetFormattedEntries(entries, skippedCount = 0)
+        val result = buildSurveyFormattedEntries(entries, skippedCount = 0)
         assertEquals("How was it?\nGreat\n\nWhat to improve?\nSpeed, Design", result)
     }
 
     @Test
-    fun `buildSheetFormattedEntries with all skipped returns Survey skipped`() {
-        val result = buildSheetFormattedEntries(emptyList(), skippedCount = 3)
+    fun `buildSurveyFormattedEntries with all skipped returns Survey skipped`() {
+        val result = buildSurveyFormattedEntries(emptyList(), skippedCount = 3)
         assertEquals("Survey skipped", result)
     }
 
     @Test
-    fun `buildSheetFormattedEntries with single step skipped returns Survey skipped`() {
-        val result = buildSheetFormattedEntries(emptyList(), skippedCount = 1)
+    fun `buildSurveyFormattedEntries with single step skipped returns Survey skipped`() {
+        val result = buildSurveyFormattedEntries(emptyList(), skippedCount = 1)
         assertEquals("Survey skipped", result)
     }
 
     @Test
-    fun `buildSheetFormattedEntries submitted with no answers returns Survey submitted`() {
-        val result = buildSheetFormattedEntries(emptyList(), skippedCount = 0)
+    fun `buildSurveyFormattedEntries submitted with no answers returns Survey submitted`() {
+        val result = buildSurveyFormattedEntries(emptyList(), skippedCount = 0)
         assertEquals("Survey submitted", result)
     }
 
     @Test
-    fun `buildSheetFormattedEntries with first answered and rest skipped shows partial QA and note`() {
+    fun `buildSurveyFormattedEntries with first answered and rest skipped shows partial QA and note`() {
         val entries = listOf(AuiEntry(question = "How was it?", answer = "Good"))
-        val result = buildSheetFormattedEntries(entries, skippedCount = 2)
+        val result = buildSurveyFormattedEntries(entries, skippedCount = 2)
         assertEquals("How was it?\nGood\n\n(2 questions skipped)", result)
     }
 
     @Test
-    fun `buildSheetFormattedEntries with one skipped uses singular form`() {
+    fun `buildSurveyFormattedEntries with one skipped uses singular form`() {
         val entries = listOf(AuiEntry(question = "How was it?", answer = "Good"))
-        val result = buildSheetFormattedEntries(entries, skippedCount = 1)
+        val result = buildSurveyFormattedEntries(entries, skippedCount = 1)
         assertEquals("How was it?\nGood\n\n(1 question skipped)", result)
     }
 
     @Test
-    fun `buildSheetFormattedEntries with multiple answered and none skipped returns clean QA`() {
+    fun `buildSurveyFormattedEntries with multiple answered and none skipped returns clean QA`() {
         val entries = listOf(
             AuiEntry(question = "Q1", answer = "A1"),
             AuiEntry(question = "Q2", answer = "A2"),
             AuiEntry(question = "Q3", answer = "A3"),
         )
-        val result = buildSheetFormattedEntries(entries, skippedCount = 0)
+        val result = buildSurveyFormattedEntries(entries, skippedCount = 0)
         assertEquals("Q1\nA1\n\nQ2\nA2\n\nQ3\nA3", result)
     }
 

@@ -1,15 +1,13 @@
 package com.bennyjon.aui.compose
 
-import com.bennyjon.aui.compose.display.buildSheetFormattedEntries
+import com.bennyjon.aui.compose.display.buildSurveyFormattedEntries
 import com.bennyjon.aui.compose.display.getAllStepEntries
-import com.bennyjon.aui.compose.display.isTerminalSheetAction
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiStep
 import com.bennyjon.aui.core.model.data.ButtonPrimaryData
-import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 import com.bennyjon.aui.core.model.data.CheckboxListData
 import com.bennyjon.aui.core.model.data.ChipOption
 import com.bennyjon.aui.core.model.data.ChipSelectSingleData
@@ -22,26 +20,23 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Verifies that a 3-step sheet survey (radio_list → checkbox_list → input_text_single)
+ * Verifies that a 3-step survey (radio_list → checkbox_list → input_text_single)
  * correctly accumulates all answers into the final consolidated feedback.
  *
- * These tests exercise the same accumulation logic that [SheetFlowDisplay] runs on each step
- * advance: merging registry values into params via the button, extracting entries with
- * [getAllStepEntries], and producing [buildSheetFormattedEntries].
+ * These tests exercise the same accumulation logic that [SurveyFlowDisplay] runs on
+ * submit: scanning the shared registry against each step's inputs with
+ * [getAllStepEntries] and producing [buildSurveyFormattedEntries].
  */
-class SheetFeedbackAccumulationTest {
+class SurveyFeedbackAccumulationTest {
 
     // ── Test data ─────────────────────────────────────────────────────────────
 
     private val step1 = AuiStep(
-        label = "Experience",
         question = "How was your overall experience?",
-        skippable = true,
         blocks = listOf(
             AuiBlock.RadioList(
                 data = RadioListData(
@@ -54,17 +49,11 @@ class SheetFeedbackAccumulationTest {
                     ),
                 ),
             ),
-            AuiBlock.ButtonPrimary(
-                data = ButtonPrimaryData(label = "Next"),
-                feedback = AuiFeedback(action = "poll_next_step", params = mapOf("poll_id" to "test_survey")),
-            ),
         ),
     )
 
     private val step2 = AuiStep(
-        label = "Improvements",
         question = "What should we focus on improving?",
-        skippable = true,
         blocks = listOf(
             AuiBlock.CheckboxList(
                 data = CheckboxListData(
@@ -77,17 +66,11 @@ class SheetFeedbackAccumulationTest {
                     ),
                 ),
             ),
-            AuiBlock.ButtonPrimary(
-                data = ButtonPrimaryData(label = "Next"),
-                feedback = AuiFeedback(action = "poll_next_step", params = mapOf("poll_id" to "test_survey")),
-            ),
         ),
     )
 
     private val step3 = AuiStep(
-        label = "Comments",
         question = "Anything else you'd like to tell us?",
-        skippable = true,
         blocks = listOf(
             AuiBlock.InputTextSingle(
                 data = InputTextSingleData(
@@ -95,10 +78,6 @@ class SheetFeedbackAccumulationTest {
                     label = "Your feedback",
                     placeholder = "Optional — type anything here...",
                 ),
-            ),
-            AuiBlock.ButtonPrimary(
-                data = ButtonPrimaryData(label = "Submit"),
-                feedback = AuiFeedback(action = "poll_complete", params = mapOf("poll_id" to "test_survey")),
             ),
         ),
     )
@@ -109,17 +88,15 @@ class SheetFeedbackAccumulationTest {
 
     @Test
     fun `all three steps answered produces complete feedback with all QA pairs`() {
-        val step1Params = mapOf("experience" to "Good", "poll_id" to "test_survey")
-        val step2Params = mapOf("improvements" to "Response speed, Visual design", "poll_id" to "test_survey")
-        val step3Params = mapOf("comments" to "Love the app!", "poll_id" to "test_survey")
+        val registry = mapOf(
+            "experience" to "Good",
+            "improvements" to "Response speed, Visual design",
+            "comments" to "Love the app!",
+        )
 
-        val accumulatedParams = mutableMapOf<String, String>()
         val accumulatedEntries = mutableListOf<AuiEntry>()
-
-        listOf(step1Params, step2Params, step3Params).forEachIndexed { i, params ->
-            val step = steps[i]
-            accumulatedParams.putAll(params)
-            accumulatedEntries.addAll(getAllStepEntries(step, params))
+        for (step in steps) {
+            accumulatedEntries.addAll(getAllStepEntries(step, registry))
         }
 
         assertEquals(3, accumulatedEntries.size)
@@ -134,11 +111,7 @@ class SheetFeedbackAccumulationTest {
         assertEquals("Anything else you'd like to tell us?", accumulatedEntries[2].question)
         assertEquals("Love the app!", accumulatedEntries[2].answer)
 
-        assertEquals("Good", accumulatedParams["experience"])
-        assertEquals("Response speed, Visual design", accumulatedParams["improvements"])
-        assertEquals("Love the app!", accumulatedParams["comments"])
-
-        val formattedEntries = buildSheetFormattedEntries(accumulatedEntries, skippedCount = 0)
+        val formattedEntries = buildSurveyFormattedEntries(accumulatedEntries, skippedCount = 0)
         assertEquals(
             "How was your overall experience?\nGood\n\n" +
                 "What should we focus on improving?\nResponse speed, Visual design\n\n" +
@@ -149,12 +122,20 @@ class SheetFeedbackAccumulationTest {
 
     @Test
     fun `step 1 answered steps 2 and 3 skipped produces partial feedback`() {
-        val step1Params = mapOf("experience" to "Excellent", "poll_id" to "test_survey")
+        val registry = mapOf("experience" to "Excellent")
 
-        val accumulatedEntries = getAllStepEntries(step1, step1Params).toMutableList()
+        val accumulatedEntries = mutableListOf<AuiEntry>()
+        var skipped = 0
+        for (step in steps) {
+            val stepEntries = getAllStepEntries(step, registry)
+            if (stepEntries.isEmpty()) skipped++
+            accumulatedEntries.addAll(stepEntries)
+        }
+
         assertEquals(1, accumulatedEntries.size)
+        assertEquals(2, skipped)
 
-        val formattedEntries = buildSheetFormattedEntries(accumulatedEntries, skippedCount = 2)
+        val formattedEntries = buildSurveyFormattedEntries(accumulatedEntries, skippedCount = skipped)
         assertEquals(
             "How was your overall experience?\nExcellent\n\n(2 questions skipped)",
             formattedEntries,
@@ -163,28 +144,21 @@ class SheetFeedbackAccumulationTest {
 
     @Test
     fun `all steps skipped produces Survey skipped`() {
-        val formattedEntries = buildSheetFormattedEntries(emptyList(), skippedCount = 3)
+        val formattedEntries = buildSurveyFormattedEntries(emptyList(), skippedCount = 3)
         assertEquals("Survey skipped", formattedEntries)
     }
 
     @Test
-    fun `step 2 only answered produces single QA entry`() {
-        val step2Params = mapOf("improvements" to "Answer accuracy, More features", "poll_id" to "test_survey")
+    fun `empty entries with zero skipped produces Survey submitted`() {
+        val formattedEntries = buildSurveyFormattedEntries(emptyList(), skippedCount = 0)
+        assertEquals("Survey submitted", formattedEntries)
+    }
 
-        // Step 1 skipped — no entry
-        // Step 2 answered
-        val accumulatedEntries = getAllStepEntries(step2, step2Params).toMutableList()
-        // Step 3 skipped — no entry
-
-        assertEquals(1, accumulatedEntries.size)
-        assertEquals("What should we focus on improving?", accumulatedEntries[0].question)
-        assertEquals("Answer accuracy, More features", accumulatedEntries[0].answer)
-
-        val formattedEntries = buildSheetFormattedEntries(accumulatedEntries, skippedCount = 2)
-        assertEquals(
-            "What should we focus on improving?\nAnswer accuracy, More features\n\n(2 questions skipped)",
-            formattedEntries,
-        )
+    @Test
+    fun `single skipped uses singular form`() {
+        val entries = listOf(AuiEntry(question = "Q1", answer = "A1"))
+        val formattedEntries = buildSurveyFormattedEntries(entries, skippedCount = 1)
+        assertEquals("Q1\nA1\n\n(1 question skipped)", formattedEntries)
     }
 
     // ── stepsSkipped / stepsTotal typed fields ────────────────────────────────
@@ -195,9 +169,9 @@ class SheetFeedbackAccumulationTest {
             AuiEntry(question = "How was your overall experience?", answer = "Good"),
         )
         val feedback = AuiFeedback(
-            action = "poll_complete",
+            action = "submit",
             entries = entries,
-            formattedEntries = buildSheetFormattedEntries(entries, skippedCount = 2),
+            formattedEntries = buildSurveyFormattedEntries(entries, skippedCount = 2),
             stepsSkipped = 2,
             stepsTotal = 3,
         )
@@ -208,7 +182,7 @@ class SheetFeedbackAccumulationTest {
     @Test
     fun `all steps answered produces stepsSkipped of zero`() {
         val feedback = AuiFeedback(
-            action = "poll_complete",
+            action = "submit",
             stepsSkipped = 0,
             stepsTotal = 3,
         )
@@ -217,7 +191,7 @@ class SheetFeedbackAccumulationTest {
     }
 
     @Test
-    fun `non-sheet feedback has null stepsSkipped and stepsTotal`() {
+    fun `non-survey feedback has null stepsSkipped and stepsTotal`() {
         val feedback = AuiFeedback(action = "button_tap")
         assertEquals(null, feedback.stepsSkipped)
         assertEquals(null, feedback.stepsTotal)
@@ -226,7 +200,6 @@ class SheetFeedbackAccumulationTest {
     // ── getAllStepEntries — multi-input ───────────────────────────────────────
 
     private val multiInputStep = AuiStep(
-        label = "Profile",
         question = "Tell us about yourself.",
         blocks = listOf(
             AuiBlock.InputTextSingle(
@@ -242,15 +215,10 @@ class SheetFeedbackAccumulationTest {
                     ),
                 ),
             ),
-            AuiBlock.ButtonPrimary(
-                data = ButtonPrimaryData(label = "Next"),
-                feedback = AuiFeedback(action = "submit"),
-            ),
         ),
     )
 
     private val threeInputStep = AuiStep(
-        label = "Rating",
         question = "How would you rate AUI?",
         blocks = listOf(
             AuiBlock.InputRatingStars(
@@ -261,10 +229,6 @@ class SheetFeedbackAccumulationTest {
             ),
             AuiBlock.InputTextSingle(
                 data = InputTextSingleData(key = "comments", label = "Comments"),
-            ),
-            AuiBlock.ButtonPrimary(
-                data = ButtonPrimaryData(label = "Submit"),
-                feedback = AuiFeedback(action = "submit"),
             ),
         ),
     )
@@ -320,91 +284,25 @@ class SheetFeedbackAccumulationTest {
 
     @Test
     fun `multi-input step accumulation produces all entries in final feedback`() {
-        val profileParams = mapOf("display_name" to "Benny", "role" to "Developer")
-        val ratingParams = mapOf("rating" to "4 stars", "recommend" to "8", "comments" to "Great!")
+        val registry = mapOf(
+            "display_name" to "Benny",
+            "role" to "Developer",
+            "rating" to "4 stars",
+            "recommend" to "8",
+            "comments" to "Great!",
+        )
 
         val accumulatedEntries = mutableListOf<AuiEntry>()
-        accumulatedEntries.addAll(getAllStepEntries(multiInputStep, profileParams))
-        accumulatedEntries.addAll(getAllStepEntries(threeInputStep, ratingParams))
+        accumulatedEntries.addAll(getAllStepEntries(multiInputStep, registry))
+        accumulatedEntries.addAll(getAllStepEntries(threeInputStep, registry))
 
         assertEquals(5, accumulatedEntries.size)
-        val formatted = buildSheetFormattedEntries(accumulatedEntries, skippedCount = 0)
+        val formatted = buildSurveyFormattedEntries(accumulatedEntries, skippedCount = 0)
         assertTrue(formatted.contains("Display name\nBenny"))
         assertTrue(formatted.contains("Your role\nDeveloper"))
         assertTrue(formatted.contains("Overall rating\n4 stars"))
         assertTrue(formatted.contains("Likely to recommend?\n8"))
         assertTrue(formatted.contains("Comments\nGreat!"))
-    }
-
-    // ── isTerminalSheetAction ────────────────────────────────────────────────
-
-    @Test
-    fun `submit is terminal`() {
-        assertTrue(isTerminalSheetAction("submit", step1))
-    }
-
-    @Test
-    fun `poll_complete is terminal`() {
-        assertTrue(isTerminalSheetAction("poll_complete", step1))
-    }
-
-    @Test
-    fun `poll_submit is terminal`() {
-        assertTrue(isTerminalSheetAction("poll_submit", step1))
-    }
-
-    @Test
-    fun `open_url is not terminal on step with one button`() {
-        // step1 has one ButtonPrimary with action "poll_next_step", so open_url doesn't match
-        assertFalse(isTerminalSheetAction("open_url", step1))
-    }
-
-    @Test
-    fun `single button fallback makes its own action terminal`() {
-        // step1 has exactly one ButtonPrimary with action "poll_next_step"
-        assertTrue(isTerminalSheetAction("poll_next_step", step1))
-    }
-
-    @Test
-    fun `open_url is not terminal on step with multiple buttons`() {
-        val stepWithMultipleButtons = AuiStep(
-            blocks = listOf(
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Submit"),
-                    feedback = AuiFeedback(action = "submit"),
-                ),
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Open Link"),
-                    feedback = AuiFeedback(action = "open_url"),
-                ),
-            ),
-        )
-        assertFalse(isTerminalSheetAction("open_url", stepWithMultipleButtons))
-    }
-
-    @Test
-    fun `navigate is not terminal`() {
-        assertFalse(isTerminalSheetAction("navigate", step1))
-    }
-
-    @Test
-    fun `secondary button action is not terminal`() {
-        val stepWithSecondary = AuiStep(
-            blocks = listOf(
-                AuiBlock.ButtonSecondary(
-                    data = ButtonSecondaryData(label = "Read docs"),
-                    feedback = AuiFeedback(action = "open_url"),
-                ),
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Next"),
-                    feedback = AuiFeedback(action = "submit"),
-                ),
-            ),
-        )
-        // open_url is not in TERMINAL_SHEET_ACTIONS and doesn't match the single ButtonPrimary
-        assertFalse(isTerminalSheetAction("open_url", stepWithSecondary))
-        // submit IS terminal
-        assertTrue(isTerminalSheetAction("submit", stepWithSecondary))
     }
 
     // ── Plugin input support in getAllStepEntries ────────────────────────────
@@ -437,10 +335,6 @@ class SheetFeedbackAccumulationTest {
         val step = AuiStep(
             blocks = listOf(
                 AuiBlock.Unknown(type = "date_picker"),
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Submit"),
-                    feedback = AuiFeedback(action = "submit"),
-                ),
             ),
         )
         val params = mapOf("dob" to "1990-01-15")
@@ -459,10 +353,6 @@ class SheetFeedbackAccumulationTest {
         val step = AuiStep(
             blocks = listOf(
                 AuiBlock.Unknown(type = "color_picker"),
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Submit"),
-                    feedback = AuiFeedback(action = "submit"),
-                ),
             ),
         )
         val params = mapOf("fav_color" to "Blue")
@@ -478,10 +368,6 @@ class SheetFeedbackAccumulationTest {
         val step = AuiStep(
             blocks = listOf(
                 AuiBlock.Unknown(type = "mystery_input"),
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Submit"),
-                    feedback = AuiFeedback(action = "submit"),
-                ),
             ),
         )
         val entries = getAllStepEntries(step, mapOf("mystery" to "value"))
@@ -494,16 +380,11 @@ class SheetFeedbackAccumulationTest {
         registry.register(inputPlugin(type = "date_picker", key = "dob", label = "Date of birth"))
 
         val step = AuiStep(
-            label = "Profile",
             blocks = listOf(
                 AuiBlock.InputTextSingle(
                     data = InputTextSingleData(key = "name", label = "Your name"),
                 ),
                 AuiBlock.Unknown(type = "date_picker"),
-                AuiBlock.ButtonPrimary(
-                    data = ButtonPrimaryData(label = "Submit"),
-                    feedback = AuiFeedback(action = "submit"),
-                ),
             ),
         )
         val params = mapOf("name" to "Benny", "dob" to "1990-01-15")

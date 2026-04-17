@@ -6,11 +6,11 @@ package com.bennyjon.auiandroid.showcase
  * @param label The component name or combo title (e.g. "text", "Combo: Product Recommendations").
  * @param description A short one-liner about what the entry demonstrates.
  * @param auiJson The raw AUI JSON payload string (just the `aui` object, not the full envelope).
- * @param isSheet Whether this entry uses the "sheet" display mode.
+ * @param isSurvey Whether this entry uses the "survey" display mode.
  */
 data class ShowcaseEntry(
     val label: String,
     val description: String?,
     val auiJson: String,
-    val isSheet: Boolean,
+    val isSurvey: Boolean,
 )

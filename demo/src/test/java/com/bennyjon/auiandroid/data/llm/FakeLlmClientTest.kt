@@ -40,15 +40,15 @@ class FakeLlmClientTest {
     }
 
     @Test
-    fun `third response parses to text and sheet AUI`() = runTest {
+    fun `third response parses to text and survey AUI`() = runTest {
         repeat(2) { client.complete("system", emptyList()) }
         val result = client.complete("system", emptyList())
         val parsed = AuiResponseExtractor.fromRawResponse(result.rawContent!!)
 
         assertNotNull(parsed.text)
         assertNotNull(parsed.auiResponse)
-        assertEquals(AuiDisplay.SHEET, parsed.auiResponse!!.display)
-        assertNotNull(parsed.auiResponse!!.sheetTitle)
+        assertEquals(AuiDisplay.SURVEY, parsed.auiResponse!!.display)
+        assertNotNull(parsed.auiResponse!!.surveyTitle)
     }
 
     @Test

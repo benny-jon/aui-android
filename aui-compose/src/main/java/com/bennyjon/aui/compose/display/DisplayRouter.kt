@@ -33,7 +33,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *   apps decide whether to surface EXPANDED responses in a separate detail surface (a
  *   bottom sheet on narrow windows, a side detail pane on wider windows). The library
  *   does not enforce this — both render the same here.
- * - **SHEET**: Renders a persistent bottom sheet that navigates through each [AuiStep]
+ * - **SURVEY**: Renders a persistent bottom sheet that navigates through each [AuiStep]
  *   without closing between steps. The library manages step navigation, the stepper indicator,
  *   and accumulation — emitting a single [AuiFeedback] with all Q+A entries at the end.
  *
@@ -65,10 +65,10 @@ fun DisplayRouter(
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     when (response.display) {
-        AuiDisplay.SHEET -> {
-            SheetFlowDisplay(
+        AuiDisplay.SURVEY -> {
+            SurveyFlowDisplay(
                 steps = response.steps,
-                sheetTitle = response.sheetTitle,
+                surveyTitle = response.surveyTitle,
                 pluginRegistry = pluginRegistry,
                 onFeedback = onFeedback,
                 onUnknownBlock = onUnknownBlock,
@@ -157,19 +157,17 @@ private fun DisplayRouterExpandedPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "DisplayRouter — Sheet Flow")
+@Preview(showBackground = true, name = "DisplayRouter — Survey Flow")
 @Composable
-private fun DisplayRouterSheetFlowPreview() {
+private fun DisplayRouterSurveyFlowPreview() {
     AuiThemeProvider {
         DisplayRouter(
             response = AuiResponse(
-                display = AuiDisplay.SHEET,
-                sheetTitle = "Quick Survey",
+                display = AuiDisplay.SURVEY,
+                surveyTitle = "Quick Survey",
                 steps = listOf(
                     AuiStep(
-                        label = "Experience",
                         question = "How was your experience?",
-                        skippable = true,
                         blocks = listOf(
                             AuiBlock.ChipSelectSingle(
                                 data = ChipSelectSingleData(
@@ -180,9 +178,18 @@ private fun DisplayRouterSheetFlowPreview() {
                                     ),
                                 ),
                             ),
-                            AuiBlock.ButtonPrimary(
-                                data = ButtonPrimaryData(label = "Next"),
-                                feedback = AuiFeedback(action = "poll_next_step"),
+                        ),
+                    ),
+                    AuiStep(
+                        question = "Any additional comments?",
+                        blocks = listOf(
+                            AuiBlock.ChipSelectSingle(
+                                data = ChipSelectSingleData(
+                                    key = "comments",
+                                    options = listOf(
+                                        ChipOption(label = "None", value = "none"),
+                                    ),
+                                ),
                             ),
                         ),
                     ),

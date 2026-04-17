@@ -91,7 +91,7 @@ enum class DemoAuiTheme(val displayName: String) {
  *   stub opens a [ModalBottomSheet] containing the full render; on wide windows
  *   ([TwoPaneBreakpointDp]+), the full render is shown in a persistent right-side detail
  *   pane and the stub stays visible in chat for navigation.
- * - **SHEET** renders via [AuiRenderer] (which manages its own bottom sheet).
+ * - **SURVEY** renders via [AuiRenderer] (which manages its own bottom sheet).
  *
  * The screen pushes the current window size to the [LiveChatViewModel] on every composition
  * so the AI sees a `DEVICE` hint with width/height/layout in its system prompt for the next
@@ -354,7 +354,7 @@ private fun DetailPane(
 /**
  * Modal bottom sheet for showing an EXPANDED response on narrow windows.
  *
- * Distinct from AUI-authored [AuiDisplay.SHEET] flows — this is a host-side display affordance
+ * Distinct from AUI-authored [AuiDisplay.SURVEY] flows — this is a host-side display affordance
  * that wraps a single [AuiRenderer] in a sheet and dismisses when feedback fires.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -534,7 +534,7 @@ private fun AssistantMessage(
             )
         }
         AuiDisplay.INLINE,
-        AuiDisplay.SHEET -> {
+        AuiDisplay.SURVEY -> {
             if (shouldRenderAui(response, message.isAuiSpent)) {
                 AuiRenderer(
                     response = response,
@@ -634,12 +634,12 @@ private fun LiveChatInput(
 }
 
 /**
- * Whether an AUI response should be rendered in the chat list (for INLINE / SHEET).
+ * Whether an AUI response should be rendered in the chat list (for INLINE / SURVEY).
  *
  * EXPANDED responses are surfaced as a [ExpandedResponseCard] stub instead, so this
- * helper is not consulted for them. Spent SHEET responses are hidden entirely (they've
- * already been submitted and re-rendering would re-open the sheet). Spent INLINE
+ * helper is not consulted for them. Spent SURVEY responses are hidden entirely (they've
+ * already been submitted and re-rendering would re-open the survey). Spent INLINE
  * responses are still shown (grayed out via `collectingFeedbackEnabled`).
  */
 internal fun shouldRenderAui(response: AuiResponse, isSpent: Boolean): Boolean =
-    !isSpent || response.display != AuiDisplay.SHEET
+    !isSpent || response.display != AuiDisplay.SURVEY

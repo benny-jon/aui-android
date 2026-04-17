@@ -16,7 +16,7 @@ sealed class DemoMessage {
      * @param id Stable identifier used as a LazyColumn key.
      * @param text Optional plain-text portion of the response.
      * @param auiJson Optional raw AUI JSON to render via [com.bennyjon.aui.compose.AuiRenderer].
-     *   Set to `null` after a sheet submission to prevent the sheet from re-opening on scroll.
+     *   Set to `null` after a survey submission to prevent the survey from re-opening on scroll.
      */
     data class Ai(
         val id: String = UUID.randomUUID().toString(),

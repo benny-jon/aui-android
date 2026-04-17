@@ -1,11 +1,9 @@
 {
-  "display": "sheet",
-  "sheet_title": "Quick Survey",
+  "display": "survey",
+  "survey_title": "Quick Survey",
   "steps": [
     {
-      "label": "Experience",
       "question": "How was your experience?",
-      "skippable": true,
       "blocks": [
         {
           "type": "chip_select_single",
@@ -18,21 +16,11 @@
               { "label": "😞 Poor", "value": "poor" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": {
-            "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" }
-          }
         }
       ]
     },
     {
-      "label": "Features",
       "question": "What would you like to see improved?",
-      "skippable": true,
       "blocks": [
         {
           "type": "chip_select_multi",
@@ -46,21 +34,11 @@
               { "label": "Pricing", "value": "pricing" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Next" },
-          "feedback": {
-            "action": "poll_next_step",
-            "params": { "poll_id": "onboarding_survey" }
-          }
         }
       ]
     },
     {
-      "label": "Feedback",
       "question": "Anything else you'd like to tell us?",
-      "skippable": true,
       "blocks": [
         {
           "type": "input_text_single",
@@ -68,14 +46,6 @@
             "key": "open_feedback",
             "label": "Your feedback",
             "placeholder": "Optional — type anything here..."
-          }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Submit" },
-          "feedback": {
-            "action": "poll_complete",
-            "params": { "poll_id": "onboarding_survey" }
           }
         }
       ]

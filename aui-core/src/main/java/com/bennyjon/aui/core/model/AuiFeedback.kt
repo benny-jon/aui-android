@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Describes the result of a user interaction with an [AuiBlock].
  *
- * Received by the host app via the `onFeedback` callback. For [AuiDisplay.SHEET]
+ * Received by the host app via the `onFeedback` callback. For [AuiDisplay.SURVEY]
  * responses the library accumulates interactions across all steps and emits a single
  * consolidated [AuiFeedback] at the end — [entries] contains the full list of
  * question–answer pairs for display, and [params] contains all collected key-value data.
@@ -17,7 +17,7 @@ data class AuiFeedback(
 
     /**
      * Structured key-value data about the interaction.
-     * For [AuiDisplay.SHEET] this is the merged params from all steps.
+     * For [AuiDisplay.SURVEY] this is the merged params from all steps.
      */
     val params: Map<String, String> = emptyMap(),
 
@@ -40,7 +40,7 @@ data class AuiFeedback(
     /**
      * Ordered list of question–answer pairs captured from user input.
      *
-     * For [AuiDisplay.SHEET], one entry per step that had both a question and a non-empty answer.
+     * For [AuiDisplay.SURVEY], one entry per step that had both a question and a non-empty answer.
      * For [AuiDisplay.EXPANDED], one entry per heading→input pair.
      *
      * Use this when you want to build a custom summary instead of using [formattedEntries].
@@ -48,14 +48,14 @@ data class AuiFeedback(
     val entries: List<AuiEntry> = emptyList(),
 
     /**
-     * Number of steps the user skipped in a [AuiDisplay.SHEET] interaction.
-     * `null` for non-sheet interactions.
+     * Number of steps the user left unanswered in a [AuiDisplay.SURVEY] interaction.
+     * `null` for non-survey interactions.
      */
     val stepsSkipped: Int? = null,
 
     /**
-     * Total number of steps in a [AuiDisplay.SHEET] interaction.
-     * `null` for non-sheet interactions.
+     * Total number of steps in a [AuiDisplay.SURVEY] interaction.
+     * `null` for non-survey interactions.
      */
     val stepsTotal: Int? = null,
 )

@@ -22,7 +22,7 @@ enum class Aggressiveness {
 /**
  * A domain-specific example appended to the EXAMPLES section of the generated prompt.
  *
- * Built-in examples always remain (they teach envelope format and sheet mechanics). Custom
+ * Built-in examples always remain (they teach envelope format and survey mechanics). Custom
  * examples are appended after them so the model learns domain-specific patterns without
  * losing foundational ones.
  *
@@ -45,7 +45,7 @@ data class AuiPromptExample(
  *   text. Swaps the framing paragraph near the top of the prompt. Defaults to [Aggressiveness.Balanced].
  * @param customExamples Additional examples appended to the built-in EXAMPLES section. Useful for
  *   teaching the model domain-specific patterns (e.g. shopping cards, product lists) without
- *   losing the library's default examples, which teach envelope format and sheet mechanics.
+ *   losing the library's default examples, which teach envelope format and survey mechanics.
  */
 data class AuiPromptConfig(
     val aggressiveness: Aggressiveness = Aggressiveness.Balanced,
@@ -71,19 +71,21 @@ data class AuiPromptConfig(
  * callback via the standard chain-of-responsibility routing. Hosts can handle `submit` in one
  * of two ways:
  *
- * **Sheet flow caveat**: Multi-step sheet flows (`SheetFlowDisplay`) consolidate all step
- * interactions into a single terminal [AuiFeedback]. The action name on that terminal feedback
- * comes from the final step's button, which means a host plugin registered for `submit` will
- * only catch sheet completions if the AI places `submit` on the final step's button.
+ * **Survey flow caveat**: Multi-page surveys (`SurveyFlowDisplay`) consolidate all step
+ * interactions into a single terminal [AuiFeedback]. The library fires this feedback with
+ * `action = "submit"` when the user taps the library-injected Submit button on the final
+ * page, so a host plugin registered for `submit` will receive every survey completion.
  *
- * For reliable handling of sheet flow completions regardless of action name, hosts should branch
+ * For reliable handling of survey completions regardless of action name, hosts should branch
  * on the structural signal [AuiFeedback.stepsTotal] `!= null` inside their `onFeedback` callback,
- * rather than relying solely on action-name dispatch via plugins. See `SheetFlowDisplay` for
+ * rather than relying solely on action-name dispatch via plugins. See `SurveyFlowDisplay` for
  * details on the consolidated feedback shape.
  *
  * 1. **Default**: handle `submit` payloads inside the `onFeedback` callback. No plugin needed.
  * 2. **Override**: register an [AuiActionPlugin] with `action = "submit"` to customize handling,
- *    provide a richer schema to the AI, or short-circuit `onFeedback`.
+ *    provide a richer schema to the AI, or short-circuit `onFeedback`. Note that the library
+ *    injects its own Submit button for surveys and always fires `submit` on survey completion —
+ *    an override plugin will catch those too.
  *
  * Example:
  * ```kotlin
@@ -160,7 +162,7 @@ object AuiCatalogPrompt {
         }
 
         appendLine()
-        appendLine(SHEET_FIELDS)
+        appendLine(SURVEY_STRUCTURE)
 
         val actionPlugins = pluginRegistry.allActionPlugins()
         val hostHasSubmit = actionPlugins.any { it.action == "submit" }
@@ -235,7 +237,7 @@ explanations. When in doubt, use a component."""
 
 In addition to normal text responses, you have access to AUI: a format for
 responding with interactive native UI components (polls, forms, rating inputs,
-quick replies, rich cards, multi-step surveys) that render inline in the chat.
+quick replies, rich cards, multi-page surveys) that render inline in the chat.
 
 {{FRAMING}}
 
@@ -263,7 +265,7 @@ that follow-up turn in mind.
 
     internal const val SCHEMA_FORMAT = """AUI payload schema (goes inside the "aui" field of the response envelope):
 {
-  "display": "inline" | "expanded" | "sheet",
+  "display": "inline" | "expanded" | "survey",
   "blocks": [ ... ]
 }
 
@@ -276,13 +278,17 @@ that show EXPANDED content as a tappable card opening into a detail surface:
   "blocks": [ ... ]
 }
 
-For "sheet" display (multi-step flows), replace "blocks" with "steps" and
-add a "sheet_title":
+For "survey" display (multi-page structured input), replace "blocks" with "steps"
+and add a "survey_title":
 {
-  "display": "sheet",
-  "sheet_title": "...",
+  "display": "survey",
+  "survey_title": "...",
   "steps": [
-    { "label": "Step name", "question": "Full question text?", "skippable": true, "blocks": [ ... ] }
+    {
+      "label": "Short stepper label (optional)",
+      "question": "Full question text?",
+      "blocks": [ ... collector(s) ... ]
+    }
   ]
 }"""
 
@@ -305,8 +311,27 @@ add a "sheet_title":
              When you do use expanded, always include card_title and
              card_description so the stub preview is meaningful.
 
-  sheet    — bottom sheet overlay for multi-step user input (surveys, forms,
-             guided flows). Not for displaying information — only for collecting it.
+  survey   — multi-page structured input. Use for polls, quizzes, feedback
+             forms, onboarding questionnaires, or any flow that collects
+             several answers across multiple questions.
+
+             You only declare the questions and the collector component(s)
+             for each. The library handles everything else: step indicator,
+             free navigation between questions (back, forward, skip), a
+             Submit button on the final question, consolidating answers,
+             and sending the final submission back as the user's next turn.
+
+             Every question is skippable — users can submit with any
+             subset of questions answered. Unanswered questions simply
+             won't appear in the feedback. If a skipped answer matters
+             for your follow-up, note it in that turn.
+
+             Do NOT include button_primary, submit actions, or any
+             navigation controls in survey steps — the library injects them.
+             Just list the questions.
+
+             Use survey ONLY when collecting input across 2+ pages. For
+             single-question input, use inline instead.
 
 DEFAULT TO INLINE. Only escalate when the content genuinely needs its own
 surface. When in doubt, inline."""
@@ -352,13 +377,18 @@ Status:
   badge_success(text)
   status_banner_success(text)"""
 
-    internal const val SHEET_FIELDS = """SHEET-ONLY FIELDS (top-level):
-  sheet_title: string — title in the sheet header
-  steps[]: array of steps (use instead of blocks for sheet display)
-    step.label: string — short label for the stepper indicator
-    step.question: string — the question this step is asking the user
-    step.skippable: boolean — show a Skip button (default true)
-    step.blocks[]: blocks for this step"""
+    internal const val SURVEY_STRUCTURE = """SURVEY STRUCTURE (when display = "survey"):
+  survey_title: string — title shown at the top of the survey
+  steps[]: one entry per question (minimum 2)
+    step.question: string — the question being asked on this page
+    step.blocks[]: the collector component(s) for this question
+    step.label: string (optional) — short label shown inside the stepper
+      indicator (e.g. "Rating", "Details"). Purely cosmetic — it does not
+      affect entries, feedback, or navigation. Omit to fall back to the
+      step number.
+
+  No optional flags, no navigation buttons — the library injects Back / Next /
+  Submit around each step."""
 
     internal const val ACTIONS_PREAMBLE =
         """  Actions are registered by ID. Reference them by name in a component's
@@ -377,7 +407,8 @@ Status:
   - A poll or pick-one question (any number of options) → inline, radio_list + submit
   - Multi-select preferences → inline, checkbox_list + submit
   - Numeric input within a range → inline, input_slider + submit
-  - Rating or feedback collection → sheet with input_rating_stars
+  - Rating or single feedback score → inline, input_rating_stars + submit
+  - Multi-question feedback / onboarding flow → survey with one question per step
   - A single product / place / link recommendation → inline, one card + button
   - 3+ rich cards in one response (products, places, profiles) → expanded
     (always with card_title + card_description)
@@ -389,14 +420,16 @@ Status:
   - Use quick_replies at the end to suggest next steps.
   - Choose display by content type, not block count — a 5-block inline poll is
     still inline. Reach for expanded only for 3+ rich cards or content that
-    genuinely benefits from a dedicated reading surface. Keep each sheet step
-    to 3-20 blocks.
+    genuinely benefits from a dedicated reading surface. Keep each survey step
+    focused on a single question.
   - Triggers (button_primary, button_secondary, quick_replies options) MUST have a
     feedback object — they fire actions when tapped.
   - Collectors (radio_list, checkbox_list, chip_select_*, input_*) passively gather
     state and do NOT need feedback on themselves. Pair them with a trigger button
     whose feedback carries the collected input via submit.
-  - For sheet surveys, set a "question" on each step describing what's being asked."""
+  - For surveys, set a "question" on each step and include only the collector
+    component(s) in that step's blocks. Do NOT add button_primary or submit —
+    the library injects navigation (Back/Next/Submit) around each step."""
 
     internal const val EXAMPLES = """EXAMPLES:
 
@@ -445,40 +478,27 @@ Inline poll (radio list + submit button):
   }
 }
 
-Sheet survey (2-step feedback flow, second step skippable):
+Survey (2-step feedback flow — library injects Back/Next/Submit):
 {
   "text": "I'd love your feedback!",
   "aui": {
-    "display": "sheet",
-    "sheet_title": "Quick feedback",
+    "display": "survey",
+    "survey_title": "Quick feedback",
     "steps": [
       {
-        "label": "Rating",
         "question": "How would you rate your experience?",
         "blocks": [
-          { "type": "input_rating_stars", "data": { "key": "rating", "label": "Your rating" } },
-          {
-            "type": "button_primary",
-            "data": { "label": "Next" },
-            "feedback": { "action": "submit", "params": {} }
-          }
+          { "type": "input_rating_stars", "data": { "key": "rating", "label": "Your rating" } }
         ]
       },
       {
-        "label": "Comment",
         "question": "Any additional comments?",
-        "skippable": true,
         "blocks": [
           { "type": "input_text_single", "data": {
               "key": "comment",
               "label": "Comments",
               "placeholder": "Tell us more..."
-          }},
-          {
-            "type": "button_primary",
-            "data": { "label": "Finish" },
-            "feedback": { "action": "submit", "params": {} }
-          }
+          }}
         ]
       }
     ]

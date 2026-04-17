@@ -473,31 +473,22 @@
   },
   {
     "label": "Combo: Feedback Survey",
-    "description": "Multi-step sheet with star rating, multi-select chips, and text input",
+    "description": "Multi-page survey with star rating, multi-select chips, and text input",
     "aui": {
-      "display": "sheet",
-      "sheet_title": "Rate This Chat",
+      "display": "survey",
+      "survey_title": "Rate This Chat",
       "steps": [
         {
-          "label": "Rating",
           "question": "How would you rate this conversation?",
-          "skippable": false,
           "blocks": [
             {
               "type": "input_rating_stars",
               "data": { "key": "chat_rating", "label": "Your rating" }
-            },
-            {
-              "type": "button_primary",
-              "data": { "label": "Next" },
-              "feedback": { "action": "submit", "params": {} }
             }
           ]
         },
         {
-          "label": "What helped",
           "question": "What was most helpful?",
-          "skippable": true,
           "blocks": [
             {
               "type": "chip_select_multi",
@@ -510,18 +501,11 @@
                   { "label": "Friendliness", "value": "tone" }
                 ]
               }
-            },
-            {
-              "type": "button_primary",
-              "data": { "label": "Next" },
-              "feedback": { "action": "submit", "params": {} }
             }
           ]
         },
         {
-          "label": "Comments",
           "question": "Any additional thoughts?",
-          "skippable": true,
           "blocks": [
             {
               "type": "input_text_single",
@@ -530,11 +514,6 @@
                 "label": "Your feedback",
                 "placeholder": "What could be better?"
               }
-            },
-            {
-              "type": "button_primary",
-              "data": { "label": "Submit" },
-              "feedback": { "action": "submit", "params": {} }
             }
           ]
         }
@@ -545,13 +524,10 @@
     "label": "Combo: Article Example",
     "description": "Here's the full write-up on how AUI works:",
     "aui": {
-      "display": "sheet",
-      "sheet_title": "About AUI",
-      "steps": [
-        {
-          "label": "Article",
-          "skippable": false,
-          "blocks": [
+      "display": "expanded",
+      "card_title": "About AUI",
+      "card_description": "Long-form article on how the library works",
+      "blocks": [
             { "type": "heading", "data": { "text": "What is Adaptive UI?" } },
             { "type": "caption", "data": { "text": "5 min read · Updated April 2026" } },
             { "type": "text", "data": { "text": "Adaptive UI (AUI) is a catalog-driven format that lets AI assistants respond with native interactive components inside a chat conversation — not just plain text. Instead of designing UI, the AI picks from a pre-built catalog of components, fills in the data, and the library renders them natively." } },
@@ -566,8 +542,8 @@
 
             { "type": "heading", "data": { "text": "Three display levels" } },
             { "type": "text", "data": { "text": "**Inline** — renders inside the AI's chat bubble. Quick confirmations, simple status, a button or two." } },
-            { "type": "text", "data": { "text": "**Expanded** — renders full-width in the chat feed, below the bubble. Product cards, galleries, rich lists." } },
-            { "type": "text", "data": { "text": "**Sheet** — renders as a bottom sheet overlay. Multi-step surveys, forms, focused input flows. Also works for long-form content like this article." } },
+            { "type": "text", "data": { "text": "**Expanded** — renders full-width in the chat feed, below the bubble. Product cards, galleries, rich lists. Also works for long-form content like this article." } },
+            { "type": "text", "data": { "text": "**Survey** — renders as a persistent bottom sheet for multi-page structured input. The library injects Back/Next/Submit controls so the AI only declares the questions." } },
             { "type": "caption", "data": { "text": "The AI picks the display level per response based on what's appropriate." } },
 
             { "type": "divider" },
@@ -577,15 +553,7 @@
 
             { "type": "divider" },
 
-            { "type": "caption", "data": { "text": "AUI is open-source and available at github.com/bennyjon/aui" } },
-
-            {
-              "type": "button_primary",
-              "data": { "label": "Got it" },
-              "feedback": { "action": "submit", "params": { "article": "about_aui", "read": true } }
-            }
-          ]
-        }
+            { "type": "caption", "data": { "text": "AUI is open-source and available at github.com/bennyjon/aui" } }
       ]
     }
   }

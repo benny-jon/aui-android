@@ -66,7 +66,7 @@ class AuiCatalogPromptTest {
     @Test
     fun `generate uses consolidated AUI JSON schema header`() {
         assertTrue(output.contains("AUI payload schema"))
-        assertTrue(output.contains("For \"sheet\" display (multi-step flows)"))
+        assertTrue(output.contains("For \"survey\" display (multi-page structured input)"))
     }
 
     @Test
@@ -95,7 +95,7 @@ class AuiCatalogPromptTest {
         assertTrue(output.contains("EXAMPLES:"))
         assertTrue(output.contains("Text-only reply:"))
         assertTrue(output.contains("Inline poll (radio list + submit button):"))
-        assertTrue(output.contains("Sheet survey (2-step feedback flow, second step skippable):"))
+        assertTrue(output.contains("Survey (2-step feedback flow — library injects Back/Next/Submit):"))
         assertTrue(output.contains("\"action\": \"submit\""))
         // Examples use envelope format with "text" and "aui" fields
         assertTrue(output.contains("\"text\": \"Let me know what you think:\""))
@@ -104,7 +104,8 @@ class AuiCatalogPromptTest {
 
     @Test
     fun `generate includes guideline about step question`() {
-        assertTrue(output.contains("set a \"question\" on each step describing what's being asked"))
+        assertTrue(output.contains("For surveys, set a \"question\" on each step"))
+        assertTrue(output.contains("Do NOT add button_primary or submit"))
         assertFalse(output.contains("so the library can build the feedback summary"))
     }
 
@@ -122,7 +123,7 @@ class AuiCatalogPromptTest {
         assertTrue(output.contains("DISPLAY LEVELS:"))
         assertTrue(output.contains("inline"))
         assertTrue(output.contains("expanded"))
-        assertTrue(output.contains("sheet"))
+        assertTrue(output.contains("survey"))
     }
 
     @Test
@@ -141,7 +142,7 @@ class AuiCatalogPromptTest {
 
     @Test
     fun `schema format documents inline as a display option`() {
-        assertTrue(output.contains("\"display\": \"inline\" | \"expanded\" | \"sheet\""))
+        assertTrue(output.contains("\"display\": \"inline\" | \"expanded\" | \"survey\""))
     }
 
     @Test
@@ -174,12 +175,15 @@ class AuiCatalogPromptTest {
     }
 
     @Test
-    fun `generate includes sheet fields`() {
-        assertTrue(output.contains("SHEET-ONLY FIELDS"))
-        assertTrue(output.contains("sheet_title"))
+    fun `generate includes survey structure`() {
+        assertTrue(output.contains("SURVEY STRUCTURE"))
+        assertTrue(output.contains("survey_title"))
+        assertTrue(output.contains("step.question"))
+        assertTrue(output.contains("step.blocks[]"))
         assertTrue(output.contains("step.label"))
-        assertTrue(output.contains("step.question: string — the question this step is asking the user"))
-        assertTrue(output.contains("step.skippable"))
+        assertFalse(output.contains("SHEET-ONLY FIELDS"))
+        assertFalse(output.contains("sheet_title"))
+        assertFalse(output.contains("step.skippable"))
         assertFalse(output.contains("feedback summary"))
     }
 
@@ -394,18 +398,18 @@ class AuiCatalogPromptTest {
 
         val componentsIndex = result.indexOf("AVAILABLE COMPONENTS:")
         val pluginComponentsIndex = result.indexOf("PLUGIN COMPONENTS:")
-        val sheetFieldsIndex = result.indexOf("SHEET-ONLY FIELDS")
+        val surveyStructureIndex = result.indexOf("SURVEY STRUCTURE")
         val availableActionsIndex = result.indexOf("AVAILABLE ACTIONS:")
         val cheatSheetIndex = result.indexOf("WHEN TO REACH FOR WHICH COMPONENT:")
         val guidelinesIndex = result.indexOf("GUIDELINES:")
         val examplesIndex = result.indexOf("EXAMPLES:")
 
-        // Plugin components appear after built-in components but before sheet fields
+        // Plugin components appear after built-in components but before survey structure
         assertTrue(pluginComponentsIndex > componentsIndex)
-        assertTrue(pluginComponentsIndex < sheetFieldsIndex)
+        assertTrue(pluginComponentsIndex < surveyStructureIndex)
 
-        // Available actions appear after sheet fields but before cheat sheet
-        assertTrue(availableActionsIndex > sheetFieldsIndex)
+        // Available actions appear after survey structure but before cheat sheet
+        assertTrue(availableActionsIndex > surveyStructureIndex)
         assertTrue(availableActionsIndex < cheatSheetIndex)
 
         // Cheat sheet appears after actions but before guidelines
@@ -581,7 +585,7 @@ class AuiCatalogPromptTest {
                 ),
                 AuiPromptExample(
                     title = "Booking flow",
-                    json = """{ "text": "Book a room:", "aui": { "display": "sheet" } }"""
+                    json = """{ "text": "Book a room:", "aui": { "display": "survey" } }"""
                 )
             )
         )
@@ -611,7 +615,7 @@ class AuiCatalogPromptTest {
 
         // Built-in signature phrases still present
         assertTrue(result.contains("feature_choice"))
-        assertTrue(result.contains("Sheet survey"))
+        assertTrue(result.contains("Survey (2-step feedback flow"))
         assertTrue(result.contains("View on Amazon"))
         assertTrue(result.contains("Read the docs"))
         // Custom example also present
@@ -635,7 +639,7 @@ class AuiCatalogPromptTest {
             "BLOCK FORMAT:",
             "FEEDBACK (on interactive components):",
             "AVAILABLE COMPONENTS:",
-            "SHEET-ONLY FIELDS",
+            "SURVEY STRUCTURE",
             "AVAILABLE ACTIONS:",
             "WHEN TO REACH FOR WHICH COMPONENT:",
             "GUIDELINES:",
