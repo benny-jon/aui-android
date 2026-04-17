@@ -154,7 +154,7 @@ Rendered as a **bottom sheet survey overlay** on top of the chat. The chat is st
 
 Best for: multi-question feedback, booking flows, multi-field forms, confirmations with consequences, multi-step processes.
 
-Survey responses use a `steps` array instead of `blocks`. Each step is rendered inside the same persistent bottom sheet — it stays open as the user advances. **The library injects Back / Next / Submit navigation around each step**, so the AI only declares the questions — no `button_primary` or `submit` blocks belong inside a step. The library also renders a stepper indicator when there are multiple steps.
+Survey responses use a `steps` array instead of `blocks`. The library renders a multi-step flow with **Back / Next / Submit** navigation injected around each step, plus a stepper indicator when there are multiple steps — the AI only declares the questions. The library renders this as flat content; hosts wrap it in whatever container fits (modal sheet, dialog, side pane) and own its open/close lifecycle. This means a dismissed survey can stay visible in the chat as a host-rendered card stub and be re-opened on tap.
 
 ```json
 {
@@ -194,14 +194,14 @@ Step fields:
 
 No optional flags, no navigation buttons. The library injects **Back**, **Next**, and **Submit** controls. Users can submit any subset of answers; unanswered steps are excluded from `formattedEntries` and `entries`.
 
-The library emits a single consolidated `AuiFeedback` when the user taps Submit or dismisses the survey. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all answered steps, plus two additional keys:
+The library emits a single consolidated `AuiFeedback` with `action = "submit"` when the user taps the library-injected Submit button. `feedback.formattedEntries` contains all recorded Q&A pairs. `feedback.params` contains the merged params from all answered steps, plus two additional keys:
 
 | Key              | Type   | Description                                                   |
 |------------------|--------|---------------------------------------------------------------|
 | `steps_total`    | string | Total number of steps in the survey (e.g. `"3"`)              |
 | `steps_skipped`  | string | Number of steps the user left unanswered (e.g. `"1"`)         |
 
-When a survey is dismissed without interaction, the client sends a feedback event: `{ "action": "survey_dismissed" }`. When submitted, the feedback appears as the next user message.
+Container dismissal (the host's sheet/dialog being closed before Submit) is a host concern: the library does not emit any feedback for it. Hosts decide whether a dismissed survey should stay available for re-opening or should be discarded.
 
 ---
 

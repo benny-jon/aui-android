@@ -27,7 +27,7 @@ import org.junit.Test
  * Verifies that a 3-step survey (radio_list → checkbox_list → input_text_single)
  * correctly accumulates all answers into the final consolidated feedback.
  *
- * These tests exercise the same accumulation logic that [SurveyFlowDisplay] runs on
+ * These tests exercise the same accumulation logic that [AuiSurveyContent] runs on
  * submit: scanning the shared registry against each step's inputs with
  * [getAllStepEntries] and producing [buildSurveyFormattedEntries].
  */

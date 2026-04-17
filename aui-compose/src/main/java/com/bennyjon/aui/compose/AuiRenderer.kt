@@ -23,13 +23,14 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * Renders an AUI JSON string as native Compose UI.
  *
  * Parses [json] and delegates to [DisplayRouter], which selects the appropriate layout
- * (inline / expanded or survey bottom sheet) based on the `display` field. The host app
- * supplies [onFeedback] to receive interaction events.
+ * (inline / expanded blocks, or a survey flow via [com.bennyjon.aui.compose.display.AuiSurveyContent])
+ * based on the `display` field. The host app supplies [onFeedback] to receive interaction
+ * events.
  *
- * For survey responses: the renderer opens a [ModalBottomSheet] overlay and emits no visible
- * content in the inline layout. The sheet navigates through all steps internally and calls
- * [onFeedback] once on submit or dismiss, then closes. The composable is inert after closing
- * (provided the host uses a stable key in [LazyColumn]).
+ * For survey responses the library emits flat content — no bottom sheet. Hosts wrap the
+ * renderer in whatever container they want (modal sheet, dialog, side pane, inline Column)
+ * and control its open/close lifecycle themselves. [onFeedback] fires once with a consolidated
+ * [AuiFeedback] when the user taps the library-injected Submit button.
  *
  * Example:
  * ```kotlin
@@ -51,7 +52,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *   matches the feedback's action and returns `true` from `handle`, this callback is
  *   **not** called. If no plugin matches, or the plugin returns `false`, this callback
  *   **is** called. Hosts using no plugins receive every feedback event (the common case).
- *   For surveys: called once on submit/dismiss with consolidated feedback.
+ *   For surveys: called once on submit with consolidated feedback.
  * @param collectingFeedbackEnabled When `false`, blocks that collect conversational feedback
  *   (e.g. submit buttons, polls, chip selects) are rendered at reduced alpha with their
  *   feedback callbacks suppressed. Pass-through blocks (no feedback, or read-only plugin
@@ -95,8 +96,12 @@ fun AuiRenderer(
  * Renders a pre-parsed [AuiResponse] as native Compose UI.
  *
  * Wraps all content in an [AuiThemeProvider] and delegates routing to [DisplayRouter], which
- * selects the appropriate layout (inline / expanded or survey bottom sheet) based on
- * [AuiResponse.display]. The host app supplies [onFeedback] to receive interaction events.
+ * selects the appropriate layout (inline / expanded blocks, or a survey flow via
+ * [com.bennyjon.aui.compose.display.AuiSurveyContent]) based on [AuiResponse.display]. The host
+ * app supplies [onFeedback] to receive interaction events.
+ *
+ * Survey responses render as flat content — hosts choose the container (sheet, dialog, pane)
+ * and own its open/close lifecycle.
  *
  * Example:
  * ```kotlin

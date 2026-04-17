@@ -1,0 +1,198 @@
+package com.bennyjon.aui.compose.display
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiTheme
+import com.bennyjon.aui.core.model.AuiBlock
+import com.bennyjon.aui.core.model.AuiDisplay
+import com.bennyjon.aui.core.model.AuiResponse
+import com.bennyjon.aui.core.model.AuiStep
+
+/**
+ * Tappable card stub that previews an [AuiResponse] the host has chosen to surface
+ * through an out-of-flow container (sheet, dialog, or detail pane).
+ *
+ * Typical use cases:
+ * - **EXPANDED** responses the host routes to a detail surface instead of rendering inline.
+ * - **SURVEY** responses the host opens in a bottom sheet — the card keeps the survey
+ *   discoverable in the chat so users can re-open it after an accidental dismiss.
+ *
+ * Title / description resolution:
+ *
+ * | Display    | Title (in order)                                           | Description (in order)                              |
+ * |------------|------------------------------------------------------------|-----------------------------------------------------|
+ * | `SURVEY`   | [AuiResponse.surveyTitle], [AuiResponse.cardTitle],        | [AuiResponse.cardDescription], step-count summary,  |
+ * |            | first step question, literal `"Survey"`                    | nothing                                             |
+ * | `EXPANDED` | [AuiResponse.cardTitle], first heading text, first text,   | [AuiResponse.cardDescription], first non-heading    |
+ * |            | literal `"Tap to view"`                                    | text block, nothing                                 |
+ *
+ * @param response The [AuiResponse] to preview.
+ * @param onClick Invoked when the user taps the card.
+ * @param modifier Applied to the outermost [Surface].
+ * @param isSpent When `true`, the card renders at reduced alpha to match the spent styling
+ *   used for inline AUI. Stays tappable so users can review the response.
+ * @param isActive When `true`, the card is highlighted — e.g. it's the message currently
+ *   shown in the detail pane or sheet.
+ */
+@Composable
+fun AuiResponseCard(
+    response: AuiResponse,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isSpent: Boolean = false,
+    isActive: Boolean = false,
+) {
+    val theme = LocalAuiTheme.current
+    val title = response.cardStubTitle()
+    val description = response.cardStubDescription()
+    val containerColor = if (isActive) theme.colors.primaryContainer else theme.colors.surfaceVariant
+    val titleColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurface
+    val descriptionColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurfaceVariant
+    val alpha = if (isSpent) 0.6f else 1f
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(alpha)
+            .clickable(enabled = !isSpent, onClick = onClick),
+        shape = theme.shapes.card,
+        color = containerColor,
+        border = BorderStroke(1.dp, theme.colors.outline),
+        tonalElevation = 1.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = theme.spacing.medium, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = theme.typography.subheading,
+                    color = titleColor,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                description?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = theme.typography.caption,
+                        color = descriptionColor,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = descriptionColor,
+                modifier = Modifier.padding(start = 12.dp),
+            )
+        }
+    }
+}
+
+private fun AuiResponse.cardStubTitle(): String = when (display) {
+    AuiDisplay.SURVEY -> surveyTitle
+        ?: cardTitle
+        ?: steps.firstStepQuestion()
+        ?: "Survey"
+
+    else -> cardTitle
+        ?: blocks.firstHeadingText()
+        ?: blocks.firstTextText()
+        ?: "Tap to view"
+}
+
+private fun AuiResponse.cardStubDescription(): String? = when (display) {
+    AuiDisplay.SURVEY -> cardDescription ?: steps.stepCountSummary()
+    else -> cardDescription ?: blocks.firstNonHeadingText()
+}
+
+private fun List<AuiStep>.firstStepQuestion(): String? =
+    firstNotNullOfOrNull { it.question?.takeIf { q -> q.isNotBlank() } }
+
+private fun List<AuiStep>.stepCountSummary(): String? = when (size) {
+    0 -> null
+    1 -> "1 question"
+    else -> "$size questions"
+}
+
+private fun List<AuiBlock>.firstHeadingText(): String? =
+    firstNotNullOfOrNull { (it as? AuiBlock.Heading)?.data?.text }
+
+private fun List<AuiBlock>.firstTextText(): String? =
+    firstNotNullOfOrNull { (it as? AuiBlock.Text)?.data?.text }
+
+private fun List<AuiBlock>.firstNonHeadingText(): String? =
+    firstNotNullOfOrNull { (it as? AuiBlock.Text)?.data?.text }
+
+@Preview(showBackground = true, name = "AuiResponseCard — Expanded")
+@Composable
+private fun AuiResponseCardExpandedPreview() {
+    AuiThemeProvider {
+        AuiResponseCard(
+            response = AuiResponse(
+                display = AuiDisplay.EXPANDED,
+                cardTitle = "Headphone picks",
+                cardDescription = "Three top noise-cancelling models compared",
+            ),
+            onClick = {},
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "AuiResponseCard — Survey")
+@Composable
+private fun AuiResponseCardSurveyPreview() {
+    AuiThemeProvider {
+        AuiResponseCard(
+            response = AuiResponse(
+                display = AuiDisplay.SURVEY,
+                surveyTitle = "Quick feedback",
+                steps = listOf(
+                    AuiStep(blocks = emptyList(), question = "How was your experience?"),
+                    AuiStep(blocks = emptyList(), question = "Any additional comments?"),
+                ),
+            ),
+            onClick = {},
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "AuiResponseCard — Spent + Active")
+@Composable
+private fun AuiResponseCardSpentActivePreview() {
+    AuiThemeProvider {
+        AuiResponseCard(
+            response = AuiResponse(
+                display = AuiDisplay.EXPANDED,
+                cardTitle = "Previously viewed",
+            ),
+            onClick = {},
+            isSpent = true,
+            isActive = true,
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}

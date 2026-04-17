@@ -494,9 +494,8 @@ aui/
 │       │   │
 │       │   ├── display/
 │       │   │   ├── DisplayRouter.kt   # Routes to expanded/survey
-│       │   │   ├── InlineDisplay.kt
-│       │   │   ├── ExpandedDisplay.kt
-│       │   │   └── SurveyFlowDisplay.kt
+│       │   │   ├── AuiResponseCard.kt # Card stub hosts drop into chat for EXPANDED/SURVEY
+│       │   │   └── AuiSurveyContent.kt # Multi-step survey content (host-owned container)
 │       │   │
 │       │   ├── components/            # One file per component
 │       │   │   ├── text/
@@ -573,9 +572,7 @@ aui/
 │       └── test/kotlin/com/bennyjon/aui/compose/
 │           ├── AuiRendererTest.kt
 │           ├── display/
-│           │   ├── InlineDisplayTest.kt
-│           │   ├── ExpandedDisplayTest.kt
-│           │   └── SurveyFlowDisplayTest.kt
+│           │   └── AuiSurveyContentUiTest.kt
 │           └── components/
 │               └── ... (snapshot tests per component)
 │

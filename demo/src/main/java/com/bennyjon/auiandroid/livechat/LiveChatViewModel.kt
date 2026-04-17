@@ -2,6 +2,7 @@ package com.bennyjon.auiandroid.livechat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.AppSettings
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -65,7 +67,21 @@ class LiveChatViewModel @Inject constructor(
         _repositoryVersion.flatMapLatest {
             repository.observeMessages(conversationId)
                 .map { it.markSpentInteractives(pluginRegistry) }
+                .onEach { maybeAutoOpenLatestSurvey(it) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Survey message ids we've already auto-opened. Prevents re-opening after a dismiss.
+    private val autoOpenedSurveyIds = mutableSetOf<String>()
+
+    private fun maybeAutoOpenLatestSurvey(messages: List<ChatMessage>) {
+        val latest = messages.lastOrNull() ?: return
+        if (latest.auiResponse?.display == AuiDisplay.SURVEY
+            && latest.id !in autoOpenedSurveyIds
+        ) {
+            autoOpenedSurveyIds.add(latest.id)
+            _selectedDetailMessageId.value = latest.id
+        }
+    }
 
     private val _isSending = MutableStateFlow(false)
 
@@ -78,8 +94,12 @@ class LiveChatViewModel @Inject constructor(
     private val _selectedDetailMessageId = MutableStateFlow<String?>(null)
 
     /**
-     * Message id selected by the user for detail surfacing. Null when the user has not pinned
-     * a specific expanded message — the detail pane (if visible) falls back to sticky-latest.
+     * Message id currently surfaced in the detail area.
+     *
+     * For EXPANDED messages, this is what the user has pinned (or null → sticky-latest
+     * fallback in two-pane mode). For SURVEY messages, the ViewModel auto-pins each newly
+     * arrived survey once so the sheet pops up on arrival; users can re-open the card later
+     * to re-surface it. Dismissal simply clears this, with no LLM turn.
      */
     val selectedDetailMessageId: StateFlow<String?> = _selectedDetailMessageId.asStateFlow()
 
@@ -168,6 +188,8 @@ class LiveChatViewModel @Inject constructor(
     fun clearConversation() {
         viewModelScope.launch {
             repository.clearConversation(conversationId)
+            autoOpenedSurveyIds.clear()
+            _selectedDetailMessageId.value = null
         }
     }
 
@@ -194,6 +216,8 @@ class LiveChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             repository.clearConversation(conversationId)
+            autoOpenedSurveyIds.clear()
+            _selectedDetailMessageId.value = null
             repository = createRepository(provider)
             _currentProvider.value = provider
             _repositoryVersion.value++

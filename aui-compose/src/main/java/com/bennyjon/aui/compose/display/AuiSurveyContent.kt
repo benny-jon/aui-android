@@ -8,15 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
@@ -25,8 +20,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,95 +40,85 @@ import com.bennyjon.aui.core.model.AuiStep
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.StepperStep
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
-import kotlinx.coroutines.launch
 
 /**
- * Renders a multi-page survey inside a single persistent [ModalBottomSheet].
+ * Renders a multi-step survey as flat content — the host chooses the container.
  *
- * The library owns the entire survey shell: step navigation (Back / Next / Submit), the
- * stepper indicator, accumulation of answers across steps, and the final submission.
- * Step blocks should contain only collector components (inputs, chip selects, radio / checkbox
+ * The library owns the survey shell: step navigation (Back / Next / Submit), the stepper
+ * indicator, accumulation of answers across steps, and the final consolidated feedback. Step
+ * blocks should contain only collector components (inputs, chip selects, radio / checkbox
  * lists) — never navigation buttons. Any [AuiBlock.ButtonPrimary] the AI places inside a step
- * is still rendered, but passes its feedback straight through to the host without advancing
- * or finalizing the survey.
+ * is still rendered, but passes its feedback straight through to [onStepFeedback] without
+ * advancing or finalizing the survey.
  *
- * The sheet stays open as the user moves between steps; it only closes on **Submit** (from
- * the last step) or when the user dismisses the sheet via swipe-down. Every step is
- * implicitly optional: users can tap **Next** without answering, and steps with no collected
- * answer are simply omitted from [AuiFeedback.entries].
+ * **No container, no dismissal.** This composable does **not** wrap itself in a
+ * [androidx.compose.material3.ModalBottomSheet] or any other surface — hosts mount it inside
+ * whatever they want (sheet, dialog, pane, inline Column). Hosts own the open/close lifecycle,
+ * which means "re-opening a dismissed survey" is just re-mounting this composable.
  *
- * A single shared registry persists across all steps, so moving back to a prior step still
- * shows the user's earlier answers. On **Submit**, [AuiFeedback.entries] is built from every
- * step's inputs in declaration order, and [AuiFeedback.stepsSkipped] reports how many steps
- * produced no entry.
+ * **No internal scrolling.** The content lays out at its natural height. If the survey may
+ * exceed the available space, the host must wrap it in a scrollable container
+ * (`Modifier.verticalScroll(...)`, `LazyColumn`, or the sheet's own scrollable content slot).
+ * Double-wrapping in nested verticalScroll will crash on measure.
  *
- * **Dismiss behavior:** When the user dismisses the sheet via swipe-down, the composable emits
- * `onFeedback(action = "survey_dismissed", stepsTotal = N)`. [AuiFeedback.stepsSkipped] is
- * `null` on dismiss.
+ * **Submission.** When the user taps the library-injected Submit button on the final step,
+ * [onSubmit] receives a single consolidated [AuiFeedback]:
  *
- * **Structural completion signal:** Hosts that want to handle survey completions uniformly
- * should branch on [AuiFeedback.stepsTotal] `!= null` in their `onFeedback` callback — this
- * is the reliable structural signal that a feedback came from a finalized survey.
+ * - `action = "submit"`
+ * - `entries` / `formattedEntries`: one row per input the user answered
+ * - `stepsTotal` / `stepsSkipped`: structural signals
  *
- * The composable is inert once the survey has been submitted or dismissed. If the host app
- * does not clear its JSON after receiving [onFeedback], scrolling back to the message will
- * not re-open the sheet (provided the composable uses a stable key in [LazyColumn]).
+ * Hosts typically respond by closing their container and forwarding the feedback text as
+ * the next user turn.
+ *
+ * **Partial progress.** Users can submit any subset of answers; unanswered steps are
+ * omitted from [AuiFeedback.entries] and increment [AuiFeedback.stepsSkipped]. A shared
+ * registry persists across steps, so Back/Next preserves earlier answers.
+ *
+ * **State lifetime.** Each mount starts a fresh [SurveyFlowState]. If the host unmounts the
+ * composable between opens (the common case for sheet-based containers), progress resets.
+ * Hosts that want progress preserved across dismiss/reopen should keep the composable in
+ * the composition and toggle their container's visibility instead of removing the content.
  *
  * @param steps The list of survey steps to render, each containing its own blocks.
- * @param surveyTitle Optional title displayed at the top of the sheet.
+ * @param surveyTitle Optional title displayed at the top of the content.
+ * @param onSubmit Called exactly once with the consolidated [AuiFeedback] when the user taps
+ *   the library-injected Submit button on the final step.
+ * @param modifier Modifier applied to the outermost [Column].
  * @param pluginRegistry Registry of component plugins, passed through to [BlockRenderer]
  *   for rendering custom or overridden block types within each step.
- * @param onFeedback Called with the final consolidated [AuiFeedback] on submit or dismiss,
- *   and with any non-terminal feedback fired by blocks inside a step (e.g. an `open_url`
- *   button the AI added to a step). Action plugin routing is handled upstream by
- *   [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer].
+ * @param onStepFeedback Called for any non-terminal feedback fired by blocks inside a step
+ *   (e.g. an `open_url` button the AI added to a step). Action plugin routing is handled
+ *   upstream by [com.bennyjon.aui.compose.AuiRenderer]. Defaults to a no-op.
  * @param onUnknownBlock If provided, called for each unrecognized block type that has no
  *   matching component plugin.
- * @see buildSurveyFormattedEntries
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SurveyFlowDisplay(
+fun AuiSurveyContent(
     steps: List<AuiStep>,
     surveyTitle: String?,
+    onSubmit: (AuiFeedback) -> Unit,
+    modifier: Modifier = Modifier,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
-    onFeedback: (AuiFeedback) -> Unit,
+    onStepFeedback: (AuiFeedback) -> Unit = {},
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
     if (steps.isEmpty()) return
 
-    val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showSheet by rememberSaveable { mutableStateOf(true) }
-    val flowState = remember { SurveyFlowState(steps, pluginRegistry) }
+    val flowState = remember(steps) { SurveyFlowState(steps, pluginRegistry) }
 
-    if (!showSheet) return
-
-    ModalBottomSheet(
-        onDismissRequest = {
-            showSheet = false
-            onFeedback(AuiFeedback(action = "survey_dismissed", stepsTotal = steps.size))
-        },
-        sheetState = sheetState,
-    ) {
-        SurveyContent(
-            steps = steps,
-            flowState = flowState,
-            surveyTitle = surveyTitle,
-            pluginRegistry = pluginRegistry,
-            onBack = { flowState.back() },
-            onNext = { flowState.next() },
-            onSubmit = {
-                val finalFeedback = flowState.finalize()
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    showSheet = false
-                    onFeedback(finalFeedback)
-                }
-            },
-            onStepFeedback = onFeedback,
-            onUnknownBlock = onUnknownBlock,
-        )
-    }
+    SurveyStepScaffold(
+        steps = steps,
+        flowState = flowState,
+        surveyTitle = surveyTitle,
+        pluginRegistry = pluginRegistry,
+        modifier = modifier,
+        onBack = { flowState.back() },
+        onNext = { flowState.next() },
+        onSubmit = { onSubmit(flowState.finalize()) },
+        onStepFeedback = onStepFeedback,
+        onUnknownBlock = onUnknownBlock,
+    )
 }
 
 // ── State holder ─────────────────────────────────────────────────────────────
@@ -195,18 +178,19 @@ internal class SurveyFlowState(
     }
 }
 
-// ── Sheet body ───────────────────────────────────────────────────────────────
+// ── Scaffolded step body ─────────────────────────────────────────────────────
 
 /**
- * The content rendered inside the [ModalBottomSheet]: title, stepper, the current step's
- * question and collector blocks, and the library-injected navigation row.
+ * Renders the title, stepper, current step's question and collector blocks, and the
+ * library-injected navigation row (Back / Next / Submit).
  */
 @Composable
-private fun SurveyContent(
+private fun SurveyStepScaffold(
     steps: List<AuiStep>,
     flowState: SurveyFlowState,
     surveyTitle: String?,
     pluginRegistry: AuiPluginRegistry,
+    modifier: Modifier,
     onBack: () -> Unit,
     onNext: () -> Unit,
     onSubmit: () -> Unit,
@@ -217,9 +201,8 @@ private fun SurveyContent(
     val step = steps[flowState.stepIndex]
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = theme.spacing.medium),
     ) {
         if (surveyTitle != null) {

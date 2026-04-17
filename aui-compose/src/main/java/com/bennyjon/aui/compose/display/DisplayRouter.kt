@@ -33,9 +33,10 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *   apps decide whether to surface EXPANDED responses in a separate detail surface (a
  *   bottom sheet on narrow windows, a side detail pane on wider windows). The library
  *   does not enforce this — both render the same here.
- * - **SURVEY**: Renders a persistent bottom sheet that navigates through each [AuiStep]
- *   without closing between steps. The library manages step navigation, the stepper indicator,
- *   and accumulation — emitting a single [AuiFeedback] with all Q+A entries at the end.
+ * - **SURVEY**: Renders flat survey content via [AuiSurveyContent] — the library manages step
+ *   navigation, the stepper indicator, and accumulation, emitting a single [AuiFeedback] with
+ *   all Q+A entries on submit. It does **not** wrap itself in a bottom sheet; hosts choose
+ *   the container (sheet, dialog, pane, inline). See [AuiSurveyContent] for details.
  *
  * The split logic for INLINE/EXPANDED: blocks are scanned from the start. Contiguous leading
  * `text`, `heading`, and `caption` blocks accumulate into the "bubble" list. The first
@@ -66,11 +67,13 @@ fun DisplayRouter(
 ) {
     when (response.display) {
         AuiDisplay.SURVEY -> {
-            SurveyFlowDisplay(
+            AuiSurveyContent(
                 steps = response.steps,
                 surveyTitle = response.surveyTitle,
+                onSubmit = onFeedback,
+                modifier = modifier,
                 pluginRegistry = pluginRegistry,
-                onFeedback = onFeedback,
+                onStepFeedback = onFeedback,
                 onUnknownBlock = onUnknownBlock,
             )
         }

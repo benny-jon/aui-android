@@ -57,11 +57,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
+import com.bennyjon.aui.compose.display.AuiResponseCard
 import com.bennyjon.aui.compose.text.parseInlineMarkdown
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.AuiResponse
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.chat.ChatMessage
 import com.bennyjon.auiandroid.data.llm.LlmProvider
@@ -87,11 +87,15 @@ enum class DemoAuiTheme(val displayName: String) {
  *
  * Routes assistant messages by their AUI [AuiDisplay] level:
  * - **INLINE** renders directly in the chat list via [AuiRenderer].
- * - **EXPANDED** renders as a tappable [ExpandedResponseCard] stub. On narrow windows the
- *   stub opens a [ModalBottomSheet] containing the full render; on wide windows
+ * - **EXPANDED** renders as a tappable [AuiResponseCard] stub. On narrow windows the stub
+ *   opens a [ModalBottomSheet] containing the full render; on wide windows
  *   ([TwoPaneBreakpointDp]+), the full render is shown in a persistent right-side detail
  *   pane and the stub stays visible in chat for navigation.
- * - **SURVEY** renders via [AuiRenderer] (which manages its own bottom sheet).
+ * - **SURVEY** renders as a tappable [AuiResponseCard] stub and the library content is
+ *   hosted in a [ModalBottomSheet] regardless of window size (surveys are modal input
+ *   collection). The sheet auto-opens on arrival; swipe-down dismissal simply closes it —
+ *   the card stays in the chat so the user can re-open the survey on tap. Only the Submit
+ *   action generates an LLM turn.
  *
  * The screen pushes the current window size to the [LiveChatViewModel] on every composition
  * so the AI sees a `DEVICE` hint with width/height/layout in its system prompt for the next
@@ -167,20 +171,25 @@ fun LiveChatScreen(
             val isTwoPane = widthDp >= TwoPaneBreakpointDp
             val auiTheme = resolveAuiTheme(theme)
 
-            // In two-pane mode, the detail pane shows the user-pinned message if one is set,
-            // otherwise the latest expanded message (sticky-latest behavior).
-            val detailPaneMessage = if (isTwoPane) {
-                messages.firstOrNull { it.id == selectedDetailMessageId }
+            val pinnedMessage = messages.firstOrNull { it.id == selectedDetailMessageId }
+            val pinnedIsSurvey = pinnedMessage?.auiResponse?.display == AuiDisplay.SURVEY
+
+            // In two-pane mode, the detail pane shows the user-pinned EXPANDED message if
+            // one is set, otherwise the latest EXPANDED message (sticky-latest behavior).
+            // Surveys are always modal — they never occupy the detail pane.
+            val detailPaneMessage = if (isTwoPane && !pinnedIsSurvey) {
+                pinnedMessage?.takeIf { it.auiResponse?.display == AuiDisplay.EXPANDED }
                     ?: messages.lastOrNull { it.auiResponse?.display == AuiDisplay.EXPANDED }
             } else {
                 null
             }
 
-            // In single-column mode, the modal bottom sheet shows the user-pinned message.
-            val sheetMessage = if (!isTwoPane) {
-                messages.firstOrNull { it.id == selectedDetailMessageId }
-            } else {
-                null
+            // Sheet hosts a pinned SURVEY at any width, or a pinned EXPANDED on narrow windows.
+            val sheetMessage = when {
+                pinnedMessage == null -> null
+                pinnedIsSurvey -> pinnedMessage
+                !isTwoPane -> pinnedMessage
+                else -> null
             }
 
             if (isTwoPane) {
@@ -222,13 +231,19 @@ fun LiveChatScreen(
             }
 
             if (sheetMessage?.auiResponse != null) {
-                ExpandedDetailSheet(
+                val messageIsSurvey = sheetMessage.auiResponse.display == AuiDisplay.SURVEY
+                ResponseDetailSheet(
                     message = sheetMessage,
                     pluginRegistry = pluginRegistry,
                     auiTheme = auiTheme,
                     onFeedback = { feedback ->
                         viewModel.onFeedback(feedback)
-                        viewModel.closeDetail()
+                        // Survey step-level feedbacks (non-submit) keep the sheet open so the
+                        // user can continue answering. Submit is structurally marked by
+                        // stepsTotal; other display types close the sheet on any feedback.
+                        if (!messageIsSurvey || feedback.stepsTotal != null) {
+                            viewModel.closeDetail()
+                        }
                     },
                     onDismiss = viewModel::closeDetail,
                 )
@@ -352,14 +367,15 @@ private fun DetailPane(
 }
 
 /**
- * Modal bottom sheet for showing an EXPANDED response on narrow windows.
+ * Modal bottom sheet wrapping a single [AuiRenderer] for a pinned response.
  *
- * Distinct from AUI-authored [AuiDisplay.SURVEY] flows — this is a host-side display affordance
- * that wraps a single [AuiRenderer] in a sheet and dismisses when feedback fires.
+ * Used by both EXPANDED responses (on narrow windows) and SURVEY responses (at any width).
+ * For SURVEY, the sheet stays open across step navigation and closes only on the consolidated
+ * Submit feedback — routing handled by the caller via [onFeedback].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExpandedDetailSheet(
+private fun ResponseDetailSheet(
     message: ChatMessage,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
@@ -524,8 +540,8 @@ private fun AssistantMessage(
     // AUI content — branch on display level
     val response = message.auiResponse ?: return
     when (response.display) {
-        AuiDisplay.EXPANDED -> {
-            ExpandedResponseCard(
+        AuiDisplay.EXPANDED, AuiDisplay.SURVEY -> {
+            AuiResponseCard(
                 response = response,
                 onClick = { onOpenDetail(message.id) },
                 modifier = Modifier.padding(top = 16.dp),
@@ -533,20 +549,17 @@ private fun AssistantMessage(
                 isActive = isActiveDetail,
             )
         }
-        AuiDisplay.INLINE,
-        AuiDisplay.SURVEY -> {
-            if (shouldRenderAui(response, message.isAuiSpent)) {
-                AuiRenderer(
-                    response = response,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    theme = auiTheme,
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = onFeedback,
-                    collectingFeedbackEnabled = !message.isAuiSpent,
-                )
-            }
+        AuiDisplay.INLINE -> {
+            AuiRenderer(
+                response = response,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+                collectingFeedbackEnabled = !message.isAuiSpent,
+            )
         }
     }
 }
@@ -633,13 +646,3 @@ private fun LiveChatInput(
     }
 }
 
-/**
- * Whether an AUI response should be rendered in the chat list (for INLINE / SURVEY).
- *
- * EXPANDED responses are surfaced as a [ExpandedResponseCard] stub instead, so this
- * helper is not consulted for them. Spent SURVEY responses are hidden entirely (they've
- * already been submitted and re-rendering would re-open the survey). Spent INLINE
- * responses are still shown (grayed out via `collectingFeedbackEnabled`).
- */
-internal fun shouldRenderAui(response: AuiResponse, isSpent: Boolean): Boolean =
-    !isSpent || response.display != AuiDisplay.SURVEY

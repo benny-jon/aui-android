@@ -22,16 +22,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * UX source-of-truth tests for [SurveyFlowDisplay].
+ * UX source-of-truth tests for [AuiSurveyContent].
  *
  * These tests assert the expected user experience of a 3-step survey — they are deliberately
  * written against the spec, not the current implementation. Each step presents a single
  * single-select question. The library (not the AI) is responsible for injecting Back / Next
- * on intermediate steps and Submit on the final step. On Submit, the sheet must dismiss and
- * emit a single consolidated [AuiFeedback] containing one entry per answered step.
+ * on intermediate steps and Submit on the final step. On Submit, the library emits a single
+ * consolidated [AuiFeedback] containing one entry per answered step. Container-level dismissal
+ * is a host concern and is not exercised here.
  */
 @RunWith(AndroidJUnit4::class)
-class SurveyFlowDisplayUiTest {
+class AuiSurveyContentUiTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -162,7 +163,7 @@ class SurveyFlowDisplayUiTest {
     }
 
     @Test
-    fun submit_dismissesSheet_andEmitsFeedbackWithEntriesFromEveryStep() {
+    fun submit_emitsConsolidatedFeedbackWithEntriesFromEveryStep() {
         val feedbacks = mutableListOf<AuiFeedback>()
         composeTestRule.setContent {
             AuiRenderer(
@@ -184,13 +185,8 @@ class SurveyFlowDisplayUiTest {
         composeTestRule.onNodeWithTag(SurveyTestTags.SUBMIT).performClick()
         composeTestRule.waitForIdle()
 
-        // Sheet is dismissed: no survey content remains on screen.
-        composeTestRule.onNodeWithText(question1).assertDoesNotExist()
-        composeTestRule.onNodeWithText(question2).assertDoesNotExist()
-        composeTestRule.onNodeWithText(question3).assertDoesNotExist()
-        composeTestRule.onNodeWithTag(SurveyTestTags.SUBMIT).assertDoesNotExist()
-
-        // Exactly one feedback — the consolidated terminal event.
+        // Exactly one feedback — the consolidated terminal event. Container dismissal is
+        // a host concern now; the library keeps its content mounted until the host unmounts it.
         assertEquals("expected a single terminal feedback on submit", 1, feedbacks.size)
         val feedback = feedbacks.single()
 

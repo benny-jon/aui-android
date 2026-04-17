@@ -71,14 +71,14 @@ data class AuiPromptConfig(
  * callback via the standard chain-of-responsibility routing. Hosts can handle `submit` in one
  * of two ways:
  *
- * **Survey flow caveat**: Multi-page surveys (`SurveyFlowDisplay`) consolidate all step
+ * **Survey flow caveat**: Multi-page surveys (`AuiSurveyContent`) consolidate all step
  * interactions into a single terminal [AuiFeedback]. The library fires this feedback with
  * `action = "submit"` when the user taps the library-injected Submit button on the final
  * page, so a host plugin registered for `submit` will receive every survey completion.
  *
  * For reliable handling of survey completions regardless of action name, hosts should branch
  * on the structural signal [AuiFeedback.stepsTotal] `!= null` inside their `onFeedback` callback,
- * rather than relying solely on action-name dispatch via plugins. See `SurveyFlowDisplay` for
+ * rather than relying solely on action-name dispatch via plugins. See `AuiSurveyContent` for
  * details on the consolidated feedback shape.
  *
  * 1. **Default**: handle `submit` payloads inside the `onFeedback` callback. No plugin needed.
