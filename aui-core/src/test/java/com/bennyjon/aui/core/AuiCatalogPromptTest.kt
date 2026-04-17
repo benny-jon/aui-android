@@ -94,7 +94,7 @@ class AuiCatalogPromptTest {
     fun `generate includes examples section with envelope format`() {
         assertTrue(output.contains("EXAMPLES:"))
         assertTrue(output.contains("Text-only reply:"))
-        assertTrue(output.contains("Expanded poll (radio list + submit button):"))
+        assertTrue(output.contains("Inline poll (radio list + submit button):"))
         assertTrue(output.contains("Sheet survey (2-step feedback flow, second step skippable):"))
         assertTrue(output.contains("\"action\": \"submit\""))
         // Examples use envelope format with "text" and "aui" fields
@@ -126,9 +126,10 @@ class AuiCatalogPromptTest {
     }
 
     @Test
-    fun `generate documents inline as belonging in chat flow`() {
+    fun `generate documents inline as the default for chat flow`() {
         assertTrue(output.contains("inline"))
-        assertTrue(output.contains("belongs in the chat flow"))
+        assertTrue(output.contains("the default"))
+        assertTrue(output.contains("DEFAULT TO INLINE"))
     }
 
     @Test
@@ -474,7 +475,8 @@ class AuiCatalogPromptTest {
     fun `generate includes component cheat sheet`() {
         assertTrue(output.contains("WHEN TO REACH FOR WHICH COMPONENT:"))
         assertTrue(output.contains("button_primary or button_secondary with action=open_url"))
-        assertTrue(output.contains("radio_list or chip_select_single + submit"))
+        assertTrue(output.contains("inline, radio_list + submit"))
+        assertTrue(output.contains("3+ rich cards"))
         assertTrue(output.contains("input_slider"))
     }
 

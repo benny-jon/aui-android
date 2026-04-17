@@ -287,18 +287,29 @@ add a "sheet_title":
 }"""
 
     internal const val DISPLAY_LEVELS = """DISPLAY LEVELS:
-  inline   — belongs in the chat flow. Quick replies, short confirmations, small polls,
-             single-button prompts. Always renders directly in the chat list.
-  expanded — focused content the user may want to linger on. Rich cards, long lists,
-             comparisons, multi-block content. Hosts may surface this as a tappable
-             card stub that opens a bottom sheet (small screens) or a side detail
-             pane (large screens). Add a short "card_title" and "card_description"
-             so the stub is meaningful when shown.
-  sheet    — bottom sheet overlay. Multi-step surveys, forms, focused input.
+  inline   — the default. Renders inside the AI's chat bubble and grows to fit.
+             Use for nearly all chat-flow replies: quick replies, polls (even
+             multi-option ones), short forms, confirmations, single cards,
+             a handful of buttons. There is no size ceiling — a 3-option poll
+             with a submit button is inline, not expanded.
 
-Choose the LEAST prominent level that serves the content well.
-Prefer "inline" for chat-flow turns; reach for "expanded" when the user may want to
-study the content. Use "sheet" only when multi-step user input is needed."""
+  expanded — opt-in upgrade for content the user will want to study OUTSIDE
+             the chat flow. Hosts may surface it as a tappable card stub that
+             opens a bottom sheet (small screens) or side detail pane (large
+             screens). Use ONLY when at least one is true:
+               • 3+ rich cards (products, places, events, profiles) in one response
+               • Content that benefits from a dedicated reading surface
+                 (long comparison tables, image galleries, detailed specs)
+               • A response the user will likely want to revisit or reference
+             If the content fits naturally in the chat flow, keep it inline.
+             When you do use expanded, always include card_title and
+             card_description so the stub preview is meaningful.
+
+  sheet    — bottom sheet overlay for multi-step user input (surveys, forms,
+             guided flows). Not for displaying information — only for collecting it.
+
+DEFAULT TO INLINE. Only escalate when the content genuinely needs its own
+surface. When in doubt, inline."""
 
     internal const val BLOCK_FORMAT = """BLOCK FORMAT:
   { "type": "<component>", "data": { ... }, "feedback": { ... } }
@@ -362,21 +373,24 @@ Status:
     internal const val COMPONENT_CHEAT_SHEET = """WHEN TO REACH FOR WHICH COMPONENT:
   - Links / URLs → button_primary or button_secondary with action=open_url.
     Never render a URL as plain text when a tappable button is available.
-  - Quick conversational branches / single-tap confirmations → inline display
-    with quick_replies or a single button.
-  - Lists of products / places / options → expanded display with a block per
-    item, each with its own action button(s). Add card_title + card_description
-    so hosts that show a stub have meaningful preview text.
-  - Comparing or picking between options → radio_list or chip_select_single + submit.
-  - Multi-select preferences → checkbox_list or chip_select_multi + submit.
-  - Rating or feedback collection → sheet with input_rating_stars.
-  - Suggesting next actions or conversational branches → quick_replies at the end.
-  - Numeric input within a range → input_slider."""
+  - Quick conversational branches / single-tap confirmations → inline, quick_replies
+  - A poll or pick-one question (any number of options) → inline, radio_list + submit
+  - Multi-select preferences → inline, checkbox_list + submit
+  - Numeric input within a range → inline, input_slider + submit
+  - Rating or feedback collection → sheet with input_rating_stars
+  - A single product / place / link recommendation → inline, one card + button
+  - 3+ rich cards in one response (products, places, profiles) → expanded
+    (always with card_title + card_description)
+  - Long comparison or gallery the user will want to study → expanded
+  - Suggesting next actions → inline, quick_replies at the end"""
 
     internal const val GUIDELINES = """GUIDELINES:
   - Start with text for context, then use components.
   - Use quick_replies at the end to suggest next steps.
-  - Keep it concise: 2-8 blocks for expanded, 3-20 per sheet step.
+  - Choose display by content type, not block count — a 5-block inline poll is
+    still inline. Reach for expanded only for 3+ rich cards or content that
+    genuinely benefits from a dedicated reading surface. Keep each sheet step
+    to 3-20 blocks.
   - Triggers (button_primary, button_secondary, quick_replies options) MUST have a
     feedback object — they fire actions when tapped.
   - Collectors (radio_list, checkbox_list, chip_select_*, input_*) passively gather
@@ -407,11 +421,11 @@ Inline quick replies (chat-flow follow-up):
   }
 }
 
-Expanded poll (radio list + submit button):
+Inline poll (radio list + submit button):
 {
   "text": "Let me know what you think:",
   "aui": {
-    "display": "expanded",
+    "display": "inline",
     "blocks": [
       { "type": "text", "data": { "text": "Which feature should we build next?" } },
       { "type": "radio_list", "data": {
