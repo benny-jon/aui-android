@@ -374,8 +374,8 @@ Progress:
   progress_bar(label, progress, max?)
 
 Status:
-  badge_success(text)
-  status_banner_success(text)"""
+  badge_info(text) | badge_success(text) | badge_warning(text) | badge_error(text)
+  status_banner_info(text) | status_banner_success(text) | status_banner_warning(text) | status_banner_error(text)"""
 
     internal const val SURVEY_STRUCTURE = """SURVEY STRUCTURE (when display = "survey"):
   survey_title: string — title shown at the top of the survey
@@ -574,7 +574,13 @@ Quick replies with per-option actions (each chip fires its own feedback):
         "divider",
         "stepper_horizontal",
         "progress_bar",
+        "badge_info",
         "badge_success",
+        "badge_warning",
+        "badge_error",
+        "status_banner_info",
         "status_banner_success",
+        "status_banner_warning",
+        "status_banner_error",
     )
 }

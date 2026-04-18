@@ -348,7 +348,7 @@ val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 
 ## Component Catalog
 
-18 built-in component types across these categories:
+24 built-in component types across these categories:
 
 | Category | Components |
 |----------|-----------|
@@ -356,7 +356,7 @@ val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 | **Input** | `button_primary`, `button_secondary`, `quick_replies`, `chip_select_single`, `chip_select_multi`, `radio_list`, `checkbox_list`, `input_text_single`, `input_slider`, `input_rating_stars` |
 | **Layout** | `divider` |
 | **Progress** | `stepper_horizontal`, `progress_bar` |
-| **Status** | `badge_success`, `status_banner_success` |
+| **Status** | `badge_info`, `badge_success`, `badge_warning`, `badge_error`, `status_banner_info`, `status_banner_success`, `status_banner_warning`, `status_banner_error` |
 
 The `text` component renders inline Markdown: `**bold**`, `*italic*`, `` `code` ``, and `[links](url)`. Structural Markdown (headings, lists, etc.) uses dedicated block types instead.
 

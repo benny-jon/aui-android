@@ -1,6 +1,9 @@
 package com.bennyjon.aui.core.model
 
+import com.bennyjon.aui.core.model.data.BadgeErrorData
+import com.bennyjon.aui.core.model.data.BadgeInfoData
 import com.bennyjon.aui.core.model.data.BadgeSuccessData
+import com.bennyjon.aui.core.model.data.BadgeWarningData
 import com.bennyjon.aui.core.model.data.ButtonPrimaryData
 import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 import com.bennyjon.aui.core.model.data.CaptionData
@@ -15,7 +18,10 @@ import com.bennyjon.aui.core.model.data.InputTextSingleData
 import com.bennyjon.aui.core.model.data.ProgressBarData
 import com.bennyjon.aui.core.model.data.QuickRepliesData
 import com.bennyjon.aui.core.model.data.RadioListData
+import com.bennyjon.aui.core.model.data.StatusBannerErrorData
+import com.bennyjon.aui.core.model.data.StatusBannerInfoData
 import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
+import com.bennyjon.aui.core.model.data.StatusBannerWarningData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.AuiInputData
 import com.bennyjon.aui.core.model.data.TextData
@@ -195,6 +201,13 @@ sealed class AuiBlock {
 
     // ── Status ───────────────────────────────────────────────────────────────
 
+    /** Small info-colored pill. */
+    @Serializable
+    data class BadgeInfo(
+        val data: BadgeInfoData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
     /** Small success-colored pill. */
     @Serializable
     data class BadgeSuccess(
@@ -202,10 +215,45 @@ sealed class AuiBlock {
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
+    /** Small warning-colored pill. */
+    @Serializable
+    data class BadgeWarning(
+        val data: BadgeWarningData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Small error-colored pill. */
+    @Serializable
+    data class BadgeError(
+        val data: BadgeErrorData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Full-width info banner. */
+    @Serializable
+    data class StatusBannerInfo(
+        val data: StatusBannerInfoData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
     /** Full-width success confirmation banner. */
     @Serializable
     data class StatusBannerSuccess(
         val data: StatusBannerSuccessData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Full-width warning banner. */
+    @Serializable
+    data class StatusBannerWarning(
+        val data: StatusBannerWarningData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Full-width error banner. */
+    @Serializable
+    data class StatusBannerError(
+        val data: StatusBannerErrorData,
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
@@ -252,8 +300,14 @@ internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(
             "divider" -> AuiBlock.Divider.serializer()
             "stepper_horizontal" -> AuiBlock.StepperHorizontal.serializer()
             "progress_bar" -> AuiBlock.ProgressBar.serializer()
+            "badge_info" -> AuiBlock.BadgeInfo.serializer()
             "badge_success" -> AuiBlock.BadgeSuccess.serializer()
+            "badge_warning" -> AuiBlock.BadgeWarning.serializer()
+            "badge_error" -> AuiBlock.BadgeError.serializer()
+            "status_banner_info" -> AuiBlock.StatusBannerInfo.serializer()
             "status_banner_success" -> AuiBlock.StatusBannerSuccess.serializer()
+            "status_banner_warning" -> AuiBlock.StatusBannerWarning.serializer()
+            "status_banner_error" -> AuiBlock.StatusBannerError.serializer()
             else -> AuiBlock.Unknown.serializer()
         }
     }

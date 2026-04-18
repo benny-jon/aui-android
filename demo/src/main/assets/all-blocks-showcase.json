@@ -352,6 +352,17 @@
     }
   },
   {
+    "label": "badge_info",
+    "description": "Info badge with text",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "badge_info", "data": { "text": "New" } },
+        { "type": "text", "data": { "text": "Profile insights are now available in settings." } }
+      ]
+    }
+  },
+  {
     "label": "badge_success",
     "description": "Success badge with text",
     "aui": {
@@ -363,12 +374,64 @@
     }
   },
   {
+    "label": "badge_warning",
+    "description": "Warning badge with text",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "badge_warning", "data": { "text": "Low stock" } },
+        { "type": "text", "data": { "text": "Only 2 items left in your size." } }
+      ]
+    }
+  },
+  {
+    "label": "badge_error",
+    "description": "Error badge with text",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "badge_error", "data": { "text": "Offline" } },
+        { "type": "text", "data": { "text": "We'll retry when the connection is restored." } }
+      ]
+    }
+  },
+  {
+    "label": "status_banner_info",
+    "description": "Full-width info banner",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "status_banner_info", "data": { "text": "Heads up: we updated our privacy policy." } }
+      ]
+    }
+  },
+  {
     "label": "status_banner_success",
     "description": "Full-width success banner",
     "aui": {
       "display": "inline",
       "blocks": [
         { "type": "status_banner_success", "data": { "text": "Your changes have been saved successfully." } }
+      ]
+    }
+  },
+  {
+    "label": "status_banner_warning",
+    "description": "Full-width warning banner",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "status_banner_warning", "data": { "text": "Your session expires in 2 minutes." } }
+      ]
+    }
+  },
+  {
+    "label": "status_banner_error",
+    "description": "Full-width error banner",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "status_banner_error", "data": { "text": "Couldn't reach the server. Check your connection." } }
       ]
     }
   },

@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 /**
  * Color palette for an [AuiTheme].
@@ -11,6 +12,11 @@ import androidx.compose.ui.graphics.Color
  * All AUI components read colors exclusively from this class via [LocalAuiTheme].
  * Use [AuiColors.Default] for Material3-inspired defaults, or [AuiColors.fromMaterialTheme]
  * to derive colors from the host app's active [MaterialTheme].
+ *
+ * The four semantic severity quads ([info], [success], [warning], [error] plus
+ * `on*` / `*Container` / `on*Container`) are treated as semantic — the library picks
+ * stable light or dark values independent of the host's brand palette so severity is
+ * consistent across themes. Hosts can still override any individual token.
  */
 data class AuiColors(
     /** Brand/interactive primary color. */
@@ -38,6 +44,30 @@ data class AuiColors(
     val successContainer: Color = Color(0xFFB7F397),
     /** Content color on top of [successContainer]. */
     val onSuccessContainer: Color = Color(0xFF072100),
+    /** Info/neutral-emphasis foreground. */
+    val info: Color = Color(0xFF1F6FEB),
+    /** Content color on top of [info]. */
+    val onInfo: Color = Color(0xFFFFFFFF),
+    /** Tinted container surface for info states. */
+    val infoContainer: Color = Color(0xFFD6E4FF),
+    /** Content color on top of [infoContainer]. */
+    val onInfoContainer: Color = Color(0xFF001A41),
+    /** Warning/caution foreground. Defaults to a yellow-amber tuned for the container. */
+    val warning: Color = Color(0xFF6B5200),
+    /** Content color on top of [warning]. */
+    val onWarning: Color = Color(0xFFFFFFFF),
+    /** Tinted container surface for warning states. Defaults to Material Amber 200. */
+    val warningContainer: Color = Color(0xFFFFE082),
+    /** Content color on top of [warningContainer]. */
+    val onWarningContainer: Color = Color(0xFF221B00),
+    /** Error/destructive foreground. */
+    val error: Color = Color(0xFFBA1A1A),
+    /** Content color on top of [error]. */
+    val onError: Color = Color(0xFFFFFFFF),
+    /** Tinted container surface for error states. */
+    val errorContainer: Color = Color(0xFFFFDAD6),
+    /** Content color on top of [errorContainer]. */
+    val onErrorContainer: Color = Color(0xFF410002),
     /**
      * Default color for heading text.
      *
@@ -62,8 +92,34 @@ data class AuiColors(
     val captionColor: Color = onSurfaceVariant,
 ) {
     companion object {
-        /** Material3-inspired default color palette. */
+        /** Material3-inspired default color palette tuned for light surfaces. */
         val Default: AuiColors = AuiColors()
+
+        /**
+         * Default palette tuned for dark surfaces.
+         *
+         * Swaps the severity quads (info/success/warning/error) to dark-mode-appropriate
+         * tonal spots where the container is deep-saturated and the on-container text is
+         * a light pastel — mirroring the Material 3 container pattern for dark schemes.
+         */
+        val DefaultDark: AuiColors = AuiColors(
+            success = Color(0xFF9CD67D),
+            onSuccess = Color(0xFF0A3900),
+            successContainer = Color(0xFF1F5000),
+            onSuccessContainer = Color(0xFFB7F397),
+            info = Color(0xFFA6C8FF),
+            onInfo = Color(0xFF002E69),
+            infoContainer = Color(0xFF00458C),
+            onInfoContainer = Color(0xFFD6E4FF),
+            warning = Color(0xFFEBC343),
+            onWarning = Color(0xFF3A2D00),
+            warningContainer = Color(0xFF524100),
+            onWarningContainer = Color(0xFFFFE082),
+            error = Color(0xFFFFB4AB),
+            onError = Color(0xFF690005),
+            errorContainer = Color(0xFF93000A),
+            onErrorContainer = Color(0xFFFFDAD6),
+        )
 
         /**
          * Derives an [AuiColors] from the current [MaterialTheme] color scheme.
@@ -75,10 +131,18 @@ data class AuiColors(
         fun fromMaterialTheme() = fromColorScheme(MaterialTheme.colorScheme)
 
         /**
-         * Derives an [com.bennyjon.aui.compose.theme.AuiColors] from a color scheme.
+         * Derives an [AuiColors] from a color scheme.
+         *
+         * Brand colors (primary, surface, outline) come from [scheme]. Severity quads
+         * (info/success/warning/error) are always sourced from the library's stable
+         * semantic palettes so meaning is preserved across host themes: yellow stays
+         * yellow, red stays red. The library picks [Default] or [DefaultDark] severities
+         * by inspecting [scheme]'s surface luminance.
          */
-        fun fromColorScheme(scheme: ColorScheme) =
-            AuiColors(
+        fun fromColorScheme(scheme: ColorScheme): AuiColors {
+            val isDark = scheme.surface.luminance() < 0.5f
+            val severity = if (isDark) DefaultDark else Default
+            return AuiColors(
                 primary = scheme.primary,
                 onPrimary = scheme.onPrimary,
                 primaryContainer = scheme.primaryContainer,
@@ -88,13 +152,26 @@ data class AuiColors(
                 surfaceVariant = scheme.surfaceVariant,
                 onSurfaceVariant = scheme.onSurfaceVariant,
                 outline = scheme.outline,
-                success = scheme.tertiary,
-                onSuccess = scheme.onTertiary,
-                successContainer = scheme.tertiaryContainer,
-                onSuccessContainer = scheme.onTertiaryContainer,
+                success = severity.success,
+                onSuccess = severity.onSuccess,
+                successContainer = severity.successContainer,
+                onSuccessContainer = severity.onSuccessContainer,
+                info = severity.info,
+                onInfo = severity.onInfo,
+                infoContainer = severity.infoContainer,
+                onInfoContainer = severity.onInfoContainer,
+                warning = severity.warning,
+                onWarning = severity.onWarning,
+                warningContainer = severity.warningContainer,
+                onWarningContainer = severity.onWarningContainer,
+                error = severity.error,
+                onError = severity.onError,
+                errorContainer = severity.errorContainer,
+                onErrorContainer = severity.onErrorContainer,
                 headingColor = scheme.onSurface,
                 bodyColor = scheme.onSurface,
                 captionColor = scheme.onSurfaceVariant,
             )
+        }
     }
 }

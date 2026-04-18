@@ -24,8 +24,14 @@ import com.bennyjon.aui.compose.components.input.AuiRadioList
 import com.bennyjon.aui.compose.components.layout.AuiDivider
 import com.bennyjon.aui.compose.components.layout.AuiProgressBar
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
+import com.bennyjon.aui.compose.components.status.AuiBadgeError
+import com.bennyjon.aui.compose.components.status.AuiBadgeInfo
 import com.bennyjon.aui.compose.components.status.AuiBadgeSuccess
+import com.bennyjon.aui.compose.components.status.AuiBadgeWarning
+import com.bennyjon.aui.compose.components.status.AuiStatusBannerError
+import com.bennyjon.aui.compose.components.status.AuiStatusBannerInfo
 import com.bennyjon.aui.compose.components.status.AuiStatusBannerSuccess
+import com.bennyjon.aui.compose.components.status.AuiStatusBannerWarning
 import com.bennyjon.aui.compose.components.text.AuiCaption
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.components.text.AuiText
@@ -185,8 +191,14 @@ internal fun BlockRenderer(
                 is AuiBlock.Divider -> AuiDivider()
                 is AuiBlock.StepperHorizontal -> AuiStepperHorizontal(block = block)
                 is AuiBlock.ProgressBar -> AuiProgressBar(block = block)
+                is AuiBlock.BadgeInfo -> AuiBadgeInfo(block = block)
                 is AuiBlock.BadgeSuccess -> AuiBadgeSuccess(block = block)
+                is AuiBlock.BadgeWarning -> AuiBadgeWarning(block = block)
+                is AuiBlock.BadgeError -> AuiBadgeError(block = block)
+                is AuiBlock.StatusBannerInfo -> AuiStatusBannerInfo(block = block)
                 is AuiBlock.StatusBannerSuccess -> AuiStatusBannerSuccess(block = block)
+                is AuiBlock.StatusBannerWarning -> AuiStatusBannerWarning(block = block)
+                is AuiBlock.StatusBannerError -> AuiStatusBannerError(block = block)
                 is AuiBlock.Unknown -> {
                     val plugin = pluginRegistry.componentPlugin(block.type)
                     if (plugin != null) {

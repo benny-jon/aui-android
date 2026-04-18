@@ -43,7 +43,8 @@ class AuiCatalogPromptTest {
             "radio_list", "checkbox_list",
             "divider",
             "stepper_horizontal", "progress_bar",
-            "badge_success", "status_banner_success",
+            "badge_info", "badge_success", "badge_warning", "badge_error",
+            "status_banner_info", "status_banner_success", "status_banner_warning", "status_banner_error",
         )
         assertEquals(expected, AuiCatalogPrompt.ALL_COMPONENT_TYPES.toSet())
     }

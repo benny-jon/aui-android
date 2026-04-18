@@ -430,6 +430,50 @@ class AuiParserTest {
         assertNull(response.steps[1].label)
     }
 
+    // ── Status variants (info/warning/error) ─────────────────────────────────
+
+    @Test
+    fun `parse all four badge severity variants`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                { "type": "badge_info",    "data": { "text": "New" } },
+                { "type": "badge_success", "data": { "text": "Verified" } },
+                { "type": "badge_warning", "data": { "text": "Low stock" } },
+                { "type": "badge_error",   "data": { "text": "Offline" } }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertEquals(4, response.blocks.size)
+        assertEquals("New",        (response.blocks[0] as AuiBlock.BadgeInfo).data.text)
+        assertEquals("Verified",   (response.blocks[1] as AuiBlock.BadgeSuccess).data.text)
+        assertEquals("Low stock",  (response.blocks[2] as AuiBlock.BadgeWarning).data.text)
+        assertEquals("Offline",    (response.blocks[3] as AuiBlock.BadgeError).data.text)
+    }
+
+    @Test
+    fun `parse all four status banner severity variants`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                { "type": "status_banner_info",    "data": { "text": "FYI" } },
+                { "type": "status_banner_success", "data": { "text": "Done!" } },
+                { "type": "status_banner_warning", "data": { "text": "Careful" } },
+                { "type": "status_banner_error",   "data": { "text": "Failed" } }
+              ]
+            }
+        """.trimIndent()
+        val response = parser.parse(json)
+        assertEquals(4, response.blocks.size)
+        assertEquals("FYI",     (response.blocks[0] as AuiBlock.StatusBannerInfo).data.text)
+        assertEquals("Done!",   (response.blocks[1] as AuiBlock.StatusBannerSuccess).data.text)
+        assertEquals("Careful", (response.blocks[2] as AuiBlock.StatusBannerWarning).data.text)
+        assertEquals("Failed",  (response.blocks[3] as AuiBlock.StatusBannerError).data.text)
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun loadResource(path: String): String {

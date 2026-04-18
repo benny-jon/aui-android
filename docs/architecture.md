@@ -58,7 +58,7 @@ AuiRenderer(
 │  │  │  ├── Theme system (AuiTheme + fromMaterialTheme)│     │   │
 │  │  │  ├── Display router (inline / expanded / survey)│     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
-│  │  │  ├── Component catalog (18 built-ins + plugins) │     │   │
+│  │  │  ├── Component catalog (24 built-ins + plugins) │     │   │
 │  │  │  ├── AuiResponseCard (host-rendered stub)       │     │   │
 │  │  │  ├── Plugin system (component + action plugins) │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -179,8 +179,14 @@ sealed class AuiBlock {
     data class Divider(val data: DividerData = DividerData(), ...) : AuiBlock()
     data class StepperHorizontal(val data: StepperHorizontalData, ...) : AuiBlock()
     data class ProgressBar(val data: ProgressBarData, ...) : AuiBlock()
+    data class BadgeInfo(val data: BadgeInfoData, ...) : AuiBlock()
     data class BadgeSuccess(val data: BadgeSuccessData, ...) : AuiBlock()
+    data class BadgeWarning(val data: BadgeWarningData, ...) : AuiBlock()
+    data class BadgeError(val data: BadgeErrorData, ...) : AuiBlock()
+    data class StatusBannerInfo(val data: StatusBannerInfoData, ...) : AuiBlock()
     data class StatusBannerSuccess(val data: StatusBannerSuccessData, ...) : AuiBlock()
+    data class StatusBannerWarning(val data: StatusBannerWarningData, ...) : AuiBlock()
+    data class StatusBannerError(val data: StatusBannerErrorData, ...) : AuiBlock()
 
     // Fallback (plugin lookup + rendering)
     data class Unknown(val type: String, val rawData: JsonElement?, ...) : AuiBlock()
@@ -434,7 +440,7 @@ AuiRenderer(json = json, pluginRegistry = registry, onFeedback = { ... })
 
 ## Catalog Roadmap
 
-The built-in catalog is deliberately small right now (18 components — see
+The built-in catalog is deliberately small right now (24 components — see
 `AuiCatalogPrompt.ALL_COMPONENT_TYPES`). The types listed below are planned but
 **not yet implemented**; the spec at `spec/aui-spec-v1.md` already describes their
 JSON shapes. Hosts that need any of them today can ship them as
@@ -487,10 +493,6 @@ shipping a real assistant today.
 - `input_text_multi`, `input_email`, `input_phone`, `input_number`
 - `input_select`, `input_date`, `input_time`
 - `form_group` — grouped fields with a single submit button
-
-### Status signals
-- `badge_info`, `badge_warning`, `badge_error`
-- `status_banner_info`, `status_banner_warning`, `status_banner_error`
 
 When one of these lands in the library, remove it from the list above, add its type
 string to `AuiCatalogPrompt.ALL_COMPONENT_TYPES`, and register its branch in
@@ -566,7 +568,7 @@ aui/
 │       │   ├── text/                 # AuiText (Markdown), AuiHeading, AuiCaption
 │       │   ├── input/                # Buttons, quick replies, chips, inputs, selection rows
 │       │   ├── layout/               # AuiDivider, AuiProgressBar, AuiStepperHorizontal
-│       │   └── status/               # AuiBadgeSuccess, AuiStatusBannerSuccess
+│       │   └── status/               # AuiBadge{Info,Success,Warning,Error}, AuiStatusBanner{Info,Success,Warning,Error}
 │       ├── plugin/
 │       │   ├── AuiComponentPlugin.kt
 │       │   └── AuiPluginRegistryExtensions.kt
