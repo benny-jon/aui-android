@@ -419,7 +419,7 @@ Read CLAUDE.md and .planning/session-aui-text-markdown.md.
 
 ---
 
-## Session 27: OpenAiLlmClient
+## Session 29: OpenAiLlmClient
 
 ```
 Read CLAUDE.md and .planning/phase5-live-chat.md.
@@ -443,7 +443,7 @@ the abstraction leaks — refactor first.
 
 ---
 
-## Session 28: Polish + Documentation
+## Session 30: Polish + Documentation
 
 ```
 Read CLAUDE.md and .planning/phase5-live-chat.md.

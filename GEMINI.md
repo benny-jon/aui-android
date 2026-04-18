@@ -1,4 +1,4 @@
-# Claude Entry Point
+# Gemini Entry Point
 
 Authoritative project status now lives in [AGENTS.md](AGENTS.md).
 
