@@ -12,7 +12,7 @@ AUI parses the JSON and renders native Compose UI — cards, forms, chips, butto
 
 | AI-Generated Survey | All Blocks Showcase |
 |:---:|:---:|
-| The AI builds a multi-step survey from JSON and presents it as a native bottom sheet. Each step collects user input and the consolidated result is delivered to your app via a single callback. | A scrollable gallery of every built-in AUI component — text, cards, lists, inputs, status, media, and layout blocks — rendered from JSON in their inline, expanded, and survey display modes. Use it to preview the catalog, switch themes on the fly, and see how each block reacts to user interaction. |
+| The AI builds a multi-step survey from JSON. The library manages step navigation and consolidation; the demo hosts it in a bottom sheet, but hosts are free to pick any container. A single callback delivers the final answers to your app. | A scrollable gallery of every built-in AUI component — text, inputs, status, layout, and progress blocks — rendered from JSON across the three display modes. Use it to preview the catalog, switch themes on the fly, and see how each block reacts to user interaction. |
 | <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <img src="docs/assets/all-blocks-show-case.gif" width="300" /> |
 
 ## How It Works
@@ -49,7 +49,7 @@ The generated prompt tells the AI what components exist (buttons, chips, forms, 
 {
   "text": "Which feature should we build next?",
   "aui": {
-    "display": "expanded",
+    "display": "inline",
     "blocks": [
       { "type": "radio_list", "data": {
           "key": "feature",
@@ -167,37 +167,76 @@ Most LLM providers support this by marking the system prompt as cacheable:
 
 ## Display Levels
 
-The AI chooses how prominently to present each response:
+The AI chooses how prominently to present each response. The library itself renders
+`inline` and `expanded` identically — both signal the AI's **intent**. Hosts decide
+whether to surface `expanded` responses in a separate detail surface.
 
-| Level | When to use | Behavior |
-|-------|-------------|----------|
-| **expanded** | Quick info, status badges, polls, rich content, product cards | Full-width in the chat feed |
-| **survey** | Multi-step surveys, forms, bookings | Bottom sheet overlay with library-injected Back/Next/Submit |
+| Level | When to use | Library behavior |
+|-------|-------------|------------------|
+| **inline** | Quick replies, polls, short confirmations, single cards — anything that belongs in the chat flow. | Renders in place. Leading `text` / `heading` / `caption` blocks form the chat bubble; the rest render full-width below. |
+| **expanded** | 3+ rich cards, image galleries, comparisons, long-form content the user may want to study. | Renders identically to `inline`. Hosts may route it to a bottom sheet (narrow windows) or a side detail pane (wide windows) using the included [`AuiResponseCard`](#expanded-content) stub. |
+| **survey** | Multi-page structured input — 2+ questions, feedback forms, onboarding flows. | Flat content with library-injected Back / Next / Submit navigation, stepper indicator, and consolidated submission. The library does **not** wrap itself in a bottom sheet — hosts own the container. |
 
-## Handling Surveys
+## Expanded content
 
-Surveys open automatically and the library injects Back/Next/Submit navigation around
-each step. When the user submits or dismisses, `onFeedback` fires once with the
-consolidated result.
+For `expanded` responses, include `card_title` and `card_description` so the host can
+render a meaningful preview stub:
 
-**Important:** After `onFeedback` fires for a survey, set the AUI JSON to `null` so it
-doesn't re-open if the user scrolls back:
-
-```kotlin
-fun onAuiFeedback(messageId: String, feedback: AuiFeedback) {
-    // Mark survey as consumed
-    if (feedback.stepsTotal != null) {
-        markAuiConsumed(messageId)  // e.g., set auiJson = null
-    }
-
-    // Use the feedback however your app needs
-    addUserMessage(feedback.formattedEntries ?: "Submitted")
-    sendToAI(feedback)
+```json
+{
+  "display": "expanded",
+  "card_title": "Headphone picks",
+  "card_description": "Three top noise-cancelling models compared",
+  "blocks": [ ... ]
 }
 ```
 
-If the host app forgets to consume the survey, it won't crash or re-open — the composable
-is inert after the first submission (provided you use stable `LazyColumn` keys).
+AUI ships with `AuiResponseCard` — a tappable card stub for hosts that want to surface
+`expanded` (or dismissed `survey`) responses through a detail surface:
+
+```kotlin
+AuiResponseCard(
+    response = parsedResponse,
+    onClick = { activeMessageId = messageId },
+    isActive = messageId == activeMessageId,
+)
+```
+
+It reads `card_title` / `card_description` (falling back to the first heading, text, or
+`survey_title`) so the stub preview is always meaningful.
+
+The host decides what happens on tap: open a `ModalBottomSheet` on narrow windows, show the
+full `AuiRenderer` in a side pane on wide windows, or anything else. The library stays out
+of layout decisions.
+
+## Handling Surveys
+
+The library renders surveys as **flat content** — it manages step navigation and
+consolidates answers, but it does not provide a sheet or dialog. The host picks the
+container:
+
+```kotlin
+if (showSurveySheet) {
+    ModalBottomSheet(onDismissRequest = { showSurveySheet = false }) {
+        AuiRenderer(
+            response = surveyResponse,
+            onFeedback = { feedback ->
+                showSurveySheet = false
+                sendToAI(feedback)
+            },
+        )
+    }
+}
+```
+
+When the user taps the library-injected Submit button, `onFeedback` fires once with
+`stepsTotal != null`, `formattedEntries` containing the full Q+A summary, and `params`
+holding the merged key-value data plus `steps_total` / `steps_skipped`. Unanswered steps
+are simply excluded from `entries` — users can submit any subset.
+
+Host-driven dismissal (closing the sheet without Submit) is a host concern — the library
+emits no feedback for it. You decide whether a dismissed survey stays re-openable in the
+chat (via `AuiResponseCard`) or is discarded.
 
 ## Theming
 
@@ -309,19 +348,21 @@ val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 
 ## Component Catalog
 
-18 component types across these categories:
+18 built-in component types across these categories:
 
 | Category | Components |
 |----------|-----------|
 | **Display** | `text`, `heading`, `caption` |
-| **Input** | `chip_select_single`, `chip_select_multi`, `button_primary`, `button_secondary`, `quick_replies`, `input_rating_stars`, `input_text_single`, `input_slider`, `radio_list`, `checkbox_list` |
+| **Input** | `button_primary`, `button_secondary`, `quick_replies`, `chip_select_single`, `chip_select_multi`, `radio_list`, `checkbox_list`, `input_text_single`, `input_slider`, `input_rating_stars` |
 | **Layout** | `divider` |
 | **Progress** | `stepper_horizontal`, `progress_bar` |
 | **Status** | `badge_success`, `status_banner_success` |
 
 The `text` component renders inline Markdown: `**bold**`, `*italic*`, `` `code` ``, and `[links](url)`. Structural Markdown (headings, lists, etc.) uses dedicated block types instead.
 
-Unknown component types are silently skipped (never crash). You can handle them with `onUnknownBlock`.
+Need something outside the catalog (e.g. product cards, maps, weather widgets)? Register
+an `AuiComponentPlugin` — see [Customization](#customization). Unknown component types are
+silently skipped (never crash). You can observe them via `onUnknownBlock`.
 
 ## Modules
 
@@ -337,15 +378,16 @@ Unknown component types are silently skipped (never crash). You can handle them 
 
 The library exposes a deliberately small surface:
 
-- **`AuiRenderer`** — The main composable. Two overloads: `(json: String, ...)` and `(response: AuiResponse, ...)`.
-- **`AuiTheme`** — Theme data class with `AuiColors`, `AuiTypography`, `AuiSpacing`, `AuiShapes`.
+- **`AuiRenderer`** — The main composable. Two overloads: `(json: String, ...)` and `(response: AuiResponse, ...)`. Handles `inline`, `expanded`, and `survey` responses.
+- **`AuiResponseCard`** — Optional host-rendered card stub for surfacing `expanded` or dismissed `survey` responses through a detail surface. Uses `card_title` / `card_description`, falling back to the first heading / text block or survey title.
+- **`AuiTheme`** — Theme data class with `AuiColors`, `AuiTypography`, `AuiSpacing`, `AuiShapes`. Includes `AuiTheme.fromMaterialTheme()` for zero-config MaterialTheme bridging.
 - **`AuiFeedback`** — Callback data: `action`, `params`, `formattedEntries`, `entries`, `stepsSkipped`, `stepsTotal`.
-- **`AuiCatalogPrompt`** — Generates AI system prompt text from the component catalog.
+- **`AuiCatalogPrompt`** — Generates the AI system prompt text from the component catalog. Tune via `AuiPromptConfig` (aggressiveness + custom examples).
 - **`AuiParser`** — JSON parser (used internally by `AuiRenderer`, but available if you need pre-parsing).
-- **`AuiResponse`** / **`AuiBlock`** — Data models for parsed responses.
+- **`AuiResponse`** / **`AuiBlock`** / **`AuiStep`** — Data models for parsed responses.
 - **`AuiPluginRegistry`** — Register and look up plugins. Pass to both renderer and prompt generator.
 - **`AuiComponentPlugin<T>`** — Add or override component types with custom Compose rendering.
-- **`AuiActionPlugin`** — Handle named actions (navigation, URLs, etc.) with chain-of-responsibility routing.
+- **`AuiActionPlugin`** — Handle named actions (navigation, URLs, etc.) with chain-of-responsibility routing. Mark `isReadOnly = true` so the renderer keeps pass-through actions enabled even after a collecting block has been spent.
 
 Everything else is `internal`.
 

@@ -14,9 +14,9 @@ It's designed for AI chat interfaces but works anywhere you need server-driven U
 ```kotlin
 // That's it. This is the integration.
 AuiRenderer(
-    json = """{ "display": "expanded", "blocks": [...] }""",
+    json = """{ "display": "inline", "blocks": [...] }""",
     theme = myAppTheme,
-    onFeedback = { feedback -> 
+    onFeedback = { feedback ->
         // User tapped something — handle it however you want
         sendToAI(feedback)
     }
@@ -55,10 +55,12 @@ AuiRenderer(
 │  │  │  aui-compose (library)                          │     │   │
 │  │  │                                                 │     │   │
 │  │  │  AuiRenderer composable                         │     │   │
-│  │  │  ├── Theme system (AuiTheme)                    │     │   │
-│  │  │  ├── Display router (inline/expanded/survey)     │     │   │
+│  │  │  ├── Theme system (AuiTheme + fromMaterialTheme)│     │   │
+│  │  │  ├── Display router (inline / expanded / survey)│     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
-│  │  │  ├── Component catalog (50+ composables)        │     │   │
+│  │  │  ├── Component catalog (18 built-ins + plugins) │     │   │
+│  │  │  ├── AuiResponseCard (host-rendered stub)       │     │   │
+│  │  │  ├── Plugin system (component + action plugins) │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
 │  │  │                                                 │     │   │
 │  │  │  Depends on:                                    │     │   │
@@ -138,27 +140,50 @@ sealed class AuiParseResult<T> {
 
 data class AuiResponse(
     val display: AuiDisplay,
-    val blocks: List<AuiBlock>,
+    val blocks: List<AuiBlock> = emptyList(),
+    val steps: List<AuiStep> = emptyList(),
     val surveyTitle: String? = null,
-    val steps: List<AuiStep>? = null
+    val cardTitle: String? = null,        // host-rendered stub title (EXPANDED)
+    val cardDescription: String? = null,  // host-rendered stub subtitle (EXPANDED)
 )
 
 enum class AuiDisplay { INLINE, EXPANDED, SURVEY }
 // Library renders INLINE and EXPANDED identically. Hosts may surface EXPANDED responses
-// via a separate detail surface (card stub → bottom sheet on narrow windows, side detail
-// pane on wide windows ≥ 600 dp). Use card_title / card_description on AuiResponse to
-// supply preview text for the host-rendered stub.
+// via a separate detail surface (AuiResponseCard stub → bottom sheet on narrow windows,
+// side detail pane on wide windows). Use card_title / card_description on AuiResponse
+// to supply preview text for the host-rendered stub.
+// SURVEY renders as flat content — the library manages step navigation and consolidation
+// but does NOT wrap itself in a sheet. Hosts own the container.
 
 sealed class AuiBlock {
-    abstract val id: String?
     abstract val feedback: AuiFeedback?
-    
+
+    // Display
     data class Text(val data: TextData, ...) : AuiBlock()
     data class Heading(val data: HeadingData, ...) : AuiBlock()
-    data class CardBasic(val data: CardBasicData, ...) : AuiBlock()
+    data class Caption(val data: CaptionData, ...) : AuiBlock()
+
+    // Input (implement AuiInputBlock where applicable)
+    data class ButtonPrimary(val data: ButtonPrimaryData, ...) : AuiBlock()
+    data class ButtonSecondary(val data: ButtonSecondaryData, ...) : AuiBlock()
     data class QuickReplies(val data: QuickRepliesData, ...) : AuiBlock()
-    data class Unknown(val type: String, val rawJson: String, ...) : AuiBlock()
-    // ... all component types
+    data class ChipSelectSingle(val data: ChipSelectSingleData, ...) : AuiBlock(), AuiInputBlock
+    data class ChipSelectMulti(val data: ChipSelectMultiData, ...) : AuiBlock(), AuiInputBlock
+    data class RadioList(val data: RadioListData, ...) : AuiBlock(), AuiInputBlock
+    data class CheckboxList(val data: CheckboxListData, ...) : AuiBlock(), AuiInputBlock
+    data class InputTextSingle(val data: InputTextSingleData, ...) : AuiBlock(), AuiInputBlock
+    data class InputSlider(val data: InputSliderData, ...) : AuiBlock(), AuiInputBlock
+    data class InputRatingStars(val data: InputRatingStarsData, ...) : AuiBlock(), AuiInputBlock
+
+    // Layout / Progress / Status
+    data class Divider(val data: DividerData = DividerData(), ...) : AuiBlock()
+    data class StepperHorizontal(val data: StepperHorizontalData, ...) : AuiBlock()
+    data class ProgressBar(val data: ProgressBarData, ...) : AuiBlock()
+    data class BadgeSuccess(val data: BadgeSuccessData, ...) : AuiBlock()
+    data class StatusBannerSuccess(val data: StatusBannerSuccessData, ...) : AuiBlock()
+
+    // Fallback (plugin lookup + rendering)
+    data class Unknown(val type: String, val rawData: JsonElement?, ...) : AuiBlock()
 }
 
 data class AuiFeedback(
@@ -179,27 +204,42 @@ data class AuiEntry(
 // ── Component Data ───────────────────────────────────────
 // Each component type has a simple data class:
 
-data class TextData(val text: String)
+data class TextData(val text: String)                        // supports inline Markdown
 data class HeadingData(val text: String)
-data class CardBasicData(val title: String, val subtitle: String? = null)
+data class CaptionData(val text: String)
 data class QuickRepliesData(val options: List<QuickReplyOption>)
 data class QuickReplyOption(val label: String, val feedback: AuiFeedback? = null)
-// ... etc for every component
+// ... one per catalog type (see AuiBlockSerializer for the complete mapping)
 
 // ── Input Data Contract ─────────────────────────────────
-// All user-input data classes implement this interface,
-// giving the feedback pipeline a uniform way to discover
-// the input's registry key and human-readable label.
+// User-input data classes implement this interface so the feedback pipeline can
+// discover each input's registry key and human-readable label without reflection.
 
 interface AuiInputData {
     val key: String        // identifies the input's value in feedback params
     val label: String?     // used as the entry question in feedback summaries
 }
 
-// Implemented by: ChipSelectSingleData, ChipSelectMultiData,
-// InputTextSingleData, InputTextMultiData, InputEmailData,
-// InputPhoneData, InputNumberData, InputSelectData, InputDateData,
-// InputTimeData, InputSliderData, InputRatingStarsData
+// Implemented by: ChipSelectSingleData, ChipSelectMultiData, RadioListData,
+// CheckboxListData, InputTextSingleData, InputSliderData, InputRatingStarsData.
+
+// ── Plugin System ────────────────────────────────────────
+// AuiCore owns plugin registration; aui-compose contributes the Composable half.
+
+class AuiPluginRegistry {
+    fun register(plugin: AuiPlugin): AuiPluginRegistry
+    fun registerAll(vararg plugins: AuiPlugin): AuiPluginRegistry
+    fun allPlugins(): List<AuiPlugin>
+    fun allActionPlugins(): List<AuiActionPlugin>
+    fun actionPlugin(action: String): AuiActionPlugin?
+    companion object { val Empty: AuiPluginRegistry }
+}
+
+abstract class AuiActionPlugin : AuiPlugin() {
+    abstract val action: String
+    open val isReadOnly: Boolean = false   // true → stays enabled after a block is spent
+    abstract fun handle(feedback: AuiFeedback): Boolean
+}
 ```
 
 ### aui-compose — Public API
@@ -209,98 +249,70 @@ interface AuiInputData {
 
 @Composable
 fun AuiRenderer(
-    response: AuiResponse,
-    modifier: Modifier = Modifier,
-    theme: AuiTheme = AuiTheme.Default,
-    onFeedback: (AuiFeedback) -> Unit = {},
-    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null
-)
-
-/** Convenience: parse + render in one call */
-@Composable
-fun AuiRenderer(
     json: String,
     modifier: Modifier = Modifier,
     theme: AuiTheme = AuiTheme.Default,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
+    collectingFeedbackEnabled: Boolean = true,
     onParseError: ((String) -> Unit)? = null,
-    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null
+    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
+)
+
+@Composable
+fun AuiRenderer(
+    response: AuiResponse,
+    modifier: Modifier = Modifier,
+    theme: AuiTheme = AuiTheme.Default,
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+    onFeedback: (AuiFeedback) -> Unit = {},
+    collectingFeedbackEnabled: Boolean = true,
+)
+
+// ── Host-rendered stub ───────────────────────────────────
+// Opt-in card stub for surfacing EXPANDED or dismissed SURVEY responses in chat.
+
+@Composable
+fun AuiResponseCard(
+    response: AuiResponse,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    theme: AuiTheme = AuiTheme.Default,
+    isActive: Boolean = false,
 )
 
 // ── Theme ────────────────────────────────────────────────
 
 data class AuiTheme(
-    val colors: AuiColors,
-    val typography: AuiTypography,
-    val spacing: AuiSpacing,
-    val shapes: AuiShapes
+    val colors: AuiColors = AuiColors.Default,
+    val typography: AuiTypography = AuiTypography.Default,
+    val spacing: AuiSpacing = AuiSpacing.Default,
+    val shapes: AuiShapes = AuiShapes.Default,
 ) {
     companion object {
-        val Default: AuiTheme  // Material-like defaults
-        
-        /** Create an AuiTheme from your existing MaterialTheme */
-        @Composable
-        fun fromMaterialTheme(): AuiTheme
+        val Default: AuiTheme
+        @Composable fun fromMaterialTheme(): AuiTheme
     }
 }
 
-data class AuiColors(
-    val primary: Color,
-    val onPrimary: Color,
-    val secondary: Color,
-    val onSecondary: Color,
-    val surface: Color,
-    val onSurface: Color,
-    val background: Color,
-    val onBackground: Color,
-    val error: Color,
-    val onError: Color,
-    val success: Color,
-    val onSuccess: Color,
-    val warning: Color,
-    val onWarning: Color,
-    val muted: Color,
-    val outline: Color,
-    val divider: Color
-)
+// AuiColors.fromMaterialTheme(), AuiTypography.fromMaterialTheme(),
+// AuiShapes.fromMaterialTheme() are also exposed for piecewise bridging.
 
-data class AuiTypography(
-    val heading: TextStyle,
-    val headingSmall: TextStyle,
-    val body: TextStyle,
-    val bodySecondary: TextStyle,
-    val caption: TextStyle,
-    val label: TextStyle,
-    val button: TextStyle,
-    val code: TextStyle
-)
+@Composable
+fun AuiThemeProvider(theme: AuiTheme = AuiTheme.Default, content: @Composable () -> Unit)
 
-data class AuiSpacing(
-    val xs: Dp,    // default 4.dp
-    val s: Dp,     // default 8.dp
-    val m: Dp,     // default 16.dp
-    val l: Dp,     // default 24.dp
-    val xl: Dp,    // default 32.dp
-    val xxl: Dp,   // default 48.dp
-    val blockSpacing: Dp,           // default 12.dp — vertical gap between sibling blocks
-    val sectionHeaderTopSpacing: Dp // default 8.dp — extra top padding above section_header
-)
+val LocalAuiTheme: ProvidableCompositionLocal<AuiTheme>
 
-data class AuiShapes(
-    val small: Shape,     // default RoundedCornerShape(8.dp)
-    val medium: Shape,    // default RoundedCornerShape(12.dp)
-    val large: Shape,     // default RoundedCornerShape(16.dp)
-    val pill: Shape       // default RoundedCornerShape(50)
-)
+// ── Plugin System (Compose half) ─────────────────────────
 
-// ── Component Registry (for extensibility) ───────────────
-
-object AuiComponentRegistry {
-    /** Register a custom component renderer for a type */
-    fun register(type: String, renderer: @Composable (AuiBlock, AuiFeedback?) -> Unit)
-    
-    /** Unregister a custom component */
-    fun unregister(type: String)
+abstract class AuiComponentPlugin<T : Any> : AuiPlugin() {
+    abstract override val componentType: String
+    abstract val dataSerializer: KSerializer<T>
+    @Composable abstract fun Render(
+        data: T,
+        onFeedback: (() -> Unit)?,
+        modifier: Modifier,
+    )
 }
 ```
 
@@ -420,191 +432,167 @@ AuiRenderer(json = json, pluginRegistry = registry, onFeedback = { ... })
 
 ---
 
+## Catalog Roadmap
+
+The built-in catalog is deliberately small right now (18 components — see
+`AuiCatalogPrompt.ALL_COMPONENT_TYPES`). The types listed below are planned but
+**not yet implemented**; the spec at `spec/aui-spec-v1.md` already describes their
+JSON shapes. Hosts that need any of them today can ship them as
+[`AuiComponentPlugin`](#with-custom-components-plugin-system)s and submit upstream
+once the API settles.
+
+Grouped roughly by the order we expect to land them.
+
+### Priority wishlist
+
+Top 10 components that would unlock the most value across general AI-chat use cases,
+regardless of domain — cross-cutting primitives we'd reach for first if we were
+shipping a real assistant today.
+
+1. `code_block` — syntax-highlighted code with copy button. Daily use across every coding / devtool chat.
+2. `collapsible` — "show more / less" wrapper. Solves length-vs-depth everywhere: long explanations, optional detail, transcripts.
+3. `chart` (bar / line / donut) — data is universal; even a crude native chart beats prose + numbers.
+4. `tabs` — multiple views of the same topic without bloating the response (e.g. "Summary / Pros / Cons").
+5. `key_value_list` — structured display primitive for specs, metadata, receipts, any "field: value" layout.
+6. `quiz_card` — single-question quiz with feedback/scoring. Killer feature for learning platforms.
+7. `table_simple` — rows × columns. Basic but conspicuously missing today; painful to fake with lists.
+8. `callout` (info / warning / tip) — tone and emphasis inside a response without derailing the flow.
+9. `video_player` with timestamps — media integration; timestamps let the AI deep-link to moments.
+10. `card_carousel` — browsable recommendations (wider cousin of `horizontal_scroll_cards`).
+
+### Text & rich content
+- `rich_text` — styled spans (bold/italic/code/underline/strike) on top of `text`
+- `section_header` — section title with optional trailing action link
+- `loading` — in-flow loading indicator with optional message
+
+### Cards
+- `card_basic`, `card_basic_icon`
+- `card_image_top`, `card_image_left`
+- `card_product_vertical`, `card_product_horizontal`
+- `card_profile`, `card_stat`, `card_event`
+- `card_order_tracking`, `card_quote`, `card_code`
+- `link_preview`
+
+### Lists
+- `list_simple`, `list_icon`, `list_avatar`
+- `list_numbered`, `list_checklist`
+- `horizontal_scroll_cards` — the one explicit nesting point in the spec
+
+### Media
+- `image_single`, `image_gallery`, `map_static`
+
+### Buttons & form inputs
+- `button_ghost`, `button_danger`
+- `button_row_primary_secondary`, `button_row_primary_ghost`
+- `input_text_multi`, `input_email`, `input_phone`, `input_number`
+- `input_select`, `input_date`, `input_time`
+- `form_group` — grouped fields with a single submit button
+
+### Status signals
+- `badge_info`, `badge_warning`, `badge_error`
+- `status_banner_info`, `status_banner_warning`, `status_banner_error`
+
+When one of these lands in the library, remove it from the list above, add its type
+string to `AuiCatalogPrompt.ALL_COMPONENT_TYPES`, and register its branch in
+`AuiBlockSerializer.selectDeserializer` — the catalog prompt and JSON parser pick
+it up automatically from there.
+
+---
+
 ## Repository Structure
 
 ```
 aui/
 ├── README.md                         # Project overview, quick start
 ├── LICENSE                           # Apache 2.0
-├── CONTRIBUTING.md                   # Contribution guidelines
-├── CHANGELOG.md                      # Version history
-├── CODE_OF_CONDUCT.md
 │
 ├── spec/                             # The AUI specification (format docs)
-│   ├── README.md                     # Spec overview
-│   ├── aui-spec-v1.md               # Full format specification
-│   ├── schema/
-│   │   └── aui-response.schema.json # JSON Schema for validation
-│   └── examples/                     # Example JSON files
-│       ├── inline-simple.json
-│       ├── inline-badges.json
-│       ├── expanded-products.json
-│       ├── expanded-restaurants.json
-│       ├── survey-booking.json
-│       ├── survey-form.json
-│       └── full-conversation.json    # Multi-turn example
+│   ├── aui-spec-v1.md                # Full format specification
+│   ├── schema/                       # JSON Schema for validation
+│   └── examples/                     # Example JSON responses
+│       ├── poll-inline-yes-no.json
+│       ├── poll-inline-rating.json
+│       ├── poll-simple.json
+│       ├── poll-confirmation.json
+│       ├── poll-expanded-survey.json
+│       ├── poll-expanded-survey-v2.json
+│       ├── poll-survey-flow.json
+│       ├── poll-survey-radio-v2.json
+│       └── plugin-showcase.json
 │
-├── aui-core/                         # Kotlin library: models + parser
-│   ├── build.gradle.kts
-│   └── src/
-│       ├── main/kotlin/com/bennyjon/aui/core/
-│       │   ├── AuiParser.kt
-│       │   ├── AuiParseResult.kt
-│       │   ├── model/
-│       │   │   ├── AuiResponse.kt
-│       │   │   ├── AuiDisplay.kt
-│       │   │   ├── AuiBlock.kt       # Sealed class
-│       │   │   ├── AuiFeedback.kt
-│       │   │   └── data/             # Component data classes
-│       │   │       ├── TextData.kt
-│       │   │       ├── HeadingData.kt
-│       │   │       ├── CardBasicData.kt
-│       │   │       ├── CardBasicIconData.kt
-│       │   │       ├── CardImageLeftData.kt
-│       │   │       ├── ListSimpleData.kt
-│       │   │       ├── ListIconData.kt
-│       │   │       ├── ButtonData.kt
-│       │   │       ├── QuickRepliesData.kt
-│       │   │       ├── AuiInputData.kt        # Shared interface for input data classes
-│       │   │       ├── ChipSelectData.kt
-│       │   │       ├── FormGroupData.kt
-│       │   │       └── ... (one per component type)
-│       │   └── validation/
-│       │       └── AuiValidator.kt    # Optional schema validation
-│       └── test/kotlin/com/bennyjon/aui/core/
-│           ├── AuiParserTest.kt
-│           ├── AuiParserEdgeCasesTest.kt
-│           └── model/
-│               └── AuiBlockSerializationTest.kt
+├── aui-core/                         # Pure-Kotlin: models + parser + prompt
+│   └── src/main/java/com/bennyjon/aui/core/
+│       ├── AuiParser.kt
+│       ├── AuiCatalogPrompt.kt       # Generated AI system prompt (+ AuiPromptConfig)
+│       ├── model/
+│       │   ├── AuiResponse.kt
+│       │   ├── AuiDisplay.kt
+│       │   ├── AuiBlock.kt           # Sealed class + polymorphic serializer
+│       │   ├── AuiFeedback.kt
+│       │   ├── AuiEntry.kt
+│       │   ├── AuiStep.kt
+│       │   └── data/                 # One file per data-class family
+│       │       ├── AuiInputData.kt   # Shared interface
+│       │       ├── ButtonData.kt
+│       │       ├── ChipData.kt
+│       │       ├── DisplayData.kt    # Text / Heading / Caption
+│       │       ├── InputData.kt      # Text / Slider / RatingStars
+│       │       ├── LayoutData.kt     # Divider
+│       │       ├── ProgressData.kt   # Stepper / ProgressBar
+│       │       ├── QuickRepliesData.kt
+│       │       ├── SelectionListData.kt  # Radio / Checkbox
+│       │       └── StatusData.kt
+│       └── plugin/
+│           ├── AuiPlugin.kt
+│           ├── AuiActionPlugin.kt    # isReadOnly + handle()
+│           └── AuiPluginRegistry.kt
 │
-├── aui-compose/                      # Compose renderer library
-│   ├── build.gradle.kts
-│   └── src/
-│       ├── main/kotlin/com/bennyjon/aui/compose/
-│       │   ├── AuiRenderer.kt        # Main public composable
-│       │   ├── AuiComponentRegistry.kt
-│       │   │
-│       │   ├── theme/
-│       │   │   ├── AuiTheme.kt       # Theme data class + defaults
-│       │   │   ├── AuiColors.kt
-│       │   │   ├── AuiTypography.kt
-│       │   │   ├── AuiSpacing.kt
-│       │   │   ├── AuiShapes.kt
-│       │   │   └── MaterialThemeAdapter.kt  # fromMaterialTheme()
-│       │   │
-│       │   ├── display/
-│       │   │   ├── DisplayRouter.kt   # Routes to expanded/survey
-│       │   │   ├── AuiResponseCard.kt # Card stub hosts drop into chat for EXPANDED/SURVEY
-│       │   │   └── AuiSurveyContent.kt # Multi-step survey content (host-owned container)
-│       │   │
-│       │   ├── components/            # One file per component
-│       │   │   ├── text/
-│       │   │   │   ├── AuiText.kt
-│       │   │   │   ├── AuiHeading.kt
-│       │   │   │   ├── AuiCaption.kt
-│       │   │   │   └── AuiRichText.kt
-│       │   │   ├── cards/
-│       │   │   │   ├── AuiCardBasic.kt
-│       │   │   │   ├── AuiCardBasicIcon.kt
-│       │   │   │   ├── AuiCardImageTop.kt
-│       │   │   │   ├── AuiCardImageLeft.kt
-│       │   │   │   ├── AuiCardProductVertical.kt
-│       │   │   │   ├── AuiCardProductHorizontal.kt
-│       │   │   │   ├── AuiCardProfile.kt
-│       │   │   │   ├── AuiCardStat.kt
-│       │   │   │   ├── AuiCardEvent.kt
-│       │   │   │   ├── AuiCardOrderTracking.kt
-│       │   │   │   ├── AuiCardQuote.kt
-│       │   │   │   └── AuiCardCode.kt
-│       │   │   ├── lists/
-│       │   │   │   ├── AuiListSimple.kt
-│       │   │   │   ├── AuiListIcon.kt
-│       │   │   │   ├── AuiListAvatar.kt
-│       │   │   │   ├── AuiListNumbered.kt
-│       │   │   │   ├── AuiListChecklist.kt
-│       │   │   │   └── AuiHorizontalScrollCards.kt
-│       │   │   ├── input/
-│       │   │   │   ├── AuiButtonPrimary.kt
-│       │   │   │   ├── AuiButtonSecondary.kt
-│       │   │   │   ├── AuiButtonGhost.kt
-│       │   │   │   ├── AuiButtonDanger.kt
-│       │   │   │   ├── AuiButtonRowPrimarySecondary.kt
-│       │   │   │   ├── AuiButtonRowPrimaryGhost.kt
-│       │   │   │   ├── AuiQuickReplies.kt
-│       │   │   │   ├── AuiChipSelectSingle.kt
-│       │   │   │   ├── AuiChipSelectMulti.kt
-│       │   │   │   ├── AuiInputTextSingle.kt
-│       │   │   │   ├── AuiInputTextMulti.kt
-│       │   │   │   ├── AuiInputEmail.kt
-│       │   │   │   ├── AuiInputPhone.kt
-│       │   │   │   ├── AuiInputNumber.kt
-│       │   │   │   ├── AuiInputSelect.kt
-│       │   │   │   ├── AuiInputDate.kt
-│       │   │   │   ├── AuiInputTime.kt
-│       │   │   │   ├── AuiInputSlider.kt
-│       │   │   │   ├── AuiInputRatingStars.kt
-│       │   │   │   └── AuiFormGroup.kt
-│       │   │   ├── status/
-│       │   │   │   ├── AuiBadgeInfo.kt
-│       │   │   │   ├── AuiBadgeSuccess.kt
-│       │   │   │   ├── AuiBadgeWarning.kt
-│       │   │   │   ├── AuiBadgeError.kt
-│       │   │   │   ├── AuiStatusBannerInfo.kt
-│       │   │   │   ├── AuiStatusBannerSuccess.kt
-│       │   │   │   ├── AuiStatusBannerWarning.kt
-│       │   │   │   ├── AuiStatusBannerError.kt
-│       │   │   │   ├── AuiStepperHorizontal.kt
-│       │   │   │   └── AuiProgressBar.kt
-│       │   │   ├── media/
-│       │   │   │   ├── AuiImageSingle.kt
-│       │   │   │   ├── AuiImageGallery.kt
-│       │   │   │   └── AuiMapStatic.kt
-│       │   │   └── layout/
-│       │   │       ├── AuiDivider.kt
-│       │   │       ├── AuiSectionHeader.kt
-│       │   │       └── AuiLoading.kt
-│       │   │
-│       │   └── internal/              # Not public API
-│       │       ├── BlockRenderer.kt   # type → composable routing; builds AuiEntry list from heading→input pairs
-│       │       ├── AuiValueRegistry.kt # shared input value state across a BlockRenderer
-│       │       └── FeedbackModifier.kt # clickable + ripple for feedback
-│       │
-│       └── test/kotlin/com/bennyjon/aui/compose/
-│           ├── AuiRendererTest.kt
-│           ├── display/
-│           │   └── AuiSurveyContentUiTest.kt
-│           └── components/
-│               └── ... (snapshot tests per component)
+├── aui-compose/                      # Compose renderer
+│   └── src/main/java/com/bennyjon/aui/compose/
+│       ├── AuiRenderer.kt            # Public composable (2 overloads)
+│       ├── theme/
+│       │   ├── AuiTheme.kt           # + AuiThemeProvider, LocalAuiTheme
+│       │   ├── AuiColors.kt          # + fromMaterialTheme()
+│       │   ├── AuiContentColors.kt
+│       │   ├── AuiTypography.kt      # + fromMaterialTheme()
+│       │   ├── AuiSpacing.kt
+│       │   └── AuiShapes.kt          # + fromMaterialTheme()
+│       ├── display/
+│       │   ├── DisplayRouter.kt      # Routes response → BlockRenderer or AuiSurveyContent
+│       │   ├── AuiResponseCard.kt    # Host-rendered stub (EXPANDED / SURVEY)
+│       │   ├── AuiSurveyContent.kt   # Flat multi-step survey — host owns container
+│       │   └── SurveyTestTags.kt
+│       ├── components/
+│       │   ├── text/                 # AuiText (Markdown), AuiHeading, AuiCaption
+│       │   ├── input/                # Buttons, quick replies, chips, inputs, selection rows
+│       │   ├── layout/               # AuiDivider, AuiProgressBar, AuiStepperHorizontal
+│       │   └── status/               # AuiBadgeSuccess, AuiStatusBannerSuccess
+│       ├── plugin/
+│       │   ├── AuiComponentPlugin.kt
+│       │   └── AuiPluginRegistryExtensions.kt
+│       ├── text/
+│       │   └── InlineMarkdown.kt     # AnnotatedString parser for AuiText
+│       └── internal/
+│           ├── BlockRenderer.kt      # type → composable routing + entries builder
+│           └── AuiValueRegistry.kt   # shared input-value state across a BlockRenderer
 │
-├── demo/                             # Sample app (NOT part of library)
-│   ├── build.gradle.kts
+├── demo/                             # Sample chat app (NOT part of the library)
 │   └── src/main/
-│       ├── kotlin/com/bennyjon/aui/demo/
-│       │   ├── MainActivity.kt
-│       │   ├── ChatScreen.kt
-│       │   ├── ChatViewModel.kt
-│       │   ├── ChatMessage.kt
-│       │   ├── ai/
-│       │   │   ├── AiChatClient.kt         # Interface
-│       │   │   ├── ClaudeChatClient.kt      # Claude implementation
-│       │   │   ├── HardcodedChatClient.kt   # For testing
-│       │   │   └── SystemPrompt.kt          # AUI catalog manifest
-│       │   └── samples/
-│       │       └── SampleResponses.kt       # Hardcoded JSON samples
-│       └── res/
-│           └── ...
+│       └── java/com/bennyjon/aui/demo/
+│           ├── MainActivity.kt
+│           ├── home/                 # Demo home + showcase entry points
+│           ├── livechat/             # Live chat screen / ViewModel / theme switcher
+│           ├── allblocks/            # All-blocks showcase
+│           ├── data/
+│           │   ├── llm/              # FakeLlmClient, ClaudeLlmClient, LlmClientFactory
+│           │   └── chat/             # Room-backed repository (provider-agnostic schema)
+│           └── plugins/              # OpenUrlPlugin, ToastNavigatePlugin, FunFactPlugin
 │
-├── docs/                             # Documentation site content
-│   ├── getting-started.md
-│   ├── theming.md
-│   ├── custom-components.md
-│   ├── display-levels.md
-│   ├── feedback-system.md
-│   ├── ai-integration-guide.md       # How to wire up any AI provider
-│   └── migration-from-a2ui.md        # For people coming from A2UI
+├── docs/
+│   ├── architecture.md               # This file
+│   └── assets/                       # README gifs
 │
-└── gradle/
-    └── libs.versions.toml            # Version catalog
+└── gradle/libs.versions.toml         # Version catalog
 ```
 
 ---
@@ -627,9 +615,9 @@ The AUI JSON spec version is separate from the library version:
 ### Forward Compatibility
 
 The library MUST handle unknown component types gracefully:
-- Unknown `type` → `AuiBlock.Unknown` → skipped in rendering (or custom handler)
+- Unknown `type` → `AuiBlock.Unknown` → the renderer looks up the plugin registry first, then skips with an `onUnknownBlock` callback if unmatched
 - Unknown fields in known types → ignored (JSON parser configured to ignore unknowns)
-- Unknown `display` value → falls back to `expanded`
+- Missing / unknown `display` value → parse fails (handled via `onParseError`); hosts decide how to surface
 - This allows newer AI models to use newer components without crashing older clients
 
 ### Backward Compatibility

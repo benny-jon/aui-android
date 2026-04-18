@@ -4,6 +4,14 @@
 > inside a chat conversation — at three levels of prominence.  
 > Rendered natively via Jetpack Compose (Android) and SwiftUI (iOS).
 
+> **Implementation status.** This spec is forward-looking. The current Android library
+> implements a focused subset of the catalog (text/heading/caption, buttons, quick
+> replies, chip selects, radio/checkbox lists, sliders, rating stars, single-line text
+> inputs, divider, stepper, progress bar, success badge/banner). Anything else — rich
+> cards, lists, media, and so on — is available to hosts via the plugin system
+> (`AuiComponentPlugin`). See [`docs/architecture.md`](../docs/architecture.md) for the
+> built-in set and plugin API.
+
 ---
 
 ## The Idea
@@ -87,7 +95,7 @@ The AI chooses **how prominently** to present its response based on what it's sh
 │   │                                                      │   │
 │   │  "inline"   → render in the chat list, in place      │   │
 │   │  "expanded" → render full-width; host may show stub  │   │
-│   │  "survey"   → render in bottom sheet survey overlay  │   │
+│   │  "survey"   → flat survey content; host owns container│  │
 │   └──────────────────────────────────────────────────────┘   │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
@@ -150,11 +158,16 @@ Best for: rich product cards, long lists, comparisons, multi-block content, medi
 
 #### `survey`
 
-Rendered as a **bottom sheet survey overlay** on top of the chat. The chat is still visible behind it (dimmed). The survey demands attention — the user should complete or dismiss it before continuing.
+Multi-page structured input. Best for multi-question feedback, booking flows,
+multi-field forms, confirmations with consequences, and multi-step processes.
 
-Best for: multi-question feedback, booking flows, multi-field forms, confirmations with consequences, multi-step processes.
-
-Survey responses use a `steps` array instead of `blocks`. The library renders a multi-step flow with **Back / Next / Submit** navigation injected around each step, plus a stepper indicator when there are multiple steps — the AI only declares the questions. The library renders this as flat content; hosts wrap it in whatever container fits (modal sheet, dialog, side pane) and own its open/close lifecycle. This means a dismissed survey can stay visible in the chat as a host-rendered card stub and be re-opened on tap.
+Survey responses use a `steps` array instead of `blocks` (minimum 2 steps). The library
+renders the survey as **flat content** with **Back / Next / Submit** navigation injected
+around each step, plus a stepper indicator — the AI only declares the questions. The
+library does **not** provide a container: hosts wrap the renderer in whatever fits
+(modal sheet, dialog, side pane, inline Column) and own its open/close lifecycle. This
+means a dismissed survey can stay visible in the chat as a host-rendered card stub and
+be re-opened on tap.
 
 ```json
 {
@@ -231,7 +244,7 @@ This means the AI doesn't need to think about "what goes in the bubble vs outsid
 |------------|--------------------------------|--------------------------------------|
 | `inline`   | In the bubble                  | Below the bubble, in the chat list   |
 | `expanded` | In the bubble                  | Full-width below the bubble; hosts may surface via a tappable card stub |
-| `survey`   | Uses `steps` array (not `blocks`) — each step rendered in the persistent bottom-sheet survey; library injects Back/Next/Submit |
+| `survey`   | Uses `steps` array (not `blocks`) — library renders flat survey content and injects Back/Next/Submit; hosts own the container (sheet, dialog, pane) |
 
 ---
 
