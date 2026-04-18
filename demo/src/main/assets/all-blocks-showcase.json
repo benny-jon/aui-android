@@ -3,7 +3,7 @@
     "label": "text",
     "description": "Plain text block",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "text", "data": { "text": "Your subscription renews on May 1st. You can manage billing in your account settings." } }
       ]
@@ -13,7 +13,7 @@
     "label": "heading",
     "description": "Section heading",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "heading", "data": { "text": "Service Maintenance Scheduled" } }
       ]
@@ -23,7 +23,7 @@
     "label": "caption",
     "description": "Caption with heading context",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "heading", "data": { "text": "Photo Upload Complete" } },
         { "type": "caption", "data": { "text": "Uploaded 3 minutes ago · 2.4 MB · JPEG" } }
@@ -34,7 +34,7 @@
     "label": "button_primary",
     "description": "Primary action button",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "text", "data": { "text": "The Q1 analytics report has been generated." } },
         {
@@ -49,7 +49,7 @@
     "label": "button_secondary",
     "description": "Secondary button alongside primary",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "text", "data": { "text": "I can reset your preferences to the defaults." } },
         {
@@ -69,7 +69,7 @@
     "label": "quick_replies",
     "description": "Tappable quick-reply chips",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "quick_replies",
@@ -97,7 +97,7 @@
     "label": "chip_select_single",
     "description": "Single-select chip group with submit",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "chip_select_single",
@@ -124,7 +124,7 @@
     "label": "chip_select_multi",
     "description": "Multi-select chip group",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "chip_select_multi",
@@ -152,7 +152,7 @@
     "label": "radio_list",
     "description": "Radio button list with descriptions",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "radio_list",
@@ -195,7 +195,7 @@
     "label": "checkbox_list",
     "description": "Checkbox list in expanded display",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "checkbox_list",
@@ -238,7 +238,7 @@
     "label": "input_text_single",
     "description": "Single-line text input with submit",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "input_text_single",
@@ -256,7 +256,7 @@
     "label": "input_slider",
     "description": "Slider input with range",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "input_slider",
@@ -281,7 +281,7 @@
     "label": "input_rating_stars",
     "description": "Star rating input",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "input_rating_stars",
@@ -302,7 +302,7 @@
     "label": "divider",
     "description": "Visual separator between content",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "heading", "data": { "text": "Order Confirmed" } },
         { "type": "text", "data": { "text": "2× Wireless Earbuds — $59.98" } },
@@ -315,7 +315,7 @@
     "label": "stepper_horizontal",
     "description": "Horizontal step progress indicator",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "stepper_horizontal",
@@ -337,7 +337,7 @@
     "label": "progress_bar",
     "description": "Progress bar with caption",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "progress_bar",
@@ -355,7 +355,7 @@
     "label": "badge_success",
     "description": "Success badge with text",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "badge_success", "data": { "text": "Verified" } },
         { "type": "text", "data": { "text": "Your email address has been confirmed." } }
@@ -366,7 +366,7 @@
     "label": "status_banner_success",
     "description": "Full-width success banner",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "status_banner_success", "data": { "text": "Your changes have been saved successfully." } }
       ]
@@ -376,7 +376,7 @@
     "label": "demo_fun_fact",
     "description": "Plugin component: fun fact card",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         {
           "type": "demo_fun_fact",
@@ -449,7 +449,7 @@
     "label": "Combo: Project Status",
     "description": "Inline status with progress bar, badge, and quick replies",
     "aui": {
-      "display": "expanded",
+      "display": "inline",
       "blocks": [
         { "type": "heading", "data": { "text": "Sprint 12 Progress" } },
         {

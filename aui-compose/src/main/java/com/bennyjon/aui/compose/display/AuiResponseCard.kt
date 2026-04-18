@@ -14,12 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
-import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiResponse
@@ -46,8 +45,9 @@ import com.bennyjon.aui.core.model.AuiStep
  * @param response The [AuiResponse] to preview.
  * @param onClick Invoked when the user taps the card.
  * @param modifier Applied to the outermost [Surface].
- * @param isSpent When `true`, the card renders at reduced alpha to match the spent styling
- *   used for inline AUI. Stays tappable so users can review the response.
+ * @param theme The [AuiTheme] used for colors, typography, spacing, and shape. Defaults to
+ *   [AuiTheme.Default]. Pass the same theme as the matching [com.bennyjon.aui.compose.AuiRenderer]
+ *   so the card stays visually consistent with its expanded content.
  * @param isActive When `true`, the card is highlighted — e.g. it's the message currently
  *   shown in the detail pane or sheet.
  */
@@ -56,56 +56,55 @@ fun AuiResponseCard(
     response: AuiResponse,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isSpent: Boolean = false,
+    theme: AuiTheme = AuiTheme.Default,
     isActive: Boolean = false,
 ) {
-    val theme = LocalAuiTheme.current
     val title = response.cardStubTitle()
     val description = response.cardStubDescription()
     val containerColor = if (isActive) theme.colors.primaryContainer else theme.colors.surfaceVariant
     val titleColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurface
     val descriptionColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurfaceVariant
-    val alpha = if (isSpent) 0.6f else 1f
 
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .alpha(alpha)
-            .clickable(enabled = !isSpent, onClick = onClick),
-        shape = theme.shapes.card,
-        color = containerColor,
-        border = BorderStroke(1.dp, theme.colors.outline),
-        tonalElevation = 1.dp,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = theme.spacing.medium, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    AuiThemeProvider(theme = theme) {
+        Surface(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+            shape = theme.shapes.card,
+            color = containerColor,
+            border = BorderStroke(1.dp, theme.colors.outline),
+            tonalElevation = 1.dp,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = theme.typography.subheading,
-                    color = titleColor,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                description?.takeIf { it.isNotBlank() }?.let {
+            Row(
+                modifier = Modifier.padding(horizontal = theme.spacing.medium, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = it,
-                        style = theme.typography.caption,
-                        color = descriptionColor,
+                        text = title,
+                        style = theme.typography.subheading,
+                        color = titleColor,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 2.dp),
                     )
+                    description?.takeIf { it.isNotBlank() }?.let {
+                        Text(
+                            text = it,
+                            style = theme.typography.caption,
+                            color = descriptionColor,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
                 }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = descriptionColor,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
             }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = descriptionColor,
-                modifier = Modifier.padding(start = 12.dp),
-            )
         }
     }
 }
@@ -180,17 +179,16 @@ private fun AuiResponseCardSurveyPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "AuiResponseCard — Spent + Active")
+@Preview(showBackground = true, name = "AuiResponseCard — Active")
 @Composable
-private fun AuiResponseCardSpentActivePreview() {
+private fun AuiResponseCardActivePreview() {
     AuiThemeProvider {
         AuiResponseCard(
             response = AuiResponse(
                 display = AuiDisplay.EXPANDED,
-                cardTitle = "Previously viewed",
+                cardTitle = "Currently viewed",
             ),
             onClick = {},
-            isSpent = true,
             isActive = true,
             modifier = Modifier.padding(16.dp),
         )

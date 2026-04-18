@@ -545,7 +545,7 @@ private fun AssistantMessage(
                 response = response,
                 onClick = { onOpenDetail(message.id) },
                 modifier = Modifier.padding(top = 16.dp),
-                isSpent = message.isAuiSpent,
+                theme = auiTheme,
                 isActive = isActiveDetail,
             )
         }
