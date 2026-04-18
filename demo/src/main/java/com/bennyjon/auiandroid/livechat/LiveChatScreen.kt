@@ -168,7 +168,7 @@ fun LiveChatScreen(
             LaunchedEffect(widthDp, heightDp) {
                 viewModel.updateWindowSize(widthDp.value.toInt(), heightDp.value.toInt())
             }
-            val isTwoPane = widthDp >= TwoPaneBreakpointDp
+            val isTwoPane = widthDp >= TwoPaneBreakpointDp && widthDp >= heightDp
             val auiTheme = resolveAuiTheme(theme)
 
             val pinnedMessage = messages.firstOrNull { it.id == selectedDetailMessageId }

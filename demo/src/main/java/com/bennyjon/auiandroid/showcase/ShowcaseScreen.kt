@@ -102,7 +102,7 @@ fun ShowcaseScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            val isTwoPane = maxWidth >= TwoPaneBreakpointDp
+            val isTwoPane = maxWidth >= TwoPaneBreakpointDp && maxWidth >= maxHeight
             val activeEntry = entries.firstOrNull { it.label == activeLabel }
             val activeResponse = activeEntry?.response
             val activeIsSurvey = activeResponse?.display == AuiDisplay.SURVEY

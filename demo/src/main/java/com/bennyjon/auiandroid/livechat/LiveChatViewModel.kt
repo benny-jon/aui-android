@@ -175,10 +175,9 @@ class LiveChatViewModel @Inject constructor(
         val width = _windowWidthDp.value
         val height = _windowHeightDp.value
         if (width <= 0 || height <= 0) return ""
-        val layout = if (width >= TWO_PANE_BREAKPOINT_DP) "two_pane" else "single_column"
+        val layout = if (width >= TWO_PANE_BREAKPOINT_DP && width >= height) "two_pane" else "single_column"
         return buildString {
-            append("DEVICE: width=").append(width).append("dp, height=").append(height)
-                .append("dp, layout=").append(layout).append(".\n")
+            append("DEVICE: layout=").append(layout).append(".\n")
             append("Prefer \"inline\" for chat-flow messages; use \"expanded\" when the ")
             append("response is focused content the user may want to linger on.")
         }
