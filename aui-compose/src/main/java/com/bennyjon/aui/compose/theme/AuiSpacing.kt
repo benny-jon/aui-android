@@ -20,6 +20,8 @@ data class AuiSpacing(
     val large: Dp = 24.dp,
     /** 32 dp — generous breathing room. */
     val xLarge: Dp = 32.dp,
+    /** 48 dp - accessible minimum size for clickable elements */
+    val minimumTouchTarget: Dp = 48.dp,
     /** Thickness of `divider` blocks. */
     val dividerThickness: Dp = 1.dp,
     /** Vertical gap between sibling blocks in a `blocks` array. */

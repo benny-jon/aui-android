@@ -73,6 +73,10 @@ or response model, not chat-product features.
   response exists, and landscape single-pane keeps chat at split-pane width
 - Session 32: Added first-class `file_content` artifacts so markdown/config/source
   files render as single copyable blocks instead of fragmented presentation text
+- Session 33: Added download-to-Downloads support to `file_content`, with scoped-storage
+  saving on Android 10+ and legacy-permission fallback on older Android
+- Session 34: Replaced `file_content` download toasts with an inline themed notice
+  under the header, including "Open" and dismiss actions
 - Session 31: Tuned live chat context hints so markdown/document requests steer the
   model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
 

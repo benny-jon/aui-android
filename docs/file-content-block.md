@@ -69,6 +69,7 @@ All platform hosts should render `file_content` with these minimum behaviors:
 - monospaced body
 - exact content preserved
 - clear copy action in the header
+- clear save/download action when the host platform supports writing a user-visible file
 - selectable text
 - filename/language/title visible when present
 
