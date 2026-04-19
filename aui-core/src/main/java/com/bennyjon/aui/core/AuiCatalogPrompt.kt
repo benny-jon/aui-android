@@ -221,7 +221,8 @@ object AuiCatalogPrompt {
     internal const val FRAMING_CONSERVATIVE =
         """AUI is OPTIONAL and ADDITIVE. Default to plain text. Only use AUI when an
 interactive component clearly adds value over prose — for example: collecting
-structured input, offering quick-reply choices, running a short survey, files, docs and markdown long texts."""
+structured input, offering quick-reply choices, running a short survey, or
+returning a copyable file/document artifact."""
 
     internal const val FRAMING_BALANCED =
         """Use AUI whenever a component makes the response more useful, actionable, or
@@ -356,6 +357,7 @@ Display:
   text(text)
   heading(text)
   caption(text)
+  file_content(content, filename?, language?, title?, description?)
 
 Input:
   button_primary(label)
@@ -412,6 +414,8 @@ Status:
   - Numeric input within a range → inline, input_slider + submit
   - Rating or single feedback score → inline, input_rating_stars + submit
   - Multi-question feedback / onboarding flow → survey with one question per step
+  - A complete file/document artifact (README, markdown file, JSON, config, source file)
+    → expanded, one file_content block. Preserve the exact file body in content.
   - A single product / place / link recommendation → inline, one card + button
   - 3+ rich cards in one response (products, places, profiles) → expanded
     (always with card_title + card_description)
@@ -425,6 +429,10 @@ Status:
     still inline. Reach for expanded only for 3+ rich cards or content that
     genuinely benefits from a dedicated reading surface. Keep each survey step
     focused on a single question.
+  - If the user asks for a complete file or document artifact (for example an
+    .md file, README, JSON file, config file, or source file), prefer a single
+    file_content block instead of decomposing the artifact into heading/text/divider
+    presentation blocks. Preserve the exact file body in data.content.
   - Triggers (button_primary, button_secondary, quick_replies options) MUST have a
     feedback object — they fire actions when tapped.
   - Collectors (radio_list, checkbox_list, chip_select_*, input_*) passively gather
@@ -533,6 +541,25 @@ Expanded response with tappable link buttons (product recommendations):
   }
 }
 
+Expanded file artifact (single copyable markdown document):
+{
+  "text": "I drafted the README as one copyable file artifact.",
+  "aui": {
+    "display": "expanded",
+    "card_title": "README draft",
+    "card_description": "Single markdown artifact",
+    "blocks": [
+      { "type": "file_content", "data": {
+          "filename": "README.md",
+          "language": "markdown",
+          "title": "Project README",
+          "description": "Setup and usage guide",
+          "content": "# Project README\n\n## Setup\n\n1. Install dependencies\n2. Run the app"
+      }}
+    ]
+  }
+}
+
 Quick replies with per-option actions (each chip fires its own feedback):
 {
   "text": "Want to learn more?",
@@ -564,6 +591,7 @@ Quick replies with per-option actions (each chip fires its own feedback):
         "text",
         "heading",
         "caption",
+        "file_content",
         "chip_select_single",
         "chip_select_multi",
         "button_primary",

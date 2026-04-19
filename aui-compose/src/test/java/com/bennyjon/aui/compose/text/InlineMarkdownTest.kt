@@ -209,4 +209,49 @@ class InlineMarkdownTest {
         val links = result.getLinkAnnotations(0, 4)
         assertEquals(1, links.size)
     }
+
+    @Test
+    fun `splitMarkdownBlocks returns single text segment when no fences exist`() {
+        val result = splitMarkdownBlocks("Hello **world**")
+
+        assertEquals(1, result.size)
+        assertEquals(MarkdownSegment.Text("Hello **world**"), result[0])
+    }
+
+    @Test
+    fun `splitMarkdownBlocks extracts fenced block with language`() {
+        val result = splitMarkdownBlocks(
+            "Intro\n```json\n{\"ok\":true}\n```\nOutro"
+        )
+
+        assertEquals(3, result.size)
+        assertEquals(MarkdownSegment.Text("Intro\n"), result[0])
+        assertEquals(
+            MarkdownSegment.FencedCode(content = "{\"ok\":true}", language = "json"),
+            result[1],
+        )
+        assertEquals(MarkdownSegment.Text("\nOutro"), result[2])
+    }
+
+    @Test
+    fun `splitMarkdownBlocks extracts multiple fenced blocks in order`() {
+        val result = splitMarkdownBlocks(
+            "```kotlin\nval a = 1\n```\nmid\n```\nplain\n```"
+        )
+
+        assertEquals(3, result.size)
+        assertEquals(MarkdownSegment.FencedCode(content = "val a = 1", language = "kotlin"), result[0])
+        assertEquals(MarkdownSegment.Text("\nmid\n"), result[1])
+        assertEquals(MarkdownSegment.FencedCode(content = "plain", language = null), result[2])
+    }
+
+    @Test
+    fun `splitMarkdownBlocks leaves unterminated fence as text`() {
+        val source = "Before\n```json\n{\"broken\": true}"
+
+        val result = splitMarkdownBlocks(source)
+
+        assertEquals(1, result.size)
+        assertEquals(MarkdownSegment.Text(source), result[0])
+    }
 }

@@ -128,13 +128,14 @@ private fun AuiResponse.cardStubTitle(): String = when (display) {
 
     else -> cardTitle
         ?: blocks.firstHeadingText()
+        ?: blocks.firstFileTitle()
         ?: blocks.firstTextText()
         ?: "Tap to view"
 }
 
 private fun AuiResponse.cardStubDescription(): String? = when (display) {
     AuiDisplay.SURVEY -> cardDescription ?: steps.stepCountSummary()
-    else -> cardDescription ?: blocks.firstNonHeadingText()
+    else -> cardDescription ?: blocks.firstFileDescription() ?: blocks.firstNonHeadingText()
 }
 
 private fun List<AuiStep>.firstStepQuestion(): String? =
@@ -151,6 +152,18 @@ private fun List<AuiBlock>.firstHeadingText(): String? =
 
 private fun List<AuiBlock>.firstTextText(): String? =
     firstNotNullOfOrNull { (it as? AuiBlock.Text)?.data?.text }
+
+private fun List<AuiBlock>.firstFileTitle(): String? =
+    firstNotNullOfOrNull { block ->
+        (block as? AuiBlock.FileContent)?.data?.title
+            ?: (block as? AuiBlock.FileContent)?.data?.filename
+    }
+
+private fun List<AuiBlock>.firstFileDescription(): String? =
+    firstNotNullOfOrNull { block ->
+        (block as? AuiBlock.FileContent)?.data?.description
+            ?: (block as? AuiBlock.FileContent)?.data?.language
+    }
 
 private fun List<AuiBlock>.firstNonHeadingText(): String? =
     firstNotNullOfOrNull { (it as? AuiBlock.Text)?.data?.text }

@@ -58,7 +58,7 @@ AuiRenderer(
 │  │  │  ├── Theme system (AuiTheme + fromMaterialTheme)│     │   │
 │  │  │  ├── Display router (inline / expanded / survey)│     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
-│  │  │  ├── Component catalog (24 built-ins + plugins) │     │   │
+│  │  │  ├── Component catalog (25 built-ins + plugins) │     │   │
 │  │  │  ├── AuiResponseCard (host-rendered stub)       │     │   │
 │  │  │  ├── Plugin system (component + action plugins) │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -162,6 +162,7 @@ sealed class AuiBlock {
     data class Text(val data: TextData, ...) : AuiBlock()
     data class Heading(val data: HeadingData, ...) : AuiBlock()
     data class Caption(val data: CaptionData, ...) : AuiBlock()
+    data class FileContent(val data: FileContentData, ...) : AuiBlock()
 
     // Input (implement AuiInputBlock where applicable)
     data class ButtonPrimary(val data: ButtonPrimaryData, ...) : AuiBlock()
@@ -213,6 +214,13 @@ data class AuiEntry(
 data class TextData(val text: String)                        // supports inline Markdown
 data class HeadingData(val text: String)
 data class CaptionData(val text: String)
+data class FileContentData(
+    val content: String,
+    val filename: String? = null,
+    val language: String? = null,
+    val title: String? = null,
+    val description: String? = null,
+)
 data class QuickRepliesData(val options: List<QuickReplyOption>)
 data class QuickReplyOption(val label: String, val feedback: AuiFeedback? = null)
 // ... one per catalog type (see AuiBlockSerializer for the complete mapping)

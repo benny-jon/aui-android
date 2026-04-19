@@ -71,6 +71,8 @@ or response model, not chat-product features.
 - Session 29: Added `OpenAiLlmClient`, OpenAI provider selection, and config-backed API key wiring
 - Session 30: Refined live chat layout so two-pane only activates when an `EXPANDED`
   response exists, and landscape single-pane keeps chat at split-pane width
+- Session 32: Added first-class `file_content` artifacts so markdown/config/source
+  files render as single copyable blocks instead of fragmented presentation text
 - Session 31: Tuned live chat context hints so markdown/document requests steer the
   model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
 

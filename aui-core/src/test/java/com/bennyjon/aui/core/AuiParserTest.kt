@@ -2,6 +2,7 @@ package com.bennyjon.aui.core
 
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
+import com.bennyjon.aui.core.model.data.FileContentData
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -341,6 +342,43 @@ class AuiParserTest {
         assertEquals(AuiDisplay.EXPANDED, response.display)
         assertEquals("Headphone picks", response.cardTitle)
         assertEquals("Three top noise-cancelling models", response.cardDescription)
+    }
+
+    @Test
+    fun `parse file_content block populates exact artifact fields`() {
+        val json = """
+            {
+              "display": "expanded",
+              "blocks": [
+                {
+                  "type": "file_content",
+                  "data": {
+                    "filename": "README.md",
+                    "language": "markdown",
+                    "title": "Project README",
+                    "description": "Setup guide",
+                    "content": "# Hello\n\nRun ./gradlew build"
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val response = parser.parse(json)
+
+        assertEquals(AuiDisplay.EXPANDED, response.display)
+        assertEquals(1, response.blocks.size)
+        val block = response.blocks[0] as AuiBlock.FileContent
+        assertEquals(
+            FileContentData(
+                filename = "README.md",
+                language = "markdown",
+                title = "Project README",
+                description = "Setup guide",
+                content = "# Hello\n\nRun ./gradlew build",
+            ),
+            block.data,
+        )
     }
 
     @Test

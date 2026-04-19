@@ -142,6 +142,55 @@ fun parseInlineMarkdown(
     }
 }
 
+sealed interface MarkdownSegment {
+    data class Text(val value: String) : MarkdownSegment
+    data class FencedCode(val content: String, val language: String?) : MarkdownSegment
+}
+
+fun splitMarkdownBlocks(source: String): List<MarkdownSegment> {
+    if (source.isEmpty()) return listOf(MarkdownSegment.Text(""))
+
+    val segments = mutableListOf<MarkdownSegment>()
+    val textBuffer = StringBuilder()
+    var index = 0
+
+    while (index < source.length) {
+        if (source.startsWith("```", index)) {
+            val infoLineEnd = source.indexOf('\n', startIndex = index + 3)
+            if (infoLineEnd == -1) {
+                textBuffer.append(source.substring(index))
+                break
+            }
+
+            val closingFenceStart = source.indexOf("\n```", startIndex = infoLineEnd + 1)
+            if (closingFenceStart == -1) {
+                textBuffer.append(source.substring(index))
+                break
+            }
+
+            if (textBuffer.isNotEmpty()) {
+                segments += MarkdownSegment.Text(textBuffer.toString())
+                textBuffer.clear()
+            }
+
+            val language = source.substring(index + 3, infoLineEnd).trim().ifEmpty { null }
+            val code = source.substring(infoLineEnd + 1, closingFenceStart)
+            segments += MarkdownSegment.FencedCode(content = code, language = language)
+            index = closingFenceStart + "\n```".length
+            continue
+        }
+
+        textBuffer.append(source[index])
+        index++
+    }
+
+    if (textBuffer.isNotEmpty() || segments.isEmpty()) {
+        segments += MarkdownSegment.Text(textBuffer.toString())
+    }
+
+    return segments
+}
+
 private fun isSupportedUrl(url: String): Boolean {
     val lower = url.lowercase()
     return lower.startsWith("http://") ||

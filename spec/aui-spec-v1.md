@@ -1116,7 +1116,7 @@ FEEDBACK: (on interactive components)
 AVAILABLE COMPONENTS:
 
 Display:
-  text(text) · heading(text) · caption(text) · rich_text(text, spans[])
+  text(text) · heading(text) · caption(text) · file_content(content, filename?, language?, title?, description?) · rich_text(text, spans[])
   card_basic(title, subtitle?)
   card_basic_icon(icon, title, subtitle?)
   card_image_top(image, title, subtitle?, caption?)
@@ -1171,6 +1171,12 @@ Input:
 
 Utility:
   divider() · loading(message?) · section_header(title, action_label?)
+
+Artifact guidance:
+  If the user asks for a complete file/document artifact (README, markdown file,
+  JSON file, config file, source file), prefer a single file_content block rather
+  than decomposing the artifact into heading/text/divider presentation blocks.
+  Preserve the exact body in file_content.content.
 
 Survey structure (when display = "survey"):
   survey_title: string — title shown at the top of the survey

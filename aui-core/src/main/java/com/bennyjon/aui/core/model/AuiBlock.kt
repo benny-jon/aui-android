@@ -11,6 +11,7 @@ import com.bennyjon.aui.core.model.data.CheckboxListData
 import com.bennyjon.aui.core.model.data.ChipSelectMultiData
 import com.bennyjon.aui.core.model.data.ChipSelectSingleData
 import com.bennyjon.aui.core.model.data.DividerData
+import com.bennyjon.aui.core.model.data.FileContentData
 import com.bennyjon.aui.core.model.data.HeadingData
 import com.bennyjon.aui.core.model.data.InputRatingStarsData
 import com.bennyjon.aui.core.model.data.InputSliderData
@@ -85,6 +86,13 @@ sealed class AuiBlock {
     @Serializable
     data class Caption(
         val data: CaptionData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Copyable file/document artifact such as markdown, JSON, or source code. */
+    @Serializable
+    data class FileContent(
+        val data: FileContentData,
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
@@ -287,6 +295,7 @@ internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(
             "text" -> AuiBlock.Text.serializer()
             "heading" -> AuiBlock.Heading.serializer()
             "caption" -> AuiBlock.Caption.serializer()
+            "file_content" -> AuiBlock.FileContent.serializer()
             "chip_select_single" -> AuiBlock.ChipSelectSingle.serializer()
             "chip_select_multi" -> AuiBlock.ChipSelectMulti.serializer()
             "button_primary" -> AuiBlock.ButtonPrimary.serializer()

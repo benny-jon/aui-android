@@ -33,6 +33,7 @@ import com.bennyjon.aui.compose.components.status.AuiStatusBannerInfo
 import com.bennyjon.aui.compose.components.status.AuiStatusBannerSuccess
 import com.bennyjon.aui.compose.components.status.AuiStatusBannerWarning
 import com.bennyjon.aui.compose.components.text.AuiCaption
+import com.bennyjon.aui.compose.components.text.AuiFileContent
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.components.text.AuiText
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
@@ -158,6 +159,7 @@ internal fun BlockRenderer(
                 is AuiBlock.Text -> AuiText(block = block)
                 is AuiBlock.Heading -> AuiHeading(block = block)
                 is AuiBlock.Caption -> AuiCaption(block = block)
+                is AuiBlock.FileContent -> AuiFileContent(block = block)
                 is AuiBlock.ChipSelectSingle -> Box(modifier = blockModifier) {
                     AuiChipSelectSingle(block = block, onFeedback = blockFeedback)
                 }

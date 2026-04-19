@@ -348,17 +348,17 @@ val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 
 ## Component Catalog
 
-24 built-in component types across these categories:
+25 built-in component types across these categories:
 
 | Category | Components |
 |----------|-----------|
-| **Display** | `text`, `heading`, `caption` |
+| **Display** | `text`, `heading`, `caption`, `file_content` |
 | **Input** | `button_primary`, `button_secondary`, `quick_replies`, `chip_select_single`, `chip_select_multi`, `radio_list`, `checkbox_list`, `input_text_single`, `input_slider`, `input_rating_stars` |
 | **Layout** | `divider` |
 | **Progress** | `stepper_horizontal`, `progress_bar` |
 | **Status** | `badge_info`, `badge_success`, `badge_warning`, `badge_error`, `status_banner_info`, `status_banner_success`, `status_banner_warning`, `status_banner_error` |
 
-The `text` component renders inline Markdown: `**bold**`, `*italic*`, `` `code` ``, and `[links](url)`. Structural Markdown (headings, lists, etc.) uses dedicated block types instead.
+The `text` component renders inline Markdown: `**bold**`, `*italic*`, `` `code` ``, and `[links](url)`. Structural Markdown (headings, lists, etc.) uses dedicated block types instead. For exact copyable artifacts like `.md`, `.json`, config files, or source files, use `file_content` rather than decomposing them into multiple presentation blocks.
 
 Need something outside the catalog (e.g. product cards, maps, weather widgets)? Register
 an `AuiComponentPlugin` — see [Customization](#customization). Unknown component types are
@@ -409,6 +409,7 @@ Everything else is `internal`.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — Module structure, public API, design decisions
+- [File Content Block](docs/file-content-block.md) — Reusable contract for copyable file/document artifacts across Android and future iOS renderers
 - [AUI Spec](spec/aui-spec-v1.md) — Full JSON format specification
 - [JSON Examples](spec/examples/) — Sample responses for each display level
 

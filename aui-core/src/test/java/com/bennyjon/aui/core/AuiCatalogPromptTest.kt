@@ -35,7 +35,7 @@ class AuiCatalogPromptTest {
         // If a new AuiBlock subclass is added but not listed here, this test reminds
         // you to update ALL_COMPONENT_TYPES (which in turn fails the coverage test).
         val expected = setOf(
-            "text", "heading", "caption",
+            "text", "heading", "caption", "file_content",
             "chip_select_single", "chip_select_multi",
             "button_primary", "button_secondary",
             "quick_replies",
@@ -147,6 +147,13 @@ class AuiCatalogPromptTest {
         assertTrue(output.contains("card_title"))
         assertTrue(output.contains("card_description"))
         assertTrue(output.contains("card stub"))
+    }
+
+    @Test
+    fun `generate includes file_content component and artifact guidance`() {
+        assertTrue(output.contains("file_content(content, filename?, language?, title?, description?)"))
+        assertTrue(output.contains("prefer a single"))
+        assertTrue(output.contains("Preserve the exact file body in data.content"))
     }
 
     @Test
@@ -512,6 +519,13 @@ class AuiCatalogPromptTest {
         assertTrue(output.contains("\"display\": \"expanded\""))
         assertTrue(output.contains("View on Amazon"))
         assertTrue(output.contains("action\": \"open_url\""))
+    }
+
+    @Test
+    fun `generate includes file artifact example`() {
+        assertTrue(output.contains("Expanded file artifact"))
+        assertTrue(output.contains("\"type\": \"file_content\""))
+        assertTrue(output.contains("\"filename\": \"README.md\""))
     }
 
     @Test
