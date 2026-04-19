@@ -32,6 +32,10 @@ annotation class AnthropicApiKey
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
+annotation class OpenAiApiKey
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
 annotation class SystemPrompt
 
 @Module
@@ -70,6 +74,11 @@ object AppModule {
     @Singleton
     @AnthropicApiKey
     fun provideAnthropicApiKey(): String = BuildConfig.ANTHROPIC_API_KEY
+
+    @Provides
+    @Singleton
+    @OpenAiApiKey
+    fun provideOpenAiApiKey(): String = BuildConfig.OPENAI_API_KEY
 
     @Provides
     @Singleton

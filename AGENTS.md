@@ -32,7 +32,7 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Goal: add a demo chat flow that talks to real LLM providers end-to-end while
   keeping the library itself a pure renderer
 - Current phase plan: `.planning/phase5-live-chat.md`
-- Next recommended task: Session 29, implement `OpenAiLlmClient`
+- Next recommended task: Session 30, polish live chat UX and documentation
 - Known blockers: none recorded
 - Known issues: none recorded
 
@@ -68,18 +68,14 @@ or response model, not chat-product features.
   synced spec/architecture/README
 - Docs sync on 2026-04-17: updated public docs to match current code
 - Status variants on 2026-04-17: expanded status components and color tokens
+- Session 29: Added `OpenAiLlmClient`, OpenAI provider selection, and config-backed API key wiring
 
 ## Next Task
 
-Implement `OpenAiLlmClient` under:
-- `demo/src/main/kotlin/com/bennyjon/aui/demo/data/llm/`
-
-Before changing code, re-read the Phase 5 plan sections covering:
-- `OpenAiLlmClient.kt`
-- the structured envelope contract
-- `LlmProvider` and `LlmClientFactory`
-
-Keep the repository, ViewModel, and UI provider-neutral.
+Polish the live chat demo and update docs:
+- spinner, empty state, error banner with retry
+- clear confirmation dialog, snackbar on provider switch
+- Phase 5 status/docs sync including `docs/livechat.md`
 
 ## Constraints
 

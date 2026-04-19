@@ -11,4 +11,7 @@ enum class LlmProvider(val displayName: String) {
 
     /** Anthropic Claude via the Messages API. Requires an API key. */
     CLAUDE("Claude"),
+
+    /** OpenAI Chat Completions. Requires an API key. */
+    OPENAI("OpenAI"),
 }

@@ -142,6 +142,7 @@ fun LiveChatScreen(
                     ProviderDropdown(
                         currentProvider = currentProvider,
                         isClaudeAvailable = viewModel.isClaudeAvailable,
+                        isOpenAiAvailable = viewModel.isOpenAiAvailable,
                         onProviderSelected = viewModel::switchProvider,
                     )
                     TextButton(onClick = viewModel::clearConversation) {
@@ -428,12 +429,14 @@ private fun ResponseDetailSheet(
 /**
  * Dropdown button in the top bar for selecting the active [LlmProvider].
  *
- * Displays the current provider name. Claude is disabled if no API key is configured.
+ * Displays the current provider name. Providers that need keys are disabled when
+ * their API key is not configured.
  */
 @Composable
 private fun ProviderDropdown(
     currentProvider: LlmProvider,
     isClaudeAvailable: Boolean,
+    isOpenAiAvailable: Boolean,
     onProviderSelected: (LlmProvider) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -449,14 +452,17 @@ private fun ProviderDropdown(
             LlmProvider.entries.forEach { provider ->
                 val enabled = when (provider) {
                     LlmProvider.CLAUDE -> isClaudeAvailable
+                    LlmProvider.OPENAI -> isOpenAiAvailable
                     else -> true
                 }
                 DropdownMenuItem(
                     text = {
-                        val label = if (provider == LlmProvider.CLAUDE && !isClaudeAvailable) {
-                            "${provider.displayName} (no key)"
-                        } else {
-                            provider.displayName
+                        val label = when {
+                            provider == LlmProvider.CLAUDE && !isClaudeAvailable ->
+                                "${provider.displayName} (no key)"
+                            provider == LlmProvider.OPENAI && !isOpenAiAvailable ->
+                                "${provider.displayName} (no key)"
+                            else -> provider.displayName
                         }
                         Text(label)
                     },
@@ -645,4 +651,3 @@ private fun LiveChatInput(
         }
     }
 }
-

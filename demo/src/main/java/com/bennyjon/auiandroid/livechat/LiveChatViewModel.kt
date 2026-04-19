@@ -14,7 +14,9 @@ import com.bennyjon.auiandroid.data.llm.ClaudeLlmClient
 import com.bennyjon.auiandroid.data.llm.FakeLlmClient
 import com.bennyjon.auiandroid.data.llm.LlmClient
 import com.bennyjon.auiandroid.data.llm.LlmProvider
+import com.bennyjon.auiandroid.data.llm.OpenAiLlmClient
 import com.bennyjon.auiandroid.di.AnthropicApiKey
+import com.bennyjon.auiandroid.di.OpenAiApiKey
 import com.bennyjon.auiandroid.di.SystemPrompt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
@@ -48,8 +50,9 @@ import javax.inject.Inject
 class LiveChatViewModel @Inject constructor(
     private val dao: ChatMessageDao,
     val pluginRegistry: AuiPluginRegistry,
-    @SystemPrompt private val systemPrompt: String,
-    @AnthropicApiKey private val anthropicApiKey: String,
+    @param:SystemPrompt private val systemPrompt: String,
+    @param:AnthropicApiKey private val anthropicApiKey: String,
+    @param:OpenAiApiKey private val openAiApiKey: String,
     private val httpClient: HttpClient,
     private val appSettings: AppSettings,
 ) : ViewModel() {
@@ -109,6 +112,9 @@ class LiveChatViewModel @Inject constructor(
     /** Whether the Claude provider is available (API key configured). */
     val isClaudeAvailable: Boolean = anthropicApiKey.isNotBlank()
 
+    /** Whether the OpenAI provider is available (API key configured). */
+    val isOpenAiAvailable: Boolean = openAiApiKey.isNotBlank()
+
     private val _selectedTheme = MutableStateFlow(DemoAuiTheme.DEFAULT)
 
     /** The currently selected AUI theme. */
@@ -117,10 +123,10 @@ class LiveChatViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val saved = appSettings.llmProvider.first()
-            val provider = if (saved == LlmProvider.CLAUDE && !isClaudeAvailable) {
-                LlmProvider.FAKE
-            } else {
-                saved
+            val provider = when {
+                saved == LlmProvider.CLAUDE && !isClaudeAvailable -> LlmProvider.FAKE
+                saved == LlmProvider.OPENAI && !isOpenAiAvailable -> LlmProvider.FAKE
+                else -> saved
             }
             if (provider != _currentProvider.value) {
                 repository = createRepository(provider)
@@ -211,7 +217,7 @@ class LiveChatViewModel @Inject constructor(
      */
     fun switchProvider(provider: LlmProvider) {
         if (provider == _currentProvider.value) return
-        if (provider == LlmProvider.CLAUDE && !isClaudeAvailable) return
+        if (!isProviderAvailable(provider)) return
 
         viewModelScope.launch {
             repository.clearConversation(conversationId)
@@ -230,6 +236,10 @@ class LiveChatViewModel @Inject constructor(
             apiKey = anthropicApiKey,
             httpClient = httpClient,
         )
+        LlmProvider.OPENAI -> OpenAiLlmClient(
+            apiKey = openAiApiKey,
+            httpClient = httpClient,
+        )
     }
 
     private fun createRepository(provider: LlmProvider): ChatRepository =
@@ -241,5 +251,11 @@ class LiveChatViewModel @Inject constructor(
 
     private companion object {
         const val TWO_PANE_BREAKPOINT_DP = 600
+    }
+
+    private fun isProviderAvailable(provider: LlmProvider): Boolean = when (provider) {
+        LlmProvider.FAKE -> true
+        LlmProvider.CLAUDE -> isClaudeAvailable
+        LlmProvider.OPENAI -> isOpenAiAvailable
     }
 }
