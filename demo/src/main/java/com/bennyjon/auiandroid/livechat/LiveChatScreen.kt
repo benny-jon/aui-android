@@ -1,6 +1,7 @@
 package com.bennyjon.auiandroid.livechat
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -50,11 +51,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.display.AuiResponseCard
@@ -121,6 +125,16 @@ fun LiveChatScreen(
     val isSending by viewModel.isSending.collectAsState()
     val currentProvider by viewModel.currentProvider.collectAsState()
     val selectedDetailMessageId by viewModel.selectedDetailMessageId.collectAsState()
+    val hasExpandedMessage = messages.any { it.auiResponse?.display == AuiDisplay.EXPANDED }
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp.dp
+    val screenHeightDp = configuration.screenHeightDp.dp
+    val isLandscape = screenWidthDp >= screenHeightDp
+    val isTwoPane = screenWidthDp >= TwoPaneBreakpointDp && isLandscape && hasExpandedMessage
+    val singlePaneLandscapeInset by animateDpAsState(
+        targetValue = if (!isTwoPane && isLandscape) screenWidthDp / 4 else 0.dp,
+        label = "live_chat_single_pane_inset",
+    )
 
     Scaffold(
         topBar = {
@@ -155,6 +169,7 @@ fun LiveChatScreen(
             LiveChatInput(
                 onSend = viewModel::send,
                 isSending = isSending,
+                horizontalInset = singlePaneLandscapeInset,
             )
         },
         contentWindowInsets = WindowInsets.safeDrawing
@@ -169,7 +184,6 @@ fun LiveChatScreen(
             LaunchedEffect(widthDp, heightDp) {
                 viewModel.updateWindowSize(widthDp.value.toInt(), heightDp.value.toInt())
             }
-            val isTwoPane = widthDp >= TwoPaneBreakpointDp && widthDp >= heightDp
             val auiTheme = resolveAuiTheme(theme)
 
             val pinnedMessage = messages.firstOrNull { it.id == selectedDetailMessageId }
@@ -227,6 +241,7 @@ fun LiveChatScreen(
                     onFeedback = viewModel::onFeedback,
                     onOpenDetail = viewModel::openDetail,
                     activeDetailMessageId = null,
+                    horizontalInset = singlePaneLandscapeInset,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -262,6 +277,7 @@ private fun ChatList(
     onFeedback: (AuiFeedback) -> Unit,
     onOpenDetail: (String) -> Unit,
     activeDetailMessageId: String?,
+    horizontalInset: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -273,7 +289,12 @@ private fun ChatList(
     LazyColumn(
         state = listState,
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(
+            start = 16.dp + horizontalInset,
+            top = 8.dp,
+            end = 16.dp + horizontalInset,
+            bottom = 8.dp,
+        ),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(items = messages, key = { it.id }) { message ->
@@ -600,16 +621,17 @@ private fun UserBubble(text: String) {
 private fun LiveChatInput(
     onSend: (String) -> Unit,
     isSending: Boolean,
+    horizontalInset: Dp = 0.dp,
 ) {
-    var text by remember { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf("") }
 
     val insets = WindowInsets.safeDrawing.asPaddingValues()
     val layoutDirection = LocalLayoutDirection.current
     Surface(
         modifier = Modifier.padding(
-            start = insets.calculateStartPadding(layoutDirection),
+            start = insets.calculateStartPadding(layoutDirection) + horizontalInset,
             bottom = insets.calculateBottomPadding(),
-            end = insets.calculateEndPadding(layoutDirection)
+            end = insets.calculateEndPadding(layoutDirection) + horizontalInset
         ),
         tonalElevation = 2.dp,
         shadowElevation = 2.dp,

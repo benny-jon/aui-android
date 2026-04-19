@@ -1,7 +1,6 @@
 package com.bennyjon.aui.compose.display
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,22 +63,34 @@ fun AuiResponseCard(
     val containerColor = if (isActive) theme.colors.primaryContainer else theme.colors.surfaceVariant
     val titleColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurface
     val descriptionColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurfaceVariant
+    val borderColor = if (isActive) theme.colors.primary else theme.colors.outline
+    val borderWidth = if (isActive) 2.dp else 1.dp
+    val arrowColor = if (isActive) theme.colors.primary else descriptionColor
+    val labelColor = if (isActive) theme.colors.primary else theme.colors.onSurfaceVariant
 
     AuiThemeProvider(theme = theme) {
         Surface(
-            modifier = modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick),
+            onClick = onClick,
+            modifier = modifier.fillMaxWidth(),
             shape = theme.shapes.card,
             color = containerColor,
-            border = BorderStroke(1.dp, theme.colors.outline),
-            tonalElevation = 1.dp,
+            border = BorderStroke(borderWidth, borderColor),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = theme.spacing.medium, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    if (isActive) {
+                        Text(
+                            text = "Viewing",
+                            style = theme.typography.label,
+                            color = labelColor,
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
+                    }
                     Text(
                         text = title,
                         style = theme.typography.subheading,
@@ -101,7 +112,7 @@ fun AuiResponseCard(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = descriptionColor,
+                    tint = arrowColor,
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }

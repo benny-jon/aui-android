@@ -338,7 +338,8 @@ surface. When in doubt, inline."""
 
     internal const val BLOCK_FORMAT = """BLOCK FORMAT:
   { "type": "<component>", "data": { ... }, "feedback": { ... } }
-  // feedback only on interactive components"""
+  "feedback" is optional and only present on interactive components.
+  "type", "data", and "feedback" are always top-level sibling fields in a block — never nest "feedback" inside "data"."""
 
     internal const val FEEDBACK_FORMAT = """FEEDBACK (on interactive components):
   { "action": "<registered_id>", "params": { ... } }

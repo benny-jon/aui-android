@@ -69,6 +69,8 @@ or response model, not chat-product features.
 - Docs sync on 2026-04-17: updated public docs to match current code
 - Status variants on 2026-04-17: expanded status components and color tokens
 - Session 29: Added `OpenAiLlmClient`, OpenAI provider selection, and config-backed API key wiring
+- Session 30: Refined live chat layout so two-pane only activates when an `EXPANDED`
+  response exists, and landscape single-pane keeps chat at split-pane width
 
 ## Next Task
 
