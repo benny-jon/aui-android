@@ -357,6 +357,7 @@ fun AiMessageBubble(jsonResponse: String) {
         colors = AuiColors(
             primary = Color(0xFF6750A4),
             onPrimary = Color.White,
+            tertiary = Color(0xFF7D5260),
             surface = Color(0xFFFFFBFE),
             // ... your brand colors
         ),

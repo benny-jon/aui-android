@@ -77,6 +77,8 @@ or response model, not chat-product features.
   saving on Android 10+ and legacy-permission fallback on older Android
 - Session 34: Replaced `file_content` download toasts with an inline themed notice
   under the header, including "Open" and dismiss actions
+- Session 35: Expanded `AuiColors` with tertiary tokens and mapped them through
+  `AuiColors.fromColorScheme`
 - Session 31: Tuned live chat context hints so markdown/document requests steer the
   model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
 

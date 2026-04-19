@@ -76,7 +76,7 @@ object DemoThemes {
 
 /**
  * Maps [AuiColors] fields onto a Material 3 [ColorScheme], falling back to [base]
- * for any colors that [AuiColors] does not define (e.g. secondary, tertiary, error).
+ * for any colors that [AuiColors] does not define (e.g. secondary).
  *
  * This allows the entire screen — scaffold, bubbles, input bar — to reflect the
  * selected AUI theme, not just the AUI renderer blocks.
@@ -86,6 +86,10 @@ fun AuiColors.toMaterialColorScheme(base: ColorScheme): ColorScheme = base.copy(
     onPrimary = onPrimary,
     primaryContainer = primaryContainer,
     onPrimaryContainer = onPrimaryContainer,
+    tertiary = tertiary,
+    onTertiary = onTertiary,
+    tertiaryContainer = tertiaryContainer,
+    onTertiaryContainer = onTertiaryContainer,
     surface = surface,
     onSurface = onSurface,
     onSurfaceVariant = onSurfaceVariant,

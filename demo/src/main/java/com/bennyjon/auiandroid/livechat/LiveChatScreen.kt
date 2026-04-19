@@ -546,8 +546,8 @@ private fun AssistantMessage(
                     bottomStart = 16.dp,
                     bottomEnd = 16.dp,
                 ),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.widthIn(max = 300.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.widthIn(max = 420.dp),
             ) {
                 val spannedText = parseInlineMarkdown(
                     source = text,
@@ -557,7 +557,7 @@ private fun AssistantMessage(
                 Text(
                     text = spannedText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                 )
             }
@@ -604,13 +604,13 @@ private fun UserBubble(text: String) {
                 bottomStart = 16.dp,
                 bottomEnd = 16.dp,
             ),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.widthIn(max = 280.dp),
+            color = MaterialTheme.colorScheme.tertiaryContainer,
+            modifier = Modifier.widthIn(max = 420.dp),
         ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             )
         }

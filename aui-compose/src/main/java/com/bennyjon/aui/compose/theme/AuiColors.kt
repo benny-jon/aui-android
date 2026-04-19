@@ -27,6 +27,14 @@ data class AuiColors(
     val primaryContainer: Color = Color(0xFFEADDFF),
     /** Content color on top of [primaryContainer]. */
     val onPrimaryContainer: Color = Color(0xFF21005D),
+    /** Secondary brand/accent color sourced from Material's tertiary role. */
+    val tertiary: Color = Color(0xFF7D5260),
+    /** Content color on top of [tertiary]. */
+    val onTertiary: Color = Color(0xFFFFFFFF),
+    /** Tinted container surface associated with [tertiary]. */
+    val tertiaryContainer: Color = Color(0xFFFFD8E4),
+    /** Content color on top of [tertiaryContainer]. */
+    val onTertiaryContainer: Color = Color(0xFF31111D),
     /** Default surface/card background. */
     val surface: Color = Color(0xFFD4CEF3),
     /** Primary content color on [surface]. */
@@ -133,7 +141,7 @@ data class AuiColors(
         /**
          * Derives an [AuiColors] from a color scheme.
          *
-         * Brand colors (primary, surface, outline) come from [scheme]. Severity quads
+         * Brand colors (primary, tertiary, surface, outline) come from [scheme]. Severity quads
          * (info/success/warning/error) are always sourced from the library's stable
          * semantic palettes so meaning is preserved across host themes: yellow stays
          * yellow, red stays red. The library picks [Default] or [DefaultDark] severities
@@ -147,6 +155,10 @@ data class AuiColors(
                 onPrimary = scheme.onPrimary,
                 primaryContainer = scheme.primaryContainer,
                 onPrimaryContainer = scheme.onPrimaryContainer,
+                tertiary = scheme.tertiary,
+                onTertiary = scheme.onTertiary,
+                tertiaryContainer = scheme.tertiaryContainer,
+                onTertiaryContainer = scheme.onTertiaryContainer,
                 surface = scheme.surface,
                 onSurface = scheme.onSurface,
                 surfaceVariant = scheme.surfaceVariant,
