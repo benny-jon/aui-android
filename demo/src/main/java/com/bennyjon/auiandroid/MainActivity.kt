@@ -26,6 +26,8 @@ import com.bennyjon.auiandroid.ui.theme.toMaterialColorScheme
 import com.bennyjon.auiandroid.ui.theme.warm.WarmTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+private const val HomeRoute = "home"
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -60,19 +62,15 @@ private fun DemoNavHost() {
         base = MaterialTheme.colorScheme,
     )
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
+    NavHost(navController = navController, startDestination = HomeRoute) {
+        composable(HomeRoute) {
             DemoHomeScreen(
-                onThemeSelected = { themeKey ->
-                    when (themeKey) {
-                        "live_chat" -> navController.navigate("live_chat")
-                        "showcase" -> navController.navigate("showcase")
-                        else -> navController.navigate("chat/$themeKey")
-                    }
+                onDestinationSelected = { destination ->
+                    navController.navigate(destination.route)
                 },
             )
         }
-        composable("live_chat") {
+        composable(DemoDestination.LIVE_CHAT.route) {
             MaterialTheme(colorScheme = colorScheme, typography = typography) {
                 LiveChatScreen(
                     viewModel = vm,
@@ -83,7 +81,7 @@ private fun DemoNavHost() {
                 )
             }
         }
-        composable("showcase") {
+        composable(DemoDestination.SHOWCASE.route) {
             val showcaseVm: ShowcaseViewModel = hiltViewModel()
             MaterialTheme(colorScheme = colorScheme, typography = typography) {
                 ShowcaseScreen(
@@ -96,24 +94,30 @@ private fun DemoNavHost() {
                 )
             }
         }
-        composable("chat/{theme}") { backStackEntry ->
-            val themeKey = backStackEntry.arguments?.getString("theme") ?: "default"
-            val (title, auiTheme) = resolveTheme(themeKey)
-            val vm: DemoViewModel = viewModel()
+        themeChatDestinations.forEach { destination ->
+            composable(destination.route) {
+                val (title, auiTheme) = resolveTheme(destination)
+                val vm: DemoViewModel = viewModel()
 
-            ChatScreen(
-                viewModel = vm,
-                title = title,
-                auiTheme = auiTheme,
-                onBack = { navController.popBackStack() },
-            )
+                ChatScreen(
+                    viewModel = vm,
+                    title = title,
+                    auiTheme = auiTheme,
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun resolveTheme(key: String): Pair<String, AuiTheme> = when (key) {
-    "warm_organic" -> "Warm Organic" to DemoThemes.warmOrganic()
-    "earthy_green" -> "Earthy Green" to DemoThemes.earthyGreen()
+private fun resolveTheme(destination: DemoDestination): Pair<String, AuiTheme> = when (destination) {
+    DemoDestination.WARM_ORGANIC_CHAT -> destination.homeTitle to DemoThemes.warmOrganic()
+    DemoDestination.EARTHY_GREEN_CHAT -> destination.homeTitle to DemoThemes.earthyGreen()
     else -> "Default" to AuiTheme.fromMaterialTheme()
 }
+
+private val themeChatDestinations = listOf(
+    DemoDestination.WARM_ORGANIC_CHAT,
+    DemoDestination.EARTHY_GREEN_CHAT,
+)

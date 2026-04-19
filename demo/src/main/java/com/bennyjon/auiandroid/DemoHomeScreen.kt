@@ -31,7 +31,7 @@ import com.bennyjon.auiandroid.ui.theme.DemoThemes
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
+fun DemoHomeScreen(onDestinationSelected: (DemoDestination) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("AUI Demo") })
@@ -54,11 +54,11 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
             )
 
             ThemeCard(
-                title = "Live Chat",
-                subtitle = "End-to-end conversation with an LLM, persisted in Room",
+                title = DemoDestination.LIVE_CHAT.homeTitle,
+                subtitle = DemoDestination.LIVE_CHAT.homeSubtitle,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                onClick = { onThemeSelected("live_chat") },
+                onClick = { onDestinationSelected(DemoDestination.LIVE_CHAT) },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -70,11 +70,11 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
             )
 
             ThemeCard(
-                title = "All Blocks Showcase",
-                subtitle = "Every AUI component in one scrollable list",
+                title = DemoDestination.SHOWCASE.homeTitle,
+                subtitle = DemoDestination.SHOWCASE.homeSubtitle,
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                onClick = { onThemeSelected("showcase") },
+                onClick = { onDestinationSelected(DemoDestination.SHOWCASE) },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -87,20 +87,20 @@ fun DemoHomeScreen(onThemeSelected: (String) -> Unit) {
 
             val warmOrganicColors = DemoThemes.warmOrganic().colors
             ThemeCard(
-                title = "Warm Organic",
-                subtitle = "Earthy tones, serif headings, rounded corners",
+                title = DemoDestination.WARM_ORGANIC_CHAT.homeTitle,
+                subtitle = DemoDestination.WARM_ORGANIC_CHAT.homeSubtitle,
                 containerColor = warmOrganicColors.primaryContainer,
                 contentColor = warmOrganicColors.onPrimaryContainer,
-                onClick = { onThemeSelected("warm_organic") },
+                onClick = { onDestinationSelected(DemoDestination.WARM_ORGANIC_CHAT) },
             )
 
             val earthyGreenColors = DemoThemes.earthyGreen().colors
             ThemeCard(
-                title = "Earthy Green",
-                subtitle = "Forest greens, clean sans-serif, softly rounded",
+                title = DemoDestination.EARTHY_GREEN_CHAT.homeTitle,
+                subtitle = DemoDestination.EARTHY_GREEN_CHAT.homeSubtitle,
                 containerColor = earthyGreenColors.primaryContainer,
                 contentColor = earthyGreenColors.onPrimaryContainer,
-                onClick = { onThemeSelected("earthy_green") },
+                onClick = { onDestinationSelected(DemoDestination.EARTHY_GREEN_CHAT) },
             )
         }
     }
