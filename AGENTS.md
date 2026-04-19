@@ -87,6 +87,8 @@ or response model, not chat-product features.
   shows clear guidance before the first message arrives
 - Session 31: Tuned live chat context hints so markdown/document requests steer the
   model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
+- Session 39: Tightened custom component input metadata, preserved multi-input
+  feedback accumulation, and synced library docs with current renderer behavior
 
 ## Next Task
 

@@ -5,10 +5,11 @@ import kotlinx.serialization.Serializable
 /**
  * A single step within a [AuiDisplay.SURVEY] response.
  *
- * The library renders each step inside a persistent bottom sheet and injects all navigation
- * controls (Back / Next on intermediate steps, Submit on the final step). The AI only declares
- * the [question] and the collector [blocks] for that question — never navigation buttons,
- * submit actions, or skip controls.
+ * The library renders each step as flat content and injects all navigation controls
+ * (Back / Next on intermediate steps, Submit on the final step). Hosts choose the surrounding
+ * container — sheet, dialog, pane, or inline content. The AI only declares the [question] and
+ * the collector [blocks] for that question — never navigation buttons, submit actions, or
+ * skip controls.
  *
  * Every step is implicitly optional: users can advance past any step without answering, and
  * steps without a collected answer are simply omitted from [AuiFeedback.entries].

@@ -258,7 +258,7 @@ AuiRenderer(json = json, theme = myTheme, ...)
 
 ## Customization
 
-AUI's plugin system lets you add custom components, override built-ins, and register app-specific actions.
+AUI's plugin system lets you add custom components and register app-specific actions.
 
 ### Custom Component
 
@@ -286,6 +286,9 @@ object FunFactPlugin : AuiComponentPlugin<FunFactData>() {
 }
 ```
 
+If your custom component collects user input, override `inputMetadata(data)` so feedback
+accumulation can include that block's per-instance `key` and optional `label`.
+
 ### Custom Action
 
 Action plugins handle side effects like navigation or opening URLs:
@@ -306,24 +309,6 @@ class OpenUrlPlugin(private val context: Context) : AuiActionPlugin() {
 
 Action plugins use chain-of-responsibility: return `true` to claim the feedback (host `onFeedback` skipped), or `false` to pass through.
 
-### Override a Built-in
-
-Register a plugin whose `componentType` matches a built-in's type — the plugin takes priority:
-
-```kotlin
-object MyCardBasicPlugin : AuiComponentPlugin<CardBasicData>() {
-    override val id = "my_card_basic"
-    override val componentType = "card_basic"  // shadows built-in card_basic
-    override val dataSerializer = CardBasicData.serializer()
-    override val promptSchema = ""  // empty — the built-in schema is already in the catalog
-
-    @Composable
-    override fun Render(data: CardBasicData, onFeedback: (() -> Unit)?, modifier: Modifier) {
-        // Your custom rendering for card_basic
-    }
-}
-```
-
 ### Building the Registry
 
 Build one `AuiPluginRegistry` and pass it to both the renderer and the prompt generator:
@@ -332,7 +317,6 @@ Build one `AuiPluginRegistry` and pass it to both the renderer and the prompt ge
 val pluginRegistry = AuiPluginRegistry().registerAll(
     FunFactPlugin,
     OpenUrlPlugin(context),
-    MyCardBasicPlugin,
 )
 
 // Renderer — plugins render custom blocks and handle actions
@@ -386,7 +370,7 @@ The library exposes a deliberately small surface:
 - **`AuiParser`** — JSON parser (used internally by `AuiRenderer`, but available if you need pre-parsing).
 - **`AuiResponse`** / **`AuiBlock`** / **`AuiStep`** — Data models for parsed responses.
 - **`AuiPluginRegistry`** — Register and look up plugins. Pass to both renderer and prompt generator.
-- **`AuiComponentPlugin<T>`** — Add or override component types with custom Compose rendering.
+- **`AuiComponentPlugin<T>`** — Add custom component types with custom Compose rendering.
 - **`AuiActionPlugin`** — Handle named actions (navigation, URLs, etc.) with chain-of-responsibility routing. Mark `isReadOnly = true` so the renderer keeps pass-through actions enabled even after a collecting block has been spent.
 
 Everything else is `internal`.

@@ -22,7 +22,8 @@ data class AuiResponse(
 
     /**
      * Ordered list of steps for [AuiDisplay.SURVEY]. The library renders each step inside
-     * a persistent bottom sheet, navigating between them without closing.
+     * host-provided flat content, injecting Back / Next / Submit navigation while the host
+     * owns the surrounding container (sheet, dialog, pane, inline content).
      */
     val steps: List<AuiStep> = emptyList(),
 

@@ -28,14 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.internal.BlockRenderer
-import com.bennyjon.aui.compose.plugin.componentPlugin
+import com.bennyjon.aui.compose.internal.inputMetadata
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiHeadingColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.AuiInputBlock
 import com.bennyjon.aui.core.model.AuiStep
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.StepperStep
@@ -86,7 +85,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *   the library-injected Submit button on the final step.
  * @param modifier Modifier applied to the outermost [Column].
  * @param pluginRegistry Registry of component plugins, passed through to [BlockRenderer]
- *   for rendering custom or overridden block types within each step.
+ *   for rendering custom block types within each step.
  * @param onStepFeedback Called for any non-terminal feedback fired by blocks inside a step
  *   (e.g. an `open_url` button the AI added to a step). Action plugin routing is handled
  *   upstream by [com.bennyjon.aui.compose.AuiRenderer]. Defaults to a no-op.
@@ -343,7 +342,7 @@ private fun SurveyNavSecondaryButton(
  * answer in [params].
  *
  * Both built-in input blocks ([AuiInputBlock]) and plugin-provided inputs
- * ([AuiComponentPlugin.inputKey][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputKey])
+ * ([AuiComponentPlugin.inputMetadata][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputMetadata])
  * are recognized. Each input's `label` (falling back to its `key`) becomes the entry's
  * question. For single-input steps, the step-level [AuiStep.question] is preferred over
  * the input label to preserve richer summary text.
@@ -355,7 +354,9 @@ internal fun getAllStepEntries(
 ): List<AuiEntry> {
     val entries = mutableListOf<AuiEntry>()
     for (block in step.blocks) {
-        val (key, label) = block.inputKeyAndLabel(pluginRegistry) ?: continue
+        val metadata = block.inputMetadata(pluginRegistry) ?: continue
+        val key = metadata.key
+        val label = metadata.label
         val answer = params[key]?.takeIf { it.isNotBlank() } ?: continue
         entries.add(AuiEntry(question = label ?: key, answer = answer))
     }
@@ -364,21 +365,6 @@ internal fun getAllStepEntries(
         return listOf(entries[0].copy(question = stepQuestion))
     }
     return entries
-}
-
-/**
- * Returns the registry key and human-readable label for this block if it is an input,
- * or `null` otherwise.
- */
-private fun AuiBlock.inputKeyAndLabel(
-    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
-): Pair<String, String?>? = when {
-    this is AuiInputBlock -> inputData.key to inputData.label
-    this is AuiBlock.Unknown -> {
-        val plugin = pluginRegistry.componentPlugin(type)
-        plugin?.inputKey?.let { key -> key to plugin.inputLabel }
-    }
-    else -> null
 }
 
 /**

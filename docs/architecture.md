@@ -1,7 +1,7 @@
 # AUI Android — Library Architecture
 
 > An open-source library for rendering AI-driven interactive UI in native Jetpack Compose.  
-> Drop-in. Provider-agnostic. Themeable. Production-ready.
+> Drop-in. Provider-agnostic. Themeable. Still evolving.
 
 ---
 
@@ -123,17 +123,12 @@ The library exposes a deliberately small API. Everything else is internal.
 ```kotlin
 // ── Parsing ──────────────────────────────────────────────
 
-object AuiParser {
-    /** Parse a JSON string into an AuiResponse. Returns null on failure. */
-    fun parse(json: String): AuiResponse?
-    
-    /** Parse with detailed error reporting. */
-    fun parseResult(json: String): AuiParseResult<AuiResponse>
-}
+class AuiParser {
+    /** Parse a JSON string into an AuiResponse. Throws on malformed input. */
+    fun parse(json: String): AuiResponse
 
-sealed class AuiParseResult<T> {
-    data class Success<T>(val value: T) : AuiParseResult<T>()
-    data class Error<T>(val message: String, val cause: Throwable?) : AuiParseResult<T>()
+    /** Parse and return null on malformed input. */
+    fun parseOrNull(json: String): AuiResponse?
 }
 
 // ── Data Models ──────────────────────────────────────────
@@ -201,6 +196,8 @@ data class AuiFeedback(
     val formattedEntries: String? = null,
     // Structured Q+A pairs. Use to build a custom summary instead of formattedEntries.
     val entries: List<AuiEntry> = emptyList(),
+    val stepsSkipped: Int? = null,
+    val stepsTotal: Int? = null,
 )
 
 data class AuiEntry(
@@ -320,8 +317,15 @@ val LocalAuiTheme: ProvidableCompositionLocal<AuiTheme>
 // ── Plugin System (Compose half) ─────────────────────────
 
 abstract class AuiComponentPlugin<T : Any> : AuiPlugin() {
-    abstract override val componentType: String
+    abstract val componentType: String
     abstract val dataSerializer: KSerializer<T>
+    open fun inputMetadata(data: T): InputMetadata? = null
+
+    data class InputMetadata(
+        val key: String,
+        val label: String? = null,
+    )
+
     @Composable abstract fun Render(
         data: T,
         onFeedback: (() -> Unit)?,

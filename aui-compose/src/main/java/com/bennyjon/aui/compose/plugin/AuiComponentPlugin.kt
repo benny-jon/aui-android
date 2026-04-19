@@ -9,12 +9,12 @@ import kotlinx.serialization.KSerializer
  * A plugin that renders a custom component type in Jetpack Compose.
  *
  * Component plugins let host apps introduce entirely new component types
- * or override built-in ones. The library handles JSON parsing automatically
+ * that are not part of the built-in catalog. The library handles JSON parsing automatically
  * using the plugin's [dataSerializer] — no manual field extraction needed.
  *
  * To **add a new type**, register a plugin with a unique [componentType].
- * To **override a built-in**, register a plugin whose [componentType] matches
- * the built-in's type (e.g. `"card_basic"`). The plugin takes priority.
+ * Built-in component types are parsed directly into built-in [com.bennyjon.aui.core.model.AuiBlock]
+ * subclasses, so component plugins only participate for unknown/custom block types.
  *
  * Example:
  * ```kotlin
@@ -38,6 +38,17 @@ import kotlinx.serialization.KSerializer
  *          Must be `@Serializable` with a matching [KSerializer].
  */
 abstract class AuiComponentPlugin<T : Any> : AuiPlugin {
+    /**
+     * Metadata describing a plugin-rendered input component.
+     *
+     * Returned by [inputMetadata] so the feedback pipeline can accumulate values from
+     * plugin components in the same way it does for built-in [com.bennyjon.aui.core.model.AuiInputBlock]s.
+     */
+    data class InputMetadata(
+        val key: String,
+        val label: String? = null,
+    )
+
     /** The component type string this plugin handles (e.g. `"card_product_review"`). */
     abstract val componentType: String
 
@@ -50,20 +61,15 @@ abstract class AuiComponentPlugin<T : Any> : AuiPlugin {
     abstract val dataSerializer: KSerializer<T>
 
     /**
-     * If this plugin renders an input component, return its registry key.
+     * If this plugin renders an input component, return its input metadata for this block instance.
      *
-     * Returning non-null tells the feedback pipeline (both [BlockRenderer][com.bennyjon.aui.compose.internal.BlockRenderer]
-     * and [AuiSurveyContent][com.bennyjon.aui.compose.display.AuiSurveyContent]) to include this
-     * component's value in entry accumulation. `null` means this plugin is not an input.
+     * Returning non-null tells the feedback pipeline (both
+     * [BlockRenderer][com.bennyjon.aui.compose.internal.BlockRenderer] and
+     * [AuiSurveyContent][com.bennyjon.aui.compose.display.AuiSurveyContent]) to include this
+     * component's value in entry accumulation. Because this is derived from [data], each rendered
+     * block instance can carry its own key and label instead of sharing one plugin-wide value.
      */
-    open val inputKey: String? get() = null
-
-    /**
-     * Human-readable label for this input, used as the entry question in feedback summaries.
-     *
-     * Only meaningful when [inputKey] is non-null. Falls back to [inputKey] if `null`.
-     */
-    open val inputLabel: String? get() = null
+    open fun inputMetadata(data: T): InputMetadata? = null
 
     /**
      * Render this component.

@@ -30,10 +30,10 @@ enum class AuiDisplay {
     @SerialName("expanded") EXPANDED,
 
     /**
-     * Multi-page structured input. Rendered as a persistent bottom sheet that navigates
-     * between questions without closing. The library handles navigation (Back/Next/Submit),
-     * the step indicator, answer accumulation, and the final submission. Content is declared
-     * as a list of [AuiStep]s — one per question.
+     * Multi-page structured input. Rendered as flat content that the host mounts inside its
+     * own container. The library handles navigation (Back/Next/Submit), the step indicator,
+     * answer accumulation, and the final submission. Content is declared as a list of
+     * [AuiStep]s — one per question.
      */
     @SerialName("survey") SURVEY,
 }

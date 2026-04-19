@@ -3,6 +3,7 @@ package com.bennyjon.aui.compose
 import com.bennyjon.aui.compose.display.buildSurveyFormattedEntries
 import com.bennyjon.aui.compose.internal.buildEntriesFromBlocks
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
+import com.bennyjon.aui.compose.plugin.AuiComponentPlugin.InputMetadata
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.data.ChipOption
@@ -13,7 +14,6 @@ import com.bennyjon.aui.core.model.data.InputSliderData
 import com.bennyjon.aui.core.model.data.TextData
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -118,6 +118,28 @@ class FeedbackBuildingTest {
         assertEquals("Rate your experience", result[0].question)
     }
 
+    @Test
+    fun `buildEntriesFromBlocks keeps collecting inputs under the same heading`() {
+        val blocks = listOf(
+            AuiBlock.Heading(data = HeadingData(text = "Tell us about yourself")),
+            AuiBlock.InputSlider(
+                data = InputSliderData(key = "confidence", label = "Confidence", min = 0f, max = 10f),
+            ),
+            AuiBlock.ChipSelectSingle(
+                data = ChipSelectSingleData(key = "role", options = emptyList()),
+            ),
+        )
+        val registry = mapOf("confidence" to "8", "role" to "Developer")
+
+        val result = buildEntriesFromBlocks(blocks, registry)
+
+        assertEquals(2, result.size)
+        assertEquals("Tell us about yourself", result[0].question)
+        assertEquals("8", result[0].answer)
+        assertEquals("Tell us about yourself", result[1].question)
+        assertEquals("Developer", result[1].answer)
+    }
+
     // ── buildSurveyFormattedEntries ────────────────────────────────────────────
 
     @Test
@@ -179,21 +201,28 @@ class FeedbackBuildingTest {
         type: String,
         key: String,
         label: String? = null,
-    ): AuiComponentPlugin<String> = object : AuiComponentPlugin<String>() {
+    ): AuiComponentPlugin<PluginInputData> = object : AuiComponentPlugin<PluginInputData>() {
         override val id = type
         override val componentType = type
         override val promptSchema = ""
-        override val dataSerializer: KSerializer<String> = String.serializer()
-        override val inputKey: String = key
-        override val inputLabel: String? = label
+        override val dataSerializer: KSerializer<PluginInputData> = PluginInputData.serializer()
+
+        override fun inputMetadata(data: PluginInputData): InputMetadata =
+            InputMetadata(key = data.key, label = data.label)
 
         @androidx.compose.runtime.Composable
         override fun Render(
-            data: String,
+            data: PluginInputData,
             onFeedback: (() -> Unit)?,
             modifier: androidx.compose.ui.Modifier,
         ) = Unit
     }
+
+    @kotlinx.serialization.Serializable
+    data class PluginInputData(
+        val key: String,
+        val label: String? = null,
+    )
 
     @Test
     fun `buildEntriesFromBlocks pairs heading with plugin input`() {
@@ -202,7 +231,13 @@ class FeedbackBuildingTest {
 
         val blocks = listOf(
             AuiBlock.Heading(data = HeadingData(text = "When were you born?")),
-            AuiBlock.Unknown(type = "date_picker"),
+            AuiBlock.Unknown(
+                type = "date_picker",
+                rawData = kotlinx.serialization.json.buildJsonObject {
+                    put("key", kotlinx.serialization.json.JsonPrimitive("dob"))
+                    put("label", kotlinx.serialization.json.JsonPrimitive("Date of birth"))
+                },
+            ),
         )
         val result = buildEntriesFromBlocks(blocks, mapOf("dob" to "1990-01-15"), registry)
 
@@ -212,10 +247,55 @@ class FeedbackBuildingTest {
     }
 
     @Test
+    fun `buildEntriesFromBlocks keeps plugin inputs under the same heading`() {
+        val registry = AuiPluginRegistry()
+        registry.register(inputPlugin(type = "date_picker", key = "dob", label = "Date of birth"))
+        registry.register(inputPlugin(type = "time_picker", key = "reminder_time", label = "Reminder time"))
+
+        val blocks = listOf(
+            AuiBlock.Heading(data = HeadingData(text = "Set your reminder")),
+            AuiBlock.Unknown(
+                type = "date_picker",
+                rawData = kotlinx.serialization.json.buildJsonObject {
+                    put("key", kotlinx.serialization.json.JsonPrimitive("dob"))
+                    put("label", kotlinx.serialization.json.JsonPrimitive("Date of birth"))
+                },
+            ),
+            AuiBlock.Unknown(
+                type = "time_picker",
+                rawData = kotlinx.serialization.json.buildJsonObject {
+                    put("key", kotlinx.serialization.json.JsonPrimitive("reminder_time"))
+                    put("label", kotlinx.serialization.json.JsonPrimitive("Reminder time"))
+                },
+            ),
+        )
+
+        val result = buildEntriesFromBlocks(
+            blocks = blocks,
+            registry = mapOf(
+                "dob" to "1990-01-15",
+                "reminder_time" to "09:30",
+            ),
+            pluginRegistry = registry,
+        )
+
+        assertEquals(2, result.size)
+        assertEquals("Set your reminder", result[0].question)
+        assertEquals("1990-01-15", result[0].answer)
+        assertEquals("Set your reminder", result[1].question)
+        assertEquals("09:30", result[1].answer)
+    }
+
+    @Test
     fun `buildEntriesFromBlocks ignores Unknown without plugin`() {
         val blocks = listOf(
             AuiBlock.Heading(data = HeadingData(text = "Pick a date")),
-            AuiBlock.Unknown(type = "date_picker"),
+            AuiBlock.Unknown(
+                type = "date_picker",
+                rawData = kotlinx.serialization.json.buildJsonObject {
+                    put("key", kotlinx.serialization.json.JsonPrimitive("dob"))
+                },
+            ),
         )
         val result = buildEntriesFromBlocks(blocks, mapOf("dob" to "1990-01-15"))
         assertTrue(result.isEmpty())

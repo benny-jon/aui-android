@@ -37,6 +37,7 @@ import com.bennyjon.aui.compose.components.text.AuiFileContent
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.components.text.AuiText
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
+import com.bennyjon.aui.compose.plugin.AuiComponentPlugin.InputMetadata
 import com.bennyjon.aui.compose.plugin.componentPlugin
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -46,17 +47,17 @@ import com.bennyjon.aui.core.model.AuiInputBlock
 import com.bennyjon.aui.core.model.isReadOnly
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 
 private const val TAG = "BlockRenderer"
 
 /**
  * Scans [blocks] for heading→input pairs and maps them to [AuiEntry] instances using the
- * current [registry] values. Each [AuiBlock.Heading] sets the current question; the next
- * input block whose key has a value in the registry produces an entry.
+ * current [registry] values. Each [AuiBlock.Heading] sets the current question; every
+ * subsequent input block whose key has a value in the registry uses that heading until a new
+ * heading appears.
  *
  * Both built-in input blocks ([AuiInputBlock]) and plugin-provided inputs
- * ([AuiComponentPlugin.inputKey][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputKey])
+ * ([AuiComponentPlugin.inputMetadata][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputMetadata])
  * are recognized.
  */
 internal fun buildEntriesFromBlocks(
@@ -71,31 +72,47 @@ internal fun buildEntriesFromBlocks(
             currentQuestion = block.data.text
             continue
         }
-        val key = block.inputKey(pluginRegistry) ?: continue
+        val key = block.inputMetadata(pluginRegistry)?.key ?: continue
         val question = currentQuestion ?: continue
         val answer = registry[key]?.takeIf { it.isNotBlank() } ?: continue
         entries.add(AuiEntry(question = question, answer = answer))
-        currentQuestion = null
     }
     return entries
 }
 
 /**
- * Returns the registry key for this block if it is an input, or `null` otherwise.
+ * Returns the input metadata for this block if it is an input, or `null` otherwise.
  *
  * Checks [AuiInputBlock] for built-ins and falls back to
- * [AuiComponentPlugin.inputKey][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputKey]
+ * [AuiComponentPlugin.inputMetadata][com.bennyjon.aui.compose.plugin.AuiComponentPlugin.inputMetadata]
  * for [AuiBlock.Unknown] blocks backed by a plugin.
  */
-internal fun AuiBlock.inputKey(pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty): String? =
+internal fun AuiBlock.inputMetadata(
+    pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
+): InputMetadata? =
     when {
-        this is AuiInputBlock -> inputData.key
-        this is AuiBlock.Unknown -> pluginRegistry.componentPlugin(type)?.inputKey
+        this is AuiInputBlock -> InputMetadata(key = inputData.key, label = inputData.label)
+        this is AuiBlock.Unknown -> pluginRegistry.componentPlugin(type)?.metadataFromBlock(this)
         else -> null
     }
 
 /** Lenient JSON instance for decoding plugin component data. */
 private val pluginJson = Json { ignoreUnknownKeys = true }
+
+internal fun AuiComponentPlugin<*>.metadataFromBlock(block: AuiBlock.Unknown): InputMetadata? {
+    val data = parseData(block) ?: return null
+    @Suppress("UNCHECKED_CAST")
+    return (this as AuiComponentPlugin<Any>).inputMetadata(data)
+}
+
+internal fun AuiComponentPlugin<*>.parseData(block: AuiBlock.Unknown): Any? {
+    val rawData = block.rawData ?: return null
+    return try {
+        pluginJson.decodeFromJsonElement(dataSerializer, rawData)
+    } catch (_: Exception) {
+        null
+    }
+}
 
 /**
  * Maps each [AuiBlock] to its composable via an exhaustive `when` expression.
@@ -235,15 +252,12 @@ private fun RenderPluginBlock(
     registry: MutableState<Map<String, String>>,
     onFeedback: (AuiFeedback) -> Unit,
 ) {
-    val rawData = block.rawData
-    if (rawData == null) {
+    if (block.rawData == null) {
         Log.w(TAG, "Plugin block '${block.type}' has no data field — skipping")
         return
     }
-    val data = try {
-        pluginJson.decodeFromJsonElement(plugin.dataSerializer, rawData)
-    } catch (e: Exception) {
-        Log.w(TAG, "Failed to parse data for plugin block '${block.type}': ${e.message}")
+    val data = plugin.parseData(block) ?: run {
+        Log.w(TAG, "Failed to parse data for plugin block '${block.type}'")
         return
     }
     val pluginOnFeedback: (() -> Unit)? = block.feedback?.let { feedback ->

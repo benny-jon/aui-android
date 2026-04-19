@@ -3,6 +3,7 @@ package com.bennyjon.aui.compose
 import com.bennyjon.aui.compose.display.buildSurveyFormattedEntries
 import com.bennyjon.aui.compose.display.getAllStepEntries
 import com.bennyjon.aui.compose.plugin.AuiComponentPlugin
+import com.bennyjon.aui.compose.plugin.AuiComponentPlugin.InputMetadata
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiEntry
 import com.bennyjon.aui.core.model.AuiFeedback
@@ -18,7 +19,6 @@ import com.bennyjon.aui.core.model.data.RadioListData
 import com.bennyjon.aui.core.model.data.SelectionOption
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -311,21 +311,28 @@ class SurveyFeedbackAccumulationTest {
         type: String,
         key: String,
         label: String? = null,
-    ): AuiComponentPlugin<String> = object : AuiComponentPlugin<String>() {
+    ): AuiComponentPlugin<PluginInputData> = object : AuiComponentPlugin<PluginInputData>() {
         override val id = type
         override val componentType = type
         override val promptSchema = ""
-        override val dataSerializer: KSerializer<String> = String.serializer()
-        override val inputKey: String = key
-        override val inputLabel: String? = label
+        override val dataSerializer: KSerializer<PluginInputData> = PluginInputData.serializer()
+
+        override fun inputMetadata(data: PluginInputData): InputMetadata =
+            InputMetadata(key = data.key, label = data.label)
 
         @androidx.compose.runtime.Composable
         override fun Render(
-            data: String,
+            data: PluginInputData,
             onFeedback: (() -> Unit)?,
             modifier: androidx.compose.ui.Modifier,
         ) = Unit
     }
+
+    @kotlinx.serialization.Serializable
+    data class PluginInputData(
+        val key: String,
+        val label: String? = null,
+    )
 
     @Test
     fun `getAllStepEntries captures plugin input when pluginRegistry provided`() {
@@ -334,7 +341,13 @@ class SurveyFeedbackAccumulationTest {
 
         val step = AuiStep(
             blocks = listOf(
-                AuiBlock.Unknown(type = "date_picker"),
+                AuiBlock.Unknown(
+                    type = "date_picker",
+                    rawData = kotlinx.serialization.json.buildJsonObject {
+                        put("key", kotlinx.serialization.json.JsonPrimitive("dob"))
+                        put("label", kotlinx.serialization.json.JsonPrimitive("Date of birth"))
+                    },
+                ),
             ),
         )
         val params = mapOf("dob" to "1990-01-15")
@@ -352,7 +365,12 @@ class SurveyFeedbackAccumulationTest {
 
         val step = AuiStep(
             blocks = listOf(
-                AuiBlock.Unknown(type = "color_picker"),
+                AuiBlock.Unknown(
+                    type = "color_picker",
+                    rawData = kotlinx.serialization.json.buildJsonObject {
+                        put("key", kotlinx.serialization.json.JsonPrimitive("fav_color"))
+                    },
+                ),
             ),
         )
         val params = mapOf("fav_color" to "Blue")
@@ -384,7 +402,13 @@ class SurveyFeedbackAccumulationTest {
                 AuiBlock.InputTextSingle(
                     data = InputTextSingleData(key = "name", label = "Your name"),
                 ),
-                AuiBlock.Unknown(type = "date_picker"),
+                AuiBlock.Unknown(
+                    type = "date_picker",
+                    rawData = kotlinx.serialization.json.buildJsonObject {
+                        put("key", kotlinx.serialization.json.JsonPrimitive("dob"))
+                        put("label", kotlinx.serialization.json.JsonPrimitive("Date of birth"))
+                    },
+                ),
             ),
         )
         val params = mapOf("name" to "Benny", "dob" to "1990-01-15")
