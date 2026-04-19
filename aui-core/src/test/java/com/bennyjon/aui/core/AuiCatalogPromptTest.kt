@@ -135,6 +135,14 @@ class AuiCatalogPromptTest {
     }
 
     @Test
+    fun `generate treats markdown and document asks as expanded-worthy`() {
+        assertTrue(output.contains("document/file-style deliverable"))
+        assertTrue(output.contains("markdown"))
+        assertTrue(output.contains("an .md file"))
+        assertTrue(output.contains("a README"))
+    }
+
+    @Test
     fun `generate documents card_title and card_description for expanded stub`() {
         assertTrue(output.contains("card_title"))
         assertTrue(output.contains("card_description"))

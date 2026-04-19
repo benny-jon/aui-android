@@ -221,7 +221,7 @@ object AuiCatalogPrompt {
     internal const val FRAMING_CONSERVATIVE =
         """AUI is OPTIONAL and ADDITIVE. Default to plain text. Only use AUI when an
 interactive component clearly adds value over prose — for example: collecting
-structured input, offering quick-reply choices, or running a short survey."""
+structured input, offering quick-reply choices, running a short survey, files, docs and markdown long texts."""
 
     internal const val FRAMING_BALANCED =
         """Use AUI whenever a component makes the response more useful, actionable, or
@@ -307,6 +307,8 @@ and add a "survey_title":
                • Content that benefits from a dedicated reading surface
                  (long comparison tables, image galleries, detailed specs)
                • A response the user will likely want to revisit or reference
+               • The user explicitly asked for a document/file-style deliverable
+                 such as markdown, an .md file, a README, a plan, a spec, or a checklist
              If the content fits naturally in the chat flow, keep it inline.
              When you do use expanded, always include card_title and
              card_description so the stub preview is meaningful.

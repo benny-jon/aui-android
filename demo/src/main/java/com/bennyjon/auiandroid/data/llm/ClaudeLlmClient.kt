@@ -12,6 +12,7 @@ import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -21,7 +22,8 @@ import kotlinx.serialization.json.put
  * [LlmClient] implementation that calls the Anthropic Messages API.
  *
  * Sends conversation history to `POST /v1/messages` and extracts the text
- * from the first `text`-type content block, returning it as [LlmRawResult.rawContent].
+ * from all `text`-type content blocks, returning the concatenated result as
+ * [LlmRawResult.rawContent].
  * Parsing into text/AUI is deferred to the repository layer via [AuiResponseExtractor].
  *
  * @param apiKey Anthropic API key (x-api-key header).
@@ -60,13 +62,7 @@ class ClaudeLlmClient(
             }
             val root = Json.parseToJsonElement(responseText).jsonObject
             val messageId = root["id"]?.jsonPrimitive?.content
-            val contentText = root["content"]
-                ?.jsonArray
-                ?.firstOrNull { it.jsonObject["type"]?.jsonPrimitive?.content == "text" }
-                ?.jsonObject
-                ?.get("text")
-                ?.jsonPrimitive
-                ?.content
+            val contentText = extractContentText(root)
                 ?: return LlmRawResult(
                     messageId = messageId,
                     errorMessage = "Claude response missing text content",
@@ -75,6 +71,17 @@ class ClaudeLlmClient(
         } catch (e: Exception) {
             LlmRawResult(errorMessage = "Claude API error: ${e.message}", cause = e)
         }
+    }
+
+    internal fun extractContentText(root: JsonObject): String? {
+        val content = root["content"]?.jsonArray ?: return null
+        return content.mapNotNull { block ->
+            val obj = block.jsonObject
+            if (obj["type"]?.jsonPrimitive?.content != "text") {
+                return@mapNotNull null
+            }
+            obj["text"]?.jsonPrimitive?.content
+        }.joinToString(separator = "").ifBlank { null }
     }
 
     private fun buildRequestBody(
