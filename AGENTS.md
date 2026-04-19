@@ -79,6 +79,12 @@ or response model, not chat-product features.
   under the header, including "Open" and dismiss actions
 - Session 35: Expanded `AuiColors` with tertiary tokens and mapped them through
   `AuiColors.fromColorScheme`
+- Session 36: Widened landscape single-pane live chat so the no-detail state keeps
+  a stronger minimum chat width instead of collapsing to split-pane proportions
+- Session 37: Updated the live chat composer to support bounded multiline input
+  instead of forcing a single-line message field
+- Session 38: Added a centered empty state to live chat so a new conversation
+  shows clear guidance before the first message arrives
 - Session 31: Tuned live chat context hints so markdown/document requests steer the
   model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
 

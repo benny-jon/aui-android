@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -24,7 +25,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -57,7 +57,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
@@ -74,6 +73,8 @@ import com.bennyjon.auiandroid.ui.theme.DemoThemes
 
 /** Width breakpoint at which the chat splits into a chat list + side detail pane. */
 private val TwoPaneBreakpointDp = 600.dp
+/** Preferred minimum width for the chat column in wide single-pane landscape mode. */
+private val SinglePaneLandscapeMinChatWidthDp = 640.dp
 
 /**
  * Available AUI themes in the demo app.
@@ -132,7 +133,11 @@ fun LiveChatScreen(
     val isLandscape = screenWidthDp >= screenHeightDp
     val isTwoPane = screenWidthDp >= TwoPaneBreakpointDp && isLandscape && hasExpandedMessage
     val singlePaneLandscapeInset by animateDpAsState(
-        targetValue = if (!isTwoPane && isLandscape) screenWidthDp / 4 else 0.dp,
+        targetValue = if (!isTwoPane && isLandscape) {
+            ((screenWidthDp - SinglePaneLandscapeMinChatWidthDp) / 2).coerceAtLeast(0.dp)
+        } else {
+            0.dp
+        },
         label = "live_chat_single_pane_inset",
     )
 
@@ -286,6 +291,12 @@ private fun ChatList(
             listState.animateScrollToItem(messages.size - 1)
         }
     }
+    if (messages.isEmpty() && !isSending) {
+        EmptyChatState(
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+
     LazyColumn(
         state = listState,
         modifier = modifier,
@@ -322,6 +333,33 @@ private fun ChatList(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun EmptyChatState(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "Start a conversation",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "Try out this enriched Chat experience",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -648,16 +686,10 @@ private fun LiveChatInput(
                 onValueChange = { text = it },
                 modifier = Modifier.weight(1f),
                 placeholder = { Text("Type a message...") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (text.isNotBlank() && !isSending) {
-                            onSend(text)
-                            text = ""
-                        }
-                    },
-                ),
-                singleLine = true,
+                keyboardOptions = KeyboardOptions.Default,
+                minLines = 1,
+                maxLines = 5,
+                singleLine = false,
                 shape = RoundedCornerShape(24.dp),
                 enabled = !isSending,
             )
