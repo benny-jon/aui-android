@@ -97,6 +97,8 @@ or response model, not chat-product features.
   surface as readable assistant errors instead of malformed message parsing
 - Session 43: Added live chat retry action on error banners and explicit OpenAI JSON
   error parsing so provider failures surface cleanly for both real backends
+- Session 44: Made tolerant AUI parsing salvage malformed known blocks as `Unknown`
+  so partial responses still render instead of dropping the entire AUI payload
 
 ## Next Task
 

@@ -308,6 +308,99 @@ class AuiParserTest {
         assertNotNull(parser.parseOrNull(json))
     }
 
+    @Test
+    fun `parseOrNull salvages malformed known blocks as Unknown`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                { "type": "heading", "data": { "text": "Attendance" } },
+                {
+                  "type": "chart",
+                  "data": {
+                    "variant": "line",
+                    "series": [
+                      {
+                        "label": "Tickets Sold",
+                        "values": [
+                          { "x": 1990, "y": 1293 }
+                        ]
+                      },
+                      { "x": 2023, "y": 1050 }
+                    ]
+                  }
+                },
+                { "type": "text", "data": { "text": "Recovered after 2020." } }
+              ]
+            }
+        """.trimIndent()
+
+        val response = parser.parseOrNull(json)
+
+        assertNotNull(response)
+        assertEquals(AuiDisplay.INLINE, response!!.display)
+        assertEquals(3, response.blocks.size)
+        assertTrue(response.blocks[0] is AuiBlock.Heading)
+        assertTrue(response.blocks[1] is AuiBlock.Unknown)
+        assertEquals("chart", (response.blocks[1] as AuiBlock.Unknown).type)
+        assertTrue(response.blocks[2] is AuiBlock.Text)
+    }
+
+    @Test
+    fun `parseOrNull salvages malformed survey steps and blocks`() {
+        val json = """
+            {
+              "display": "survey",
+              "survey_title": "Quick check-in",
+              "steps": [
+                {
+                  "question": "How did it go?",
+                  "blocks": [
+                    {
+                      "type": "radio_list",
+                      "data": {
+                        "key": "rating",
+                        "options": [
+                          { "label": "Great", "value": "great" }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "question": "Show me a trend",
+                  "blocks": [
+                    {
+                      "type": "chart",
+                      "data": {
+                        "variant": "line",
+                        "series": [
+                          {
+                            "label": "Sales",
+                            "values": [
+                              { "x": 1, "y": 100 }
+                            ]
+                          },
+                          { "x": 2, "y": 150 }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val response = parser.parseOrNull(json)
+
+        assertNotNull(response)
+        assertEquals(AuiDisplay.SURVEY, response!!.display)
+        assertEquals(2, response.steps.size)
+        assertTrue(response.steps[0].blocks[0] is AuiBlock.RadioList)
+        assertTrue(response.steps[1].blocks[0] is AuiBlock.Unknown)
+        assertEquals("chart", (response.steps[1].blocks[0] as AuiBlock.Unknown).type)
+    }
+
     // ── Inline display + card stub fields ─────────────────────────────────────
 
     @Test

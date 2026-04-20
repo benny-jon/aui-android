@@ -127,7 +127,7 @@ class AuiParser {
     /** Parse a JSON string into an AuiResponse. Throws on malformed input. */
     fun parse(json: String): AuiResponse
 
-    /** Parse and return null on malformed input. */
+    /** Parse leniently; return null only when the top-level response is unusable. */
     fun parseOrNull(json: String): AuiResponse?
 }
 

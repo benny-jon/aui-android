@@ -1,5 +1,6 @@
 package com.bennyjon.auiandroid.data.llm
 
+import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -61,6 +62,48 @@ class AuiResponseExtractorTest {
         assertNotNull(result.auiJson)
         assertNull(result.auiResponse)
         assertNull(result.errorMessage)
+    }
+
+    @Test
+    fun `envelope with malformed known block preserves remaining AUI blocks`() {
+        val raw = """
+        {
+          "text": "Here's the trend:",
+          "aui": {
+            "display": "inline",
+            "blocks": [
+              { "type": "heading", "data": { "text": "Attendance" } },
+              {
+                "type": "chart",
+                "data": {
+                  "variant": "line",
+                  "series": [
+                    {
+                      "label": "Tickets Sold",
+                      "values": [
+                        { "x": 1990, "y": 1293 }
+                      ]
+                    },
+                    { "x": 2023, "y": 1050 }
+                  ]
+                }
+              },
+              { "type": "text", "data": { "text": "Recovered after 2020." } }
+            ]
+          }
+        }
+        """.trimIndent()
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals("Here's the trend:", result.text)
+        assertNotNull(result.auiJson)
+        assertNotNull(result.auiResponse)
+        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(3, result.auiResponse!!.blocks.size)
+        assert(result.auiResponse!!.blocks[0] is AuiBlock.Heading)
+        assert(result.auiResponse!!.blocks[1] is AuiBlock.Unknown)
+        assert(result.auiResponse!!.blocks[2] is AuiBlock.Text)
     }
 
     @Test
