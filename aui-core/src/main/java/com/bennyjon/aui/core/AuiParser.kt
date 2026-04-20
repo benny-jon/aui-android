@@ -11,6 +11,8 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -39,7 +41,10 @@ class AuiParser {
      *
      * @throws SerializationException if the JSON is structurally invalid or missing required fields.
      */
-    fun parse(jsonString: String): AuiResponse = json.decodeFromString(jsonString)
+    fun parse(jsonString: String): AuiResponse {
+        val normalizedRoot = normalizeResponseRoot(json.parseToJsonElement(jsonString))
+        return json.decodeFromJsonElement(normalizedRoot)
+    }
 
     /**
      * Parses [jsonString] into an [AuiResponse], returning `null` only when the top-level
@@ -59,7 +64,7 @@ class AuiParser {
 
     private fun parseResilientOrNull(jsonString: String): AuiResponse? {
         val root = try {
-            json.parseToJsonElement(jsonString) as? JsonObject
+            normalizeResponseRoot(json.parseToJsonElement(jsonString)) as? JsonObject
         } catch (_: Exception) {
             null
         } ?: return null
@@ -110,6 +115,88 @@ class AuiParser {
         element?.let { json.decodeFromJsonElement<AuiFeedback>(it) }
     } catch (_: Exception) {
         null
+    }
+
+    /**
+     * Normalizes a common malformed shape emitted by some models:
+     *
+     * { "type": "...", "data": { ..., "feedback": { ... } } }
+     *
+     * into the canonical sibling form:
+     *
+     * { "type": "...", "data": { ... }, "feedback": { ... } }
+     *
+     * This only applies to top-level blocks (response blocks and survey step blocks).
+     * Nested item data such as quick_replies option feedback is left untouched.
+     */
+    private fun normalizeResponseRoot(root: JsonElement): JsonElement {
+        val obj = root as? JsonObject ?: return root
+        return buildJsonObject {
+            obj.forEach { (key, value) ->
+                when (key) {
+                    "blocks" -> put(key, normalizeBlocksArray(value))
+                    "steps" -> put(key, normalizeStepsArray(value))
+                    else -> put(key, value)
+                }
+            }
+        }
+    }
+
+    private fun normalizeBlocksArray(element: JsonElement): JsonElement {
+        val array = element as? JsonArray ?: return element
+        return buildJsonArray {
+            array.forEach { add(normalizeTopLevelBlockFeedback(it)) }
+        }
+    }
+
+    private fun normalizeStepsArray(element: JsonElement): JsonElement {
+        val array = element as? JsonArray ?: return element
+        return buildJsonArray {
+            array.forEach { stepElement ->
+                val step = stepElement as? JsonObject
+                if (step == null) {
+                    add(stepElement)
+                } else {
+                    add(
+                        buildJsonObject {
+                            step.forEach { (key, value) ->
+                                if (key == "blocks") {
+                                    put(key, normalizeBlocksArray(value))
+                                } else {
+                                    put(key, value)
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    private fun normalizeTopLevelBlockFeedback(element: JsonElement): JsonElement {
+        val obj = element as? JsonObject ?: return element
+        if (obj.containsKey("feedback")) return obj
+
+        val data = obj["data"] as? JsonObject ?: return obj
+        val nestedFeedback = data["feedback"] ?: return obj
+
+        return buildJsonObject {
+            obj.forEach { (key, value) ->
+                when (key) {
+                    "data" -> put(
+                        key,
+                        buildJsonObject {
+                            data.forEach { (dataKey, dataValue) ->
+                                if (dataKey != "feedback") put(dataKey, dataValue)
+                            }
+                        },
+                    )
+
+                    else -> put(key, value)
+                }
+            }
+            put("feedback", nestedFeedback)
+        }
     }
 
     private fun JsonElement?.asJsonArrayOrEmpty(): JsonArray = (this as? JsonArray) ?: JsonArray(emptyList())

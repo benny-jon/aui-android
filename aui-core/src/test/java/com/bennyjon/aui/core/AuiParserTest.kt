@@ -293,6 +293,66 @@ class AuiParserTest {
         assertEquals("Hi", block.data.text)
     }
 
+    @Test
+    fun `parse normalizes nested data feedback into top level block feedback`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                {
+                  "type": "button_primary",
+                  "data": {
+                    "label": "Submit Quiz",
+                    "feedback": { "action": "submit", "params": { "source": "quiz" } }
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val response = parser.parse(json)
+
+        assertEquals(AuiDisplay.INLINE, response.display)
+        val button = response.blocks.single() as AuiBlock.ButtonPrimary
+        assertEquals("Submit Quiz", button.data.label)
+        assertNotNull(button.feedback)
+        assertEquals("submit", button.feedback!!.action)
+        assertEquals("quiz", button.feedback!!.params["source"])
+    }
+
+    @Test
+    fun `parse normalizes nested data feedback inside survey step blocks`() {
+        val json = """
+            {
+              "display": "survey",
+              "survey_title": "Quiz",
+              "steps": [
+                {
+                  "question": "Ready?",
+                  "blocks": [
+                    {
+                      "type": "button_primary",
+                      "data": {
+                        "label": "Submit",
+                        "feedback": { "action": "submit", "params": { "step": "1" } }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val response = parser.parse(json)
+
+        assertEquals(AuiDisplay.SURVEY, response.display)
+        val button = response.steps.single().blocks.single() as AuiBlock.ButtonPrimary
+        assertEquals("Submit", button.data.label)
+        assertNotNull(button.feedback)
+        assertEquals("submit", button.feedback!!.action)
+        assertEquals("1", button.feedback!!.params["step"])
+    }
+
     // ── parseOrNull ───────────────────────────────────────────────────────────
 
     @Test
@@ -306,6 +366,35 @@ class AuiParserTest {
     fun `parseOrNull returns response for valid JSON`() {
         val json = """{"display":"expanded","blocks":[]}"""
         assertNotNull(parser.parseOrNull(json))
+    }
+
+    @Test
+    fun `parseOrNull preserves quick replies nested option feedback`() {
+        val json = """
+            {
+              "display": "inline",
+              "blocks": [
+                {
+                  "type": "quick_replies",
+                  "data": {
+                    "options": [
+                      {
+                        "label": "Yes",
+                        "feedback": { "action": "submit", "params": { "value": "yes" } }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val response = parser.parseOrNull(json)
+
+        assertNotNull(response)
+        val replies = response!!.blocks.single() as AuiBlock.QuickReplies
+        assertEquals("submit", replies.data.options.single().feedback?.action)
+        assertEquals("yes", replies.data.options.single().feedback?.params?.get("value"))
     }
 
     @Test

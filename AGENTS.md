@@ -99,6 +99,8 @@ or response model, not chat-product features.
   error parsing so provider failures surface cleanly for both real backends
 - Session 44: Made tolerant AUI parsing salvage malformed known blocks as `Unknown`
   so partial responses still render instead of dropping the entire AUI payload
+- Session 45: Normalized malformed top-level `data.feedback` into sibling block
+  `feedback` during parsing so misnested trigger actions still work
 
 ## Next Task
 
