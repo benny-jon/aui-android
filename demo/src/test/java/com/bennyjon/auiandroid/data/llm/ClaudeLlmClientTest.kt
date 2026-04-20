@@ -70,4 +70,27 @@ class ClaudeLlmClientTest {
 
         assertNull(result)
     }
+
+    @Test
+    fun `extractErrorMessage returns provider error details`() {
+        val root = Json.parseToJsonElement(
+            """
+            {
+              "type": "error",
+              "error": {
+                "type": "overloaded_error",
+                "message": "Overloaded"
+              },
+              "request_id": "req_011CaEUrFTUpnvCFmPetkqNa"
+            }
+            """.trimIndent()
+        ).jsonObject
+
+        val result = client.extractErrorMessage(root)
+
+        assertEquals(
+            "Claude API error (overloaded_error): Overloaded [req_011CaEUrFTUpnvCFmPetkqNa]",
+            result,
+        )
+    }
 }

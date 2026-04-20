@@ -15,6 +15,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -61,6 +62,12 @@ class ClaudeLlmClient(
                 Log.d("ClaudeLlmClient", responseText)
             }
             val root = Json.parseToJsonElement(responseText).jsonObject
+            extractErrorMessage(root)?.let { errorMessage ->
+                return LlmRawResult(
+                    messageId = root.primitiveContentOrNull("request_id"),
+                    errorMessage = errorMessage,
+                )
+            }
             val messageId = root["id"]?.jsonPrimitive?.content
             val contentText = extractContentText(root)
                 ?: return LlmRawResult(
@@ -83,6 +90,31 @@ class ClaudeLlmClient(
             obj["text"]?.jsonPrimitive?.content
         }.joinToString(separator = "").ifBlank { null }
     }
+
+    internal fun extractErrorMessage(root: JsonObject): String? {
+        if (root.primitiveContentOrNull("type") != "error") return null
+
+        val error = root["error"]?.jsonObject
+        val message = error?.primitiveContentOrNull("message")
+        val type = error?.primitiveContentOrNull("type")
+        val requestId = root.primitiveContentOrNull("request_id")
+
+        return buildString {
+            append("Claude API error")
+            if (!type.isNullOrBlank()) {
+                append(" (").append(type).append(")")
+            }
+            if (!message.isNullOrBlank()) {
+                append(": ").append(message)
+            }
+            if (!requestId.isNullOrBlank()) {
+                append(" [").append(requestId).append("]")
+            }
+        }
+    }
+
+    private fun JsonObject?.primitiveContentOrNull(key: String): String? =
+        this?.let { (it[key] as? JsonPrimitive)?.content }
 
     private fun buildRequestBody(
         systemPrompt: String,

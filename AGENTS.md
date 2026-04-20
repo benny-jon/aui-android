@@ -93,6 +93,10 @@ or response model, not chat-product features.
   previewable JSON examples, grouped sections, and asset validation tests
 - Session 41: Added a built-in `chart` block (`bar` / `line` / `pie` variants) rendered
   natively with Compose Canvas, including axis labels and legends; catalog count 25 → 26
+- Session 42: Handled Claude API error payloads explicitly so overload/provider failures
+  surface as readable assistant errors instead of malformed message parsing
+- Session 43: Added live chat retry action on error banners and explicit OpenAI JSON
+  error parsing so provider failures surface cleanly for both real backends
 
 ## Next Task
 

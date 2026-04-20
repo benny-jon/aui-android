@@ -4,6 +4,7 @@ import com.bennyjon.aui.core.AuiParser
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -56,8 +57,12 @@ internal object AuiResponseExtractor {
             } catch (_: Exception) {
                 null
             }
-            if (root != null && isClaudeApiResponse(root)) {
-                parseClaudeApiResponse(root)
+            if (root != null) {
+                when {
+                    isClaudeErrorResponse(root) -> parseClaudeErrorResponse(root)
+                    isClaudeApiResponse(root) -> parseClaudeApiResponse(root)
+                    else -> parseContentText(rawText)
+                }
             } else {
                 parseContentText(rawText)
             }
@@ -80,6 +85,10 @@ internal object AuiResponseExtractor {
         val content = root["content"] ?: return false
         return content is JsonArray
     }
+
+    private fun isClaudeErrorResponse(root: JsonObject): Boolean =
+        root.primitiveContentOrNull("type") == "error" &&
+            root["error"] is JsonObject
 
     /**
      * Parses the original structured envelope format: `{ "text": "...", "aui": { ... } }`.
@@ -120,6 +129,31 @@ internal object AuiResponseExtractor {
         val parsed = parseContentText(contentText)
         return parsed.copy(id = id ?: parsed.id)
     }
+
+    private fun parseClaudeErrorResponse(root: JsonObject): LlmResponse {
+        val error = root["error"]?.jsonObject
+        val message = error?.primitiveContentOrNull("message")
+        val type = error?.primitiveContentOrNull("type")
+        val requestId = root.primitiveContentOrNull("request_id")
+
+        val errorMessage = buildString {
+            append("Claude API error")
+            if (!type.isNullOrBlank()) {
+                append(" (").append(type).append(")")
+            }
+            if (!message.isNullOrBlank()) {
+                append(": ").append(message)
+            }
+            if (!requestId.isNullOrBlank()) {
+                append(" [").append(requestId).append("]")
+            }
+        }
+
+        return LlmResponse(id = requestId, errorMessage = errorMessage)
+    }
+
+    private fun JsonObject?.primitiveContentOrNull(key: String): String? =
+        this?.let { (it[key] as? JsonPrimitive)?.content }
 
     /**
      * Parses the text content of an assistant message, which may be:

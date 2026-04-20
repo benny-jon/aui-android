@@ -124,6 +124,7 @@ fun LiveChatScreen(
 ) {
     val messages by viewModel.messages.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
+    val canRetryLastMessage by viewModel.canRetryLastMessage.collectAsState()
     val currentProvider by viewModel.currentProvider.collectAsState()
     val selectedDetailMessageId by viewModel.selectedDetailMessageId.collectAsState()
     val hasExpandedMessage = messages.any { it.auiResponse?.display == AuiDisplay.EXPANDED }
@@ -220,8 +221,10 @@ fun LiveChatScreen(
                         pluginRegistry = pluginRegistry,
                         auiTheme = auiTheme,
                         onFeedback = viewModel::onFeedback,
+                        onRetry = viewModel::retryLastSend,
                         onOpenDetail = viewModel::openDetail,
                         activeDetailMessageId = detailPaneMessage?.id,
+                        retryEnabled = canRetryLastMessage && !isSending,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -244,8 +247,10 @@ fun LiveChatScreen(
                     pluginRegistry = pluginRegistry,
                     auiTheme = auiTheme,
                     onFeedback = viewModel::onFeedback,
+                    onRetry = viewModel::retryLastSend,
                     onOpenDetail = viewModel::openDetail,
                     activeDetailMessageId = null,
+                    retryEnabled = canRetryLastMessage && !isSending,
                     horizontalInset = singlePaneLandscapeInset,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -280,8 +285,10 @@ private fun ChatList(
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
     onFeedback: (AuiFeedback) -> Unit,
+    onRetry: () -> Unit,
     onOpenDetail: (String) -> Unit,
     activeDetailMessageId: String?,
+    retryEnabled: Boolean,
     horizontalInset: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
@@ -318,6 +325,8 @@ private fun ChatList(
                     onFeedback = onFeedback,
                     onOpenDetail = onOpenDetail,
                     isActiveDetail = message.id == activeDetailMessageId,
+                    onRetry = onRetry,
+                    retryEnabled = retryEnabled,
                 )
             }
         }
@@ -554,6 +563,8 @@ private fun AssistantMessage(
     onFeedback: (AuiFeedback) -> Unit,
     onOpenDetail: (String) -> Unit,
     isActiveDetail: Boolean,
+    onRetry: () -> Unit,
+    retryEnabled: Boolean,
 ) {
     // Error banner
     message.errorMessage?.let { error ->
@@ -562,12 +573,29 @@ private fun AssistantMessage(
             color = MaterialTheme.colorScheme.errorContainer,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(
-                text = error,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(
+                    onClick = onRetry,
+                    enabled = retryEnabled,
+                ) {
+                    Text(
+                        text = "Retry",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
         }
     }
 

@@ -59,6 +59,12 @@ class OpenAiLlmClient(
                 Log.d("OpenAiLlmClient", responseText)
             }
             val root = Json.parseToJsonElement(responseText).jsonObject
+            extractErrorMessage(root)?.let { errorMessage ->
+                return LlmRawResult(
+                    messageId = root.primitiveContentOrNull("id"),
+                    errorMessage = errorMessage,
+                )
+            }
             val messageId = root["id"]?.jsonPrimitive?.content
             val message = root["choices"]
                 ?.jsonArray
@@ -80,6 +86,26 @@ class OpenAiLlmClient(
             LlmRawResult(messageId = messageId, rawContent = rawContent)
         } catch (e: Exception) {
             LlmRawResult(errorMessage = "OpenAI API error: ${e.message}", cause = e)
+        }
+    }
+
+    internal fun extractErrorMessage(root: JsonObject): String? {
+        val error = root["error"]?.jsonObject ?: return null
+        val message = error.primitiveContentOrNull("message")
+        val type = error.primitiveContentOrNull("type")
+        val code = error.primitiveContentOrNull("code")
+
+        return buildString {
+            append("OpenAI API error")
+            if (!type.isNullOrBlank()) {
+                append(" (").append(type).append(")")
+            }
+            if (!message.isNullOrBlank()) {
+                append(": ").append(message)
+            }
+            if (!code.isNullOrBlank()) {
+                append(" [").append(code).append("]")
+            }
         }
     }
 
@@ -145,6 +171,9 @@ class OpenAiLlmClient(
             else -> null
         }
     }
+
+    private fun JsonObject.primitiveContentOrNull(key: String): String? =
+        (this[key] as? JsonPrimitive)?.content
 
     internal companion object {
         const val CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"

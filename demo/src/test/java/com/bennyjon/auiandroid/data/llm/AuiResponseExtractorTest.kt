@@ -220,6 +220,31 @@ class AuiResponseExtractorTest {
     }
 
     @Test
+    fun `claude error response returns structured error message`() {
+        val raw = """
+        {
+          "type": "error",
+          "error": {
+            "type": "overloaded_error",
+            "message": "Overloaded"
+          },
+          "request_id": "req_011CaEUrFTUpnvCFmPetkqNa"
+        }
+        """.trimIndent()
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals("req_011CaEUrFTUpnvCFmPetkqNa", result.id)
+        assertNull(result.text)
+        assertNull(result.auiJson)
+        assertNull(result.auiResponse)
+        assertEquals(
+            "Claude API error (overloaded_error): Overloaded [req_011CaEUrFTUpnvCFmPetkqNa]",
+            result.errorMessage,
+        )
+    }
+
+    @Test
     fun `claude api response skips non-text content blocks`() {
         val raw = """
         {

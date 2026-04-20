@@ -87,9 +87,15 @@ class LiveChatViewModel @Inject constructor(
     }
 
     private val _isSending = MutableStateFlow(false)
+    private val _lastUserMessage = MutableStateFlow<String?>(null)
 
     /** True while a message is being sent and the LLM response is pending. */
     val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
+
+    /** Whether the latest failed assistant turn can be retried. */
+    val canRetryLastMessage: StateFlow<Boolean> = _lastUserMessage
+        .map { !it.isNullOrBlank() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     /** The currently active LLM provider. */
     val currentProvider: StateFlow<LlmProvider> = _currentProvider.asStateFlow()
@@ -142,6 +148,7 @@ class LiveChatViewModel @Inject constructor(
     /** Sends a user text message and waits for the LLM response. */
     fun send(text: String) {
         if (text.isBlank()) return
+        _lastUserMessage.value = text
         viewModelScope.launch {
             _isSending.value = true
             try {
@@ -150,6 +157,13 @@ class LiveChatViewModel @Inject constructor(
                 _isSending.value = false
             }
         }
+    }
+
+    /** Re-sends the last user-authored message after a failed assistant turn. */
+    fun retryLastSend() {
+        val lastMessage = _lastUserMessage.value ?: return
+        if (_isSending.value) return
+        send(lastMessage)
     }
 
     /** Converts AUI feedback to text and sends it as a user message. */
@@ -195,6 +209,7 @@ class LiveChatViewModel @Inject constructor(
             repository.clearConversation(conversationId)
             autoOpenedSurveyIds.clear()
             _selectedDetailMessageId.value = null
+            _lastUserMessage.value = null
         }
     }
 
@@ -223,6 +238,7 @@ class LiveChatViewModel @Inject constructor(
             repository.clearConversation(conversationId)
             autoOpenedSurveyIds.clear()
             _selectedDetailMessageId.value = null
+            _lastUserMessage.value = null
             repository = createRepository(provider)
             _currentProvider.value = provider
             _repositoryVersion.value++
