@@ -10,7 +10,9 @@ import com.bennyjon.aui.core.model.AuiResponse
  * @param response The parsed AUI payload. Drives both rendering and stub-card resolution.
  */
 data class ShowcaseEntry(
+    val category: String,
     val label: String,
     val description: String?,
     val response: AuiResponse,
+    val sourceJson: String,
 )

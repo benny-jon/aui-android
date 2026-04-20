@@ -89,6 +89,8 @@ or response model, not chat-product features.
   model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
 - Session 39: Tightened custom component input metadata, preserved multi-input
   feedback accumulation, and synced library docs with current renderer behavior
+- Session 40: Refreshed the All Blocks showcase with current component coverage,
+  previewable JSON examples, grouped sections, and asset validation tests
 
 ## Next Task
 

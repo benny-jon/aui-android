@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,11 +25,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.display.AuiResponseCard
@@ -74,12 +79,13 @@ fun ShowcaseScreen(
     onBack: () -> Unit,
 ) {
     val entries by viewModel.entries.collectAsState()
-    var activeLabel by remember { mutableStateOf<String?>(null) }
+    var activeDetailLabel by remember { mutableStateOf<String?>(null) }
+    var sheetLabel by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("All Blocks") },
+                title = { Text("All Blocks Showcase") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -103,24 +109,24 @@ fun ShowcaseScreen(
                 .padding(padding),
         ) {
             val isTwoPane = maxWidth >= TwoPaneBreakpointDp && maxWidth >= maxHeight
-            val activeEntry = entries.firstOrNull { it.label == activeLabel }
-            val activeResponse = activeEntry?.response
-            val activeIsSurvey = activeResponse?.display == AuiDisplay.SURVEY
+            val detailPaneEntry = entries.firstOrNull { it.label == activeDetailLabel }
+            val sheetEntry = entries.firstOrNull { it.label == sheetLabel }
 
-            // Detail pane only hosts EXPANDED responses on wide windows. Surveys always go
-            // through the sheet regardless of width.
-            val detailPaneEntry = if (isTwoPane && activeResponse?.display == AuiDisplay.EXPANDED) {
-                activeEntry
-            } else {
-                null
+            LaunchedEffect(isTwoPane, entries) {
+                if (isTwoPane && detailPaneEntry == null) {
+                    activeDetailLabel = entries.firstOrNull { it.response.display != AuiDisplay.SURVEY }?.label
+                }
+                if (!isTwoPane) {
+                    activeDetailLabel = null
+                }
             }
 
-            // Sheet hosts surveys at any width, or expanded on narrow windows.
-            val sheetEntry = when {
-                activeEntry == null -> null
-                activeIsSurvey -> activeEntry
-                !isTwoPane -> activeEntry
-                else -> null
+            val openEntry: (ShowcaseEntry) -> Unit = { entry ->
+                if (isTwoPane && entry.response.display != AuiDisplay.SURVEY) {
+                    activeDetailLabel = entry.label
+                } else {
+                    sheetLabel = entry.label
+                }
             }
 
             if (isTwoPane) {
@@ -130,14 +136,14 @@ fun ShowcaseScreen(
                         auiTheme = auiTheme,
                         pluginRegistry = pluginRegistry,
                         activeLabel = detailPaneEntry?.label,
-                        onOpenCard = { activeLabel = it.label },
+                        onInspectEntry = openEntry,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
                     )
                     VerticalDivider()
                     DetailPane(
-                        response = detailPaneEntry?.response,
+                        entry = detailPaneEntry,
                         pluginRegistry = pluginRegistry,
                         auiTheme = auiTheme,
                         modifier = Modifier
@@ -151,14 +157,14 @@ fun ShowcaseScreen(
                     auiTheme = auiTheme,
                     pluginRegistry = pluginRegistry,
                     activeLabel = null,
-                    onOpenCard = { activeLabel = it.label },
+                    onInspectEntry = openEntry,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
 
             sheetEntry?.let { entry ->
                 ShowcaseDetailSheet(
-                    response = entry.response,
+                    entry = entry,
                     pluginRegistry = pluginRegistry,
                     auiTheme = auiTheme,
                     onFeedback = { feedback ->
@@ -169,10 +175,10 @@ fun ShowcaseScreen(
                         if (entry.response.display != AuiDisplay.SURVEY ||
                             feedback.stepsTotal != null
                         ) {
-                            activeLabel = null
+                            sheetLabel = null
                         }
                     },
-                    onDismiss = { activeLabel = null },
+                    onDismiss = { sheetLabel = null },
                 )
             }
         }
@@ -185,21 +191,65 @@ private fun EntryList(
     auiTheme: AuiTheme,
     pluginRegistry: AuiPluginRegistry,
     activeLabel: String?,
-    onOpenCard: (ShowcaseEntry) -> Unit,
+    onInspectEntry: (ShowcaseEntry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val categories = entries.map { it.category }.distinct()
+
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        items(entries, key = { it.label }) { entry ->
-            ShowcaseItem(
-                entry = entry,
-                auiTheme = auiTheme,
-                pluginRegistry = pluginRegistry,
-                isActiveDetail = entry.label == activeLabel,
-                onOpenCard = onOpenCard,
+        item(key = "showcase_overview") {
+            ShowcaseOverview(entries = entries)
+        }
+
+        categories.forEach { category ->
+            item(key = "category_$category") {
+                Text(
+                    text = category,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            items(
+                items = entries.filter { it.category == category },
+                key = { it.label },
+            ) { entry ->
+                ShowcaseItem(
+                    entry = entry,
+                    auiTheme = auiTheme,
+                    pluginRegistry = pluginRegistry,
+                    isActiveDetail = entry.label == activeLabel,
+                    onInspectEntry = onInspectEntry,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShowcaseOverview(entries: List<ShowcaseEntry>) {
+    val displays = entries.map { it.response.display }.distinct()
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp,
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "Every built-in block, current display mode, and the demo plugin live here.",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "${entries.size} curated examples across ${displays.size} display modes. Inline entries render in place; use Preview & JSON to inspect the exact payload. Expanded examples open in the side pane on wide layouts and a bottom sheet on narrow layouts. Surveys stay modal.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -211,13 +261,20 @@ private fun ShowcaseItem(
     auiTheme: AuiTheme,
     pluginRegistry: AuiPluginRegistry,
     isActiveDetail: Boolean,
-    onOpenCard: (ShowcaseEntry) -> Unit,
+    onInspectEntry: (ShowcaseEntry) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = entry.label,
-            style = MaterialTheme.typography.titleMedium,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = entry.label,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            DisplayPill(display = entry.response.display)
+        }
         entry.description?.let {
             Text(
                 text = it,
@@ -225,12 +282,17 @@ private fun ShowcaseItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        Text(
+            text = "${entry.response.totalBlockCount()} block${if (entry.response.totalBlockCount() == 1) "" else "s"}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
         when (entry.response.display) {
             AuiDisplay.EXPANDED, AuiDisplay.SURVEY -> {
                 AuiResponseCard(
                     response = entry.response,
-                    onClick = { onOpenCard(entry) },
+                    onClick = { onInspectEntry(entry) },
                     theme = auiTheme,
                     isActive = isActiveDetail,
                 )
@@ -242,6 +304,14 @@ private fun ShowcaseItem(
                     pluginRegistry = pluginRegistry,
                     onFeedback = { Log.d("Showcase", "Feedback: ${it.action}") },
                 )
+                TextButton(
+                    onClick = { onInspectEntry(entry) },
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(
+                        text = if (isActiveDetail) "Showing Preview & JSON" else "Preview & JSON",
+                    )
+                }
             }
         }
     }
@@ -253,63 +323,42 @@ private fun ShowcaseItem(
  */
 @Composable
 private fun DetailPane(
-    response: AuiResponse?,
+    entry: ShowcaseEntry?,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
-        if (response == null) {
+        if (entry == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Tap an expanded card to preview it here.",
+                    text = "Select an example to inspect its rendered output and JSON here.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             return@Box
         }
-        Column(
+        ShowcaseDetailContent(
+            entry = entry,
+            pluginRegistry = pluginRegistry,
+            auiTheme = auiTheme,
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-        ) {
-            response.cardTitle?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-            response.cardDescription?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
-            AuiRenderer(
-                response = response,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                theme = auiTheme,
-                pluginRegistry = pluginRegistry,
-                onFeedback = { Log.d("Showcase", "Feedback: ${it.action}") },
-            )
-        }
+            onFeedback = { Log.d("Showcase", "Feedback: ${it.action}") },
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShowcaseDetailSheet(
-    response: AuiResponse,
+    entry: ShowcaseEntry,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
     onFeedback: (AuiFeedback) -> Unit,
@@ -321,36 +370,116 @@ private fun ShowcaseDetailSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
     ) {
-        Column(
+        ShowcaseDetailContent(
+            entry = entry,
+            pluginRegistry = pluginRegistry,
+            auiTheme = auiTheme,
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-        ) {
-            response.cardTitle?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-            response.cardDescription?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
-            AuiRenderer(
-                response = response,
+            onFeedback = onFeedback,
+        )
+    }
+}
+
+@Composable
+private fun ShowcaseDetailContent(
+    entry: ShowcaseEntry,
+    pluginRegistry: AuiPluginRegistry,
+    auiTheme: AuiTheme,
+    modifier: Modifier = Modifier,
+    onFeedback: (AuiFeedback) -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(
+            text = entry.label,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        entry.description?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        DisplayPill(display = entry.response.display)
+        Text(
+            text = "Rendered Preview",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        entry.response.cardTitle?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        entry.response.cardDescription?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        AuiRenderer(
+            response = entry.response,
+            modifier = Modifier.fillMaxWidth(),
+            theme = auiTheme,
+            pluginRegistry = pluginRegistry,
+            onFeedback = onFeedback,
+        )
+        Text(
+            text = "Example JSON",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        JsonCodeBlock(json = entry.sourceJson)
+    }
+}
+
+@Composable
+private fun DisplayPill(display: AuiDisplay) {
+    val label = when (display) {
+        AuiDisplay.INLINE -> "INLINE"
+        AuiDisplay.EXPANDED -> "EXPANDED"
+        AuiDisplay.SURVEY -> "SURVEY"
+    }
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun JsonCodeBlock(json: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        SelectionContainer {
+            Text(
+                text = json,
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 24.dp),
-                theme = auiTheme,
-                pluginRegistry = pluginRegistry,
-                onFeedback = onFeedback,
+                    .padding(16.dp),
             )
         }
     }
 }
+
+private fun AuiResponse.totalBlockCount(): Int = blocks.size + steps.sumOf { it.blocks.size }

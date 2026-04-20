@@ -1,73 +1,106 @@
 [
   {
+    "category": "Display",
     "label": "text",
-    "description": "Plain text block",
+    "description": "Plain text with inline markdown, code, and a link.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "text", "data": { "text": "Your subscription renews on May 1st. You can manage billing in your account settings." } }
-      ]
-    }
-  },
-  {
-    "label": "heading",
-    "description": "Section heading",
-    "aui": {
-      "display": "inline",
-      "blocks": [
-        { "type": "heading", "data": { "text": "Service Maintenance Scheduled" } }
-      ]
-    }
-  },
-  {
-    "label": "caption",
-    "description": "Caption with heading context",
-    "aui": {
-      "display": "inline",
-      "blocks": [
-        { "type": "heading", "data": { "text": "Photo Upload Complete" } },
-        { "type": "caption", "data": { "text": "Uploaded 3 minutes ago · 2.4 MB · JPEG" } }
-      ]
-    }
-  },
-  {
-    "label": "button_primary",
-    "description": "Primary action button",
-    "aui": {
-      "display": "inline",
-      "blocks": [
-        { "type": "text", "data": { "text": "The Q1 analytics report has been generated." } },
         {
-          "type": "button_primary",
-          "data": { "label": "Download Report" },
-          "feedback": { "action": "open_url", "params": { "url": "https://example.com/reports/q1" } }
+          "type": "text",
+          "data": {
+            "text": "Your release is **ready to ship**. Review the `gradle.properties` diff and [open the checklist](https://example.com/release-checklist) before publishing."
+          }
         }
       ]
     }
   },
   {
-    "label": "button_secondary",
-    "description": "Secondary button alongside primary",
+    "category": "Display",
+    "label": "heading",
+    "description": "Standalone section heading block.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "text", "data": { "text": "I can reset your preferences to the defaults." } },
+        { "type": "heading", "data": { "text": "Workspace Maintenance Window" } }
+      ]
+    }
+  },
+  {
+    "category": "Display",
+    "label": "caption",
+    "description": "Muted metadata text paired with a heading.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Build Finished" } },
+        { "type": "caption", "data": { "text": "Completed 2 minutes ago · 148 tasks · 0 failed" } }
+      ]
+    }
+  },
+  {
+    "category": "Display",
+    "label": "file_content",
+    "description": "Exact artifact rendering with title, filename, language, and description.",
+    "aui": {
+      "display": "expanded",
+      "card_title": "README draft",
+      "card_description": "Single markdown artifact with exact copyable content",
+      "blocks": [
+        {
+          "type": "file_content",
+          "data": {
+            "title": "README preview",
+            "description": "Shows how exact markdown or config payloads should be delivered.",
+            "filename": "README.md",
+            "language": "markdown",
+            "content": "# AUI Android\\n\\nAUI renders AI-generated native UI from JSON.\\n\\n- `inline` stays in flow\\n- `expanded` can open in a detail surface\\n- `survey` collects structured input\\n"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Inputs",
+    "label": "button_primary",
+    "description": "Primary CTA button using the read-only open_url action plugin.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "text", "data": { "text": "The release notes draft is ready for review." } },
         {
           "type": "button_primary",
-          "data": { "label": "Reset Preferences" },
-          "feedback": { "action": "submit", "params": { "confirm": "reset" } }
+          "data": { "label": "Open Notes" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/releases/notes" } }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Inputs",
+    "label": "button_secondary",
+    "description": "Secondary action paired with a submit-style confirmation flow.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "text", "data": { "text": "Do you want to archive this workspace?" } },
+        {
+          "type": "button_primary",
+          "data": { "label": "Archive Workspace" },
+          "feedback": { "action": "submit", "params": { "intent": "archive_workspace" } }
         },
         {
           "type": "button_secondary",
-          "data": { "label": "Cancel" },
-          "feedback": { "action": "submit", "params": { "confirm": "cancel" } }
+          "data": { "label": "Keep It" },
+          "feedback": { "action": "submit", "params": { "intent": "keep_workspace" } }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "quick_replies",
-    "description": "Tappable quick-reply chips",
+    "description": "Quick reply chips with both default plain-text and explicit feedback behaviors.",
     "aui": {
       "display": "inline",
       "blocks": [
@@ -75,16 +108,13 @@
           "type": "quick_replies",
           "data": {
             "options": [
+              { "label": "Summarize the PR" },
               {
-                "label": "Check order status",
-                "feedback": { "action": "submit", "params": { "topic": "order_status" } }
+                "label": "Open the dashboard",
+                "feedback": { "action": "navigate", "params": { "screen": "dashboard", "source": "showcase" } }
               },
               {
-                "label": "Browse new arrivals",
-                "feedback": { "action": "navigate", "params": { "screen": "catalog", "filter": "new" } }
-              },
-              {
-                "label": "Talk to support",
+                "label": "Ask support",
                 "feedback": { "action": "submit", "params": { "topic": "support" } }
               }
             ]
@@ -94,200 +124,177 @@
     }
   },
   {
+    "category": "Inputs",
     "label": "chip_select_single",
-    "description": "Single-select chip group with submit",
+    "description": "Single-choice chips with a preselected value.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "chip_select_single",
           "data": {
-            "key": "size",
-            "label": "Select a size",
+            "key": "deployment_window",
+            "label": "Pick a deployment window",
+            "selected": "tomorrow_morning",
             "options": [
-              { "label": "Small", "value": "sm" },
-              { "label": "Medium", "value": "md" },
-              { "label": "Large", "value": "lg" },
-              { "label": "X-Large", "value": "xl" }
+              { "label": "Tonight", "value": "tonight" },
+              { "label": "Tomorrow AM", "value": "tomorrow_morning" },
+              { "label": "Tomorrow PM", "value": "tomorrow_afternoon" }
             ]
           }
         },
         {
           "type": "button_primary",
-          "data": { "label": "Confirm" },
+          "data": { "label": "Confirm Window" },
           "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "chip_select_multi",
-    "description": "Multi-select chip group",
+    "description": "Multi-choice chips with preselected values.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "chip_select_multi",
           "data": {
-            "key": "interests",
-            "label": "Pick all that apply",
+            "key": "channels",
+            "label": "Where should we announce the release?",
+            "selected": ["slack", "email"],
             "options": [
-              { "label": "Technology", "value": "tech" },
-              { "label": "Design", "value": "design" },
-              { "label": "Business", "value": "biz" },
-              { "label": "Science", "value": "sci" },
-              { "label": "Arts", "value": "arts" }
+              { "label": "Slack", "value": "slack" },
+              { "label": "Email", "value": "email" },
+              { "label": "Status page", "value": "status_page" },
+              { "label": "Docs site", "value": "docs" }
             ]
           }
         },
         {
           "type": "button_primary",
-          "data": { "label": "Save Interests" },
+          "data": { "label": "Save Channels" },
           "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "radio_list",
-    "description": "Radio button list with descriptions",
+    "description": "Single-choice selection list with supporting descriptions and a default choice.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "radio_list",
           "data": {
-            "key": "experience",
-            "label": "Choose one",
+            "key": "risk_level",
+            "label": "How risky is this deployment?",
+            "selected": "medium",
             "options": [
-              {
-                "label": "Excellent",
-                "description": "Everything worked perfectly",
-                "value": "excellent"
-              },
-              {
-                "label": "Good",
-                "description": "Minor issues but overall positive",
-                "value": "good"
-              },
-              {
-                "label": "Fair",
-                "description": "Some things need improvement",
-                "value": "fair"
-              },
-              {
-                "label": "Poor",
-                "description": "Significant problems encountered",
-                "value": "poor"
-              }
+              { "label": "Low", "description": "Copy or docs only", "value": "low" },
+              { "label": "Medium", "description": "Behavior changes with safe rollback", "value": "medium" },
+              { "label": "High", "description": "Critical path or migration involved", "value": "high" }
             ]
           }
         },
         {
           "type": "button_primary",
-          "data": { "label": "Submit" },
+          "data": { "label": "Submit Risk" },
           "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "checkbox_list",
-    "description": "Checkbox list in expanded display",
+    "description": "Multi-choice selection list with descriptions and defaults.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "checkbox_list",
           "data": {
-            "key": "priorities",
-            "label": "Select all that apply",
+            "key": "release_checks",
+            "label": "Which checks are already complete?",
+            "selected": ["tests", "notes"],
             "options": [
-              {
-                "label": "Faster performance",
-                "description": "Reduce load times and lag",
-                "value": "perf"
-              },
-              {
-                "label": "Better design",
-                "description": "Cleaner layouts and navigation",
-                "value": "design"
-              },
-              {
-                "label": "More features",
-                "description": "New capabilities and integrations",
-                "value": "features"
-              },
-              {
-                "label": "Lower price",
-                "description": "More affordable plans",
-                "value": "price"
-              }
+              { "label": "Tests green", "description": "Unit and instrumentation checks passed", "value": "tests" },
+              { "label": "Release notes ready", "description": "Customer-facing summary is written", "value": "notes" },
+              { "label": "Support briefed", "description": "Support team has rollout context", "value": "support" },
+              { "label": "Monitoring armed", "description": "Dashboards and alerts are verified", "value": "monitoring" }
             ]
           }
         },
         {
           "type": "button_primary",
-          "data": { "label": "Submit Priorities" },
+          "data": { "label": "Save Checklist" },
           "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "input_text_single",
-    "description": "Single-line text input with submit",
+    "description": "Single-line text input using the documented submit_label field.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "input_text_single",
           "data": {
-            "key": "nickname",
-            "label": "Your nickname",
-            "placeholder": "e.g. Alex",
-            "submit_label": "Save"
+            "key": "release_name",
+            "label": "Release codename",
+            "placeholder": "e.g. Springboard",
+            "submit_label": "Save Name"
           }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "input_slider",
-    "description": "Slider input with range",
+    "description": "Range slider with min, max, value, and step.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "input_slider",
           "data": {
-            "key": "energy",
-            "label": "Energy level (1 = exhausted, 10 = unstoppable)",
-            "min": 1,
+            "key": "confidence",
+            "label": "How confident are you in this rollout?",
+            "min": 0,
             "max": 10,
-            "value": 5,
+            "value": 7,
             "step": 1
           }
         },
         {
           "type": "button_primary",
-          "data": { "label": "Log It" },
+          "data": { "label": "Log Confidence" },
           "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
   },
   {
+    "category": "Inputs",
     "label": "input_rating_stars",
-    "description": "Star rating input",
+    "description": "Star rating input with an initial value.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "input_rating_stars",
           "data": {
-            "key": "rating",
-            "label": "Rate your experience"
+            "key": "demo_rating",
+            "label": "How helpful is this example?",
+            "value": 4
           }
         },
         {
@@ -299,21 +306,23 @@
     }
   },
   {
+    "category": "Layout & Progress",
     "label": "divider",
-    "description": "Visual separator between content",
+    "description": "Simple content separator inside an inline response.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "heading", "data": { "text": "Order Confirmed" } },
-        { "type": "text", "data": { "text": "2× Wireless Earbuds — $59.98" } },
+        { "type": "heading", "data": { "text": "Release Summary" } },
+        { "type": "text", "data": { "text": "Version 0.5.0 is staged and signed." } },
         { "type": "divider" },
-        { "type": "text", "data": { "text": "Estimated delivery: April 20" } }
+        { "type": "text", "data": { "text": "Next step: publish the changelog and start rollout." } }
       ]
     }
   },
   {
+    "category": "Layout & Progress",
     "label": "stepper_horizontal",
-    "description": "Horizontal step progress indicator",
+    "description": "Stepper showing a flow position inside a wider process.",
     "aui": {
       "display": "inline",
       "blocks": [
@@ -321,123 +330,133 @@
           "type": "stepper_horizontal",
           "data": {
             "steps": [
-              { "label": "Cart" },
-              { "label": "Shipping" },
-              { "label": "Payment" },
-              { "label": "Confirm" }
+              { "label": "Plan" },
+              { "label": "Build" },
+              { "label": "Verify" },
+              { "label": "Ship" }
             ],
             "current": 2
           }
         },
-        { "type": "text", "data": { "text": "Please enter your payment details to continue." } }
+        { "type": "text", "data": { "text": "Verification is in progress before rollout begins." } }
       ]
     }
   },
   {
+    "category": "Layout & Progress",
     "label": "progress_bar",
-    "description": "Progress bar with caption",
+    "description": "Progress bar with current and max values.",
     "aui": {
       "display": "inline",
       "blocks": [
         {
           "type": "progress_bar",
           "data": {
-            "label": "Uploading photos…",
-            "progress": 7,
-            "max": 10
+            "label": "Assets uploaded",
+            "progress": 18,
+            "max": 24
           }
         },
-        { "type": "caption", "data": { "text": "7 of 10 files uploaded" } }
+        { "type": "caption", "data": { "text": "18 of 24 artifacts uploaded to the CDN" } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "badge_info",
-    "description": "Info badge with text",
+    "description": "Info badge for neutral metadata.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "badge_info", "data": { "text": "New" } },
-        { "type": "text", "data": { "text": "Profile insights are now available in settings." } }
+        { "type": "badge_info", "data": { "text": "Beta" } },
+        { "type": "text", "data": { "text": "The new editor stays behind a feature flag this week." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "badge_success",
-    "description": "Success badge with text",
+    "description": "Success badge for positive state.",
     "aui": {
       "display": "inline",
       "blocks": [
         { "type": "badge_success", "data": { "text": "Verified" } },
-        { "type": "text", "data": { "text": "Your email address has been confirmed." } }
+        { "type": "text", "data": { "text": "Smoke tests passed on the canary build." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "badge_warning",
-    "description": "Warning badge with text",
+    "description": "Warning badge for cautionary state.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "badge_warning", "data": { "text": "Low stock" } },
-        { "type": "text", "data": { "text": "Only 2 items left in your size." } }
+        { "type": "badge_warning", "data": { "text": "Needs review" } },
+        { "type": "text", "data": { "text": "One migration still needs DBA approval." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "badge_error",
-    "description": "Error badge with text",
+    "description": "Error badge for broken or blocked state.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "badge_error", "data": { "text": "Offline" } },
-        { "type": "text", "data": { "text": "We'll retry when the connection is restored." } }
+        { "type": "badge_error", "data": { "text": "Blocked" } },
+        { "type": "text", "data": { "text": "Publishing is paused until signing credentials are fixed." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "status_banner_info",
-    "description": "Full-width info banner",
+    "description": "Full-width informational banner.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "status_banner_info", "data": { "text": "Heads up: we updated our privacy policy." } }
+        { "type": "status_banner_info", "data": { "text": "Heads up: the staging API will restart at 3:00 PM." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "status_banner_success",
-    "description": "Full-width success banner",
+    "description": "Full-width success banner.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "status_banner_success", "data": { "text": "Your changes have been saved successfully." } }
+        { "type": "status_banner_success", "data": { "text": "Rollout completed successfully across all regions." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "status_banner_warning",
-    "description": "Full-width warning banner",
+    "description": "Full-width warning banner.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "status_banner_warning", "data": { "text": "Your session expires in 2 minutes." } }
+        { "type": "status_banner_warning", "data": { "text": "Canary error rate is elevated. Monitor closely before widening rollout." } }
       ]
     }
   },
   {
+    "category": "Status",
     "label": "status_banner_error",
-    "description": "Full-width error banner",
+    "description": "Full-width error banner.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "status_banner_error", "data": { "text": "Couldn't reach the server. Check your connection." } }
+        { "type": "status_banner_error", "data": { "text": "Artifact upload failed. Retry after network access is restored." } }
       ]
     }
   },
   {
+    "category": "Plugins",
     "label": "demo_fun_fact",
-    "description": "Plugin component: fun fact card",
+    "description": "Demo plugin component rendered through the component registry.",
     "aui": {
       "display": "inline",
       "blocks": [
@@ -445,89 +464,79 @@
           "type": "demo_fun_fact",
           "data": {
             "title": "Did You Know?",
-            "fact": "Honey never spoils. Archaeologists have found 3,000-year-old honey in Egyptian tombs that was still perfectly edible.",
-            "source": "National Geographic"
+            "fact": "Jetpack Compose skips most recomposition work when state objects stay stable and unchanged.",
+            "source": "Compose mental model"
           }
         }
       ]
     }
   },
   {
-    "label": "Combo: Inline Quick Replies",
-    "description": "Inline display — chat-flow follow-up with quick-reply chips",
+    "category": "Plugins",
+    "label": "Plugin: open_url",
+    "description": "Read-only action plugin that opens a link in the browser.",
     "aui": {
       "display": "inline",
       "blocks": [
-        {
-          "type": "quick_replies",
-          "data": {
-            "options": [
-              { "label": "Tell me more", "feedback": { "action": "submit", "params": { "topic": "more" } } },
-              { "label": "Sounds good", "feedback": { "action": "submit", "params": { "topic": "agree" } } },
-              { "label": "Not now", "feedback": { "action": "submit", "params": { "topic": "later" } } }
-            ]
-          }
-        }
-      ]
-    }
-  },
-  {
-    "label": "Combo: Product Recommendations",
-    "description": "Expanded layout with card stub fields, headings, badges, buttons, and quick replies",
-    "aui": {
-      "display": "expanded",
-      "card_title": "Headphone picks",
-      "card_description": "Three top noise-cancelling models compared",
-      "blocks": [
-        { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
-        { "type": "text", "data": { "text": "Industry-leading noise cancellation. 30-hour battery. $348." } },
-        { "type": "badge_success", "data": { "text": "Best Overall" } },
+        { "type": "text", "data": { "text": "Action plugins can handle side effects outside the renderer. This one opens a URL." } },
         {
           "type": "button_primary",
-          "data": { "label": "View Details" },
-          "feedback": { "action": "open_url", "params": { "url": "https://example.com/sony-xm5" } }
-        },
-        { "type": "divider" },
-        { "type": "heading", "data": { "text": "Apple AirPods Pro 2" } },
-        { "type": "text", "data": { "text": "Seamless Apple ecosystem integration. Adaptive transparency. $249." } },
-        {
-          "type": "button_secondary",
-          "data": { "label": "View Details" },
-          "feedback": { "action": "open_url", "params": { "url": "https://example.com/airpods-pro" } }
-        },
-        { "type": "divider" },
-        {
-          "type": "quick_replies",
-          "data": {
-            "options": [
-              { "label": "Compare these two", "feedback": { "action": "submit", "params": { "compare": ["sony-xm5", "airpods-pro"] } } },
-              { "label": "Show me more options", "feedback": { "action": "submit", "params": { "action": "more_options" } } }
-            ]
-          }
+          "data": { "label": "Open AUI Docs" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/docs/aui" } }
         }
       ]
     }
   },
   {
-    "label": "Combo: Project Status",
-    "description": "Inline status with progress bar, badge, and quick replies",
+    "category": "Plugins",
+    "label": "Plugin: navigate",
+    "description": "Read-only action plugin that routes navigation through the host app.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "heading", "data": { "text": "Sprint 12 Progress" } },
+        { "type": "text", "data": { "text": "In the demo this shows a toast, but a real host would navigate to a screen." } },
         {
-          "type": "progress_bar",
-          "data": { "label": "Tasks completed", "progress": 14, "max": 20 }
+          "type": "button_secondary",
+          "data": { "label": "Open Settings" },
+          "feedback": { "action": "navigate", "params": { "screen": "settings", "source": "showcase_plugins" } }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Compositions",
+    "label": "Combo: Expanded Product Brief",
+    "description": "Expanded response with stub metadata, headings, statuses, CTAs, and quick replies.",
+    "aui": {
+      "display": "expanded",
+      "card_title": "Noise-cancelling picks",
+      "card_description": "Three premium headphones, compared side by side",
+      "blocks": [
+        { "type": "text", "data": { "text": "I found three strong options depending on budget and ecosystem fit." } },
+        { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
+        { "type": "caption", "data": { "text": "Best overall · 30-hour battery · Multipoint Bluetooth" } },
+        { "type": "badge_success", "data": { "text": "Top Pick" } },
+        {
+          "type": "button_primary",
+          "data": { "label": "Open Sony" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/sony-wh1000xm5" } }
         },
-        { "type": "caption", "data": { "text": "6 tasks remaining · 3 days left" } },
         { "type": "divider" },
-        { "type": "badge_success", "data": { "text": "On Track" } },
+        { "type": "heading", "data": { "text": "Bose QuietComfort Ultra" } },
+        { "type": "caption", "data": { "text": "Best comfort · Immersive audio · Fold-flat design" } },
+        { "type": "badge_info", "data": { "text": "Traveler Friendly" } },
+        {
+          "type": "button_secondary",
+          "data": { "label": "Open Bose" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/bose-qc-ultra" } }
+        },
+        { "type": "divider" },
         {
           "type": "quick_replies",
           "data": {
             "options": [
-              { "label": "Show remaining tasks", "feedback": { "action": "submit", "params": { "view": "remaining" } } },
-              { "label": "Team workload", "feedback": { "action": "submit", "params": { "view": "workload" } } }
+              { "label": "Compare Sony vs Bose", "feedback": { "action": "submit", "params": { "compare": "sony_vs_bose" } } },
+              { "label": "Show more options", "feedback": { "action": "submit", "params": { "intent": "more_headphones" } } }
             ]
           }
         }
@@ -535,88 +544,123 @@
     }
   },
   {
+    "category": "Compositions",
+    "label": "Combo: Documentation Draft",
+    "description": "Expanded long-form content that mixes prose, file_content, and read-only actions.",
+    "aui": {
+      "display": "expanded",
+      "card_title": "Migration guide draft",
+      "card_description": "Long-form document preview with exact markdown artifact",
+      "blocks": [
+        { "type": "heading", "data": { "text": "AUI 0.5 migration notes" } },
+        { "type": "caption", "data": { "text": "Updated April 2026 · 4 min read" } },
+        {
+          "type": "text",
+          "data": {
+            "text": "Use `file_content` for exact artifacts, prefer `expanded` when users may want a focused detail surface, and keep chat history out of the library modules."
+          }
+        },
+        {
+          "type": "file_content",
+          "data": {
+            "title": "docs/livechat.md",
+            "description": "A copyable markdown draft delivered as one exact artifact.",
+            "filename": "livechat.md",
+            "language": "markdown",
+            "content": "# Live Chat Demo\\n\\nThe demo module owns provider integration, persistence, and UX.\\n\\n## Key points\\n- `expanded` responses can open in a side pane on wide layouts\\n- `survey` stays modal\\n- `file_content` preserves exact document bodies\\n"
+          }
+        },
+        {
+          "type": "button_primary",
+          "data": { "label": "Open Docs Site" },
+          "feedback": { "action": "open_url", "params": { "url": "https://example.com/docs/aui" } }
+        },
+        {
+          "type": "button_secondary",
+          "data": { "label": "Go to Demo Settings" },
+          "feedback": { "action": "navigate", "params": { "screen": "settings", "section": "demo" } }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Compositions",
+    "label": "Combo: Release Status Board",
+    "description": "Inline composition with heading, progress, status banner, and quick follow-ups.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        { "type": "heading", "data": { "text": "Release 0.5.0" } },
+        {
+          "type": "progress_bar",
+          "data": { "label": "Rollout progress", "progress": 42, "max": 100 }
+        },
+        { "type": "caption", "data": { "text": "42% complete · 12,400 of 29,500 devices updated" } },
+        { "type": "status_banner_warning", "data": { "text": "One region is lagging behind the planned rollout pace." } },
+        {
+          "type": "quick_replies",
+          "data": {
+            "options": [
+              { "label": "Pause rollout", "feedback": { "action": "submit", "params": { "intent": "pause_rollout" } } },
+              { "label": "Show slower region", "feedback": { "action": "submit", "params": { "intent": "show_region_gap" } } }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Compositions",
     "label": "Combo: Feedback Survey",
-    "description": "Multi-page survey with star rating, multi-select chips, and text input",
+    "description": "Survey with step labels, mixed input types, and host-owned modal routing.",
     "aui": {
       "display": "survey",
-      "survey_title": "Rate This Chat",
+      "survey_title": "Release Retrospective",
       "steps": [
         {
-          "question": "How would you rate this conversation?",
+          "label": "Rating",
+          "question": "How smooth was the rollout overall?",
           "blocks": [
             {
               "type": "input_rating_stars",
-              "data": { "key": "chat_rating", "label": "Your rating" }
+              "data": { "key": "rollout_rating", "label": "Overall rating", "value": 4 }
             }
           ]
         },
         {
-          "question": "What was most helpful?",
+          "label": "Signals",
+          "question": "Which signals gave you confidence?",
           "blocks": [
             {
-              "type": "chip_select_multi",
+              "type": "checkbox_list",
               "data": {
-                "key": "helpful_aspects",
+                "key": "confidence_signals",
+                "label": "Select all that apply",
                 "options": [
-                  { "label": "Accuracy", "value": "accuracy" },
-                  { "label": "Speed", "value": "speed" },
-                  { "label": "Clarity", "value": "clarity" },
-                  { "label": "Friendliness", "value": "tone" }
+                  { "label": "Crash-free sessions", "value": "crash_free" },
+                  { "label": "Healthy API latency", "value": "latency" },
+                  { "label": "Support ticket volume", "value": "support" },
+                  { "label": "Business KPI trend", "value": "kpis" }
                 ]
               }
             }
           ]
         },
         {
-          "question": "Any additional thoughts?",
+          "label": "Notes",
+          "question": "What should we improve next time?",
           "blocks": [
             {
               "type": "input_text_single",
               "data": {
-                "key": "comments",
-                "label": "Your feedback",
-                "placeholder": "What could be better?"
+                "key": "retro_note",
+                "label": "Improvement note",
+                "placeholder": "Optional follow-up",
+                "submit_label": "Save Note"
               }
             }
           ]
         }
-      ]
-    }
-  },
-  {
-    "label": "Combo: Article Example",
-    "description": "Here's the full write-up on how AUI works:",
-    "aui": {
-      "display": "expanded",
-      "card_title": "About AUI",
-      "card_description": "Long-form article on how the library works",
-      "blocks": [
-            { "type": "heading", "data": { "text": "What is Adaptive UI?" } },
-            { "type": "caption", "data": { "text": "5 min read · Updated April 2026" } },
-            { "type": "text", "data": { "text": "Adaptive UI (AUI) is a catalog-driven format that lets AI assistants respond with native interactive components inside a chat conversation — not just plain text. Instead of designing UI, the AI picks from a pre-built catalog of components, fills in the data, and the library renders them natively." } },
-
-            { "type": "divider" },
-
-            { "type": "heading", "data": { "text": "Why a catalog, not a layout language?" } },
-            { "type": "text", "data": { "text": "Letting an AI design arbitrary UI from scratch creates two problems: inconsistent visual quality, and unbounded token cost. A catalog flips both. The AI picks from a finite set of components that the host app has already designed, themed, and tested. The AI's job shrinks from *designing* to *choosing*." } },
-            { "type": "text", "data": { "text": "The trade-off is expressiveness — you can only show what the catalog supports. In practice, this is the right constraint for chat. A well-designed catalog of 30-50 components covers the vast majority of useful chat interactions: polls, forms, product cards, confirmations, rich status updates." } },
-
-            { "type": "divider" },
-
-            { "type": "heading", "data": { "text": "Three display levels" } },
-            { "type": "text", "data": { "text": "**Inline** — renders inside the AI's chat bubble. Quick confirmations, simple status, a button or two." } },
-            { "type": "text", "data": { "text": "**Expanded** — renders full-width in the chat feed, below the bubble. Product cards, galleries, rich lists. Also works for long-form content like this article." } },
-            { "type": "text", "data": { "text": "**Survey** — renders as a persistent bottom sheet for multi-page structured input. The library injects Back/Next/Submit controls so the AI only declares the questions." } },
-            { "type": "caption", "data": { "text": "The AI picks the display level per response based on what's appropriate." } },
-
-            { "type": "divider" },
-
-            { "type": "heading", "data": { "text": "Closing the loop" } },
-            { "type": "text", "data": { "text": "When a user interacts with a rendered component — taps a button, selects a chip, submits a form — the result becomes the next user message in the conversation. This is what makes AUI *conversational*: every interaction feeds back into the dialogue, and the AI responds to the interaction just like it would to typed text." } },
-
-            { "type": "divider" },
-
-            { "type": "caption", "data": { "text": "AUI is open-source and available at github.com/bennyjon/aui" } }
       ]
     }
   }

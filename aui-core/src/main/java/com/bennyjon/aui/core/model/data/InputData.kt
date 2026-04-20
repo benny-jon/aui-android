@@ -1,5 +1,6 @@
 package com.bennyjon.aui.core.model.data
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Data for the `input_rating_stars` block. A 1–5 star rating input. */
@@ -23,7 +24,7 @@ data class InputTextSingleData(
     /** Placeholder text shown when the field is empty. */
     val placeholder: String? = null,
     /** Label for the submit button. Defaults to "Submit" if absent. */
-    val submitLabel: String? = null,
+    @SerialName("submit_label") val submitLabel: String? = null,
 ) : AuiInputData
 
 /** Data for the `input_slider` block. A range slider for scale questions. */
