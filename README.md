@@ -10,10 +10,30 @@ AUI parses the JSON and renders native Compose UI — cards, forms, chips, butto
 
 ## Visual Examples
 
-| AI-Generated Survey | All Blocks Showcase |
-|:---:|:---:|
-| The AI builds a multi-step survey from JSON. The library manages step navigation and consolidation; the demo hosts it in a bottom sheet, but hosts are free to pick any container. A single callback delivers the final answers to your app. | A scrollable gallery of every built-in AUI component — text, inputs, status, layout, and progress blocks — rendered from JSON across the three display modes. Use it to preview the catalog, switch themes on the fly, and see how each block reacts to user interaction. |
-| <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> | <img src="docs/assets/all-blocks-show-case.gif" width="300" /> |
+| AI-Generated Survey |
+|:---:|
+| The AI builds a multi-step survey from JSON. The library manages step navigation and consolidation; the demo hosts it in a bottom sheet, but hosts are free to pick any container. A single callback delivers the final answers to your app. |
+| <img src="docs/assets/ai-generated-survey-example.gif" width="300" /> |
+
+### AUI Blocks Examples
+
+Ordered from basic content blocks to richer composite layouts and host-routed detail flows.
+
+| Complexity | Examples | Preview |
+|:---|:---|:---:|
+| 1. Foundations | `text`, `heading`, `caption` | <img src="docs/assets/screenshots-all-blocks/text-heading-caption.png" width="260" /> |
+| 2. Tap Actions | `button_primary`, `button_secondary`, `quick_replies` | <img src="docs/assets/screenshots-all-blocks/button_primary-secondary-quick_replies.png" width="260" /> |
+| 3. Single-Choice Inputs | `chip_select_single`, `chip_select_multi`, `radio_list` | <img src="docs/assets/screenshots-all-blocks/chip_select_single-select-multi-radio_list.png" width="260" /> |
+| 4. Form Inputs | `checkbox_list`, `input_text_single`, `input_slider` | <img src="docs/assets/screenshots-all-blocks/checkbox_list-input-text-slider.png" width="260" /> |
+| 5. Feedback + Flow Layout | `input_rating_stars`, `divider`, `stepper_horizontal` | <img src="docs/assets/screenshots-all-blocks/ratings-divider-stepper_horizontal.png" width="260" /> |
+| 6. Progress + Positive Status | `progress_bar`, `badge_info`, `badge_success`, `badge_warning` | <img src="docs/assets/screenshots-all-blocks/progress_bar-badge_info-success-warning.png" width="260" /> |
+| 7. Error + Banner Status | `badge_error`, `status_banner_info`, `status_banner_success`, `status_banner_warning` | <img src="docs/assets/screenshots-all-blocks/badge_error-banner-info_sucess_warning.png" width="260" /> |
+| 8. Rich Content Blocks | `caption`, `file_content`, `chart` (`bar`) | <img src="docs/assets/screenshots-all-blocks/caption-file_content-chart_bar.png" width="260" /> |
+| 9. Data Visualization Variants | `chart` (`line`, `pie`) | <img src="docs/assets/screenshots-all-blocks/chart_line-chart_pie.png" width="260" /> |
+| 10. Plugins + Error Handling | `status_banner_error`, plugin-rendered blocks | <img src="docs/assets/screenshots-all-blocks/banner_error-plugins.png" width="260" /> |
+| 11. Composite Expanded Content | mixed block composition, `expanded` card preview, document draft teaser | <img src="docs/assets/screenshots-all-blocks/compositions1-combo_expanded-doc_draft.png" width="260" /> |
+| 12. Survey Host Flow | `survey` rendered in a host-owned sheet with step navigation | <img src="docs/assets/screenshots-all-blocks/sheet_survey_opened.png" width="260" /> |
+| 13. Document Detail Flow | `expanded` document/file-style response opened in detail surface | <img src="docs/assets/screenshots-all-blocks/sheet_doc_draft_opened.png" width="260" /> |
 
 ## How It Works
 

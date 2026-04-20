@@ -63,11 +63,6 @@
       "blocks": [
         { "type": "text", "data": { "text": "Do you want to archive this workspace?" } },
         {
-          "type": "button_primary",
-          "data": { "label": "Archive Workspace" },
-          "feedback": { "action": "submit", "params": { "intent": "archive_workspace" } }
-        },
-        {
           "type": "button_secondary",
           "data": { "label": "Keep It" },
           "feedback": { "action": "submit", "params": { "intent": "keep_workspace" } }
@@ -120,11 +115,6 @@
               { "label": "Tomorrow PM", "value": "tomorrow_afternoon" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Confirm Window" },
-          "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
@@ -149,11 +139,6 @@
               { "label": "Docs site", "value": "docs" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Save Channels" },
-          "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
@@ -177,11 +162,6 @@
               { "label": "High", "description": "Critical path or migration involved", "value": "high" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Submit Risk" },
-          "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
@@ -206,11 +186,6 @@
               { "label": "Monitoring armed", "description": "Dashboards and alerts are verified", "value": "monitoring" }
             ]
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Save Checklist" },
-          "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
@@ -251,11 +226,6 @@
             "value": 7,
             "step": 1
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Log Confidence" },
-          "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
@@ -274,11 +244,6 @@
             "label": "How helpful is this example?",
             "value": 4
           }
-        },
-        {
-          "type": "button_primary",
-          "data": { "label": "Submit Rating" },
-          "feedback": { "action": "submit", "params": {} }
         }
       ]
     }
