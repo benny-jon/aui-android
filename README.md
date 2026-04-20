@@ -19,40 +19,129 @@ AUI parses the JSON and renders native Compose UI — cards, forms, chips, butto
 
 Ordered from basic content blocks to richer composite layouts and host-routed detail flows.
 
-| 1. Foundations | 2. Tap Actions |
-|:---|:---|
-| `text`, `heading`, `caption` | `button_primary`, `button_secondary`, `quick_replies` |
-| <img src="docs/assets/screenshots-all-blocks/text-heading-caption.png" width="420" /> | <img src="docs/assets/screenshots-all-blocks/button_primary-secondary-quick_replies.png" width="420" /> |
-
-| 3. Single-Choice Inputs | 4. Form Inputs |
-|:---|:---|
-| `chip_select_single`, `chip_select_multi`, `radio_list` | `checkbox_list`, `input_text_single`, `input_slider` |
-| <img src="docs/assets/screenshots-all-blocks/chip_select_single-select-multi-radio_list.png" width="420" /> | <img src="docs/assets/screenshots-all-blocks/checkbox_list-input-text-slider.png" width="420" /> |
-
-| 5. Feedback + Flow Layout | 6. Progress + Positive Status |
-|:---|:---|
-| `input_rating_stars`, `divider`, `stepper_horizontal` | `progress_bar`, `badge_info`, `badge_success`, `badge_warning` |
-| <img src="docs/assets/screenshots-all-blocks/ratings-divider-stepper_horizontal.png" width="420" /> | <img src="docs/assets/screenshots-all-blocks/progress_bar-badge_info-success-warning.png" width="420" /> |
-
-| 7. Error + Banner Status | 8. Rich Content Blocks |
-|:---|:---|
-| `badge_error`, `status_banner_info`, `status_banner_success`, `status_banner_warning` | `caption`, `file_content`, `chart` (`bar`) |
-| <img src="docs/assets/screenshots-all-blocks/badge_error-banner-info_sucess_warning.png" width="420" /> | <img src="docs/assets/screenshots-all-blocks/caption-file_content-chart_bar.png" width="420" /> |
-
-| 9. Data Visualization Variants | 10. Plugins + Error Handling |
-|:---|:---|
-| `chart` (`line`, `pie`) | `status_banner_error`, plugin-rendered blocks |
-| <img src="docs/assets/screenshots-all-blocks/chart_line-chart_pie.png" width="420" /> | <img src="docs/assets/screenshots-all-blocks/banner_error-plugins.png" width="420" /> |
-
-| 11. Composite Expanded Content | 12. Survey Host Flow |
-|:---|:---|
-| mixed block composition, `expanded` card preview, document draft teaser | `survey` rendered in a host-owned sheet with step navigation |
-| <img src="docs/assets/screenshots-all-blocks/compositions1-combo_expanded-doc_draft.png" width="420" /> | <img src="docs/assets/screenshots-all-blocks/sheet_survey_opened.png" width="420" /> |
-
-| 13. Document Detail Flow | |
-|:---|:---|
-| `expanded` document/file-style response opened in detail surface | |
-| <img src="docs/assets/screenshots-all-blocks/sheet_doc_draft_opened.png" width="420" /> | |
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>1. Foundations</strong><br/>
+      <code>text</code>, <code>heading</code>, <code>caption</code>
+    </td>
+    <td width="50%" valign="top">
+      <strong>2. Tap Actions</strong><br/>
+      <code>button_primary</code>, <code>button_secondary</code>, <code>quick_replies</code>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/text-heading-caption.png" height="320" />
+    </td>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/button_primary-secondary-quick_replies.png" height="320" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>3. Single-Choice Inputs</strong><br/>
+      <code>chip_select_single</code>, <code>chip_select_multi</code>, <code>radio_list</code>
+    </td>
+    <td width="50%" valign="top">
+      <strong>4. Form Inputs</strong><br/>
+      <code>checkbox_list</code>, <code>input_text_single</code>, <code>input_slider</code>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/chip_select_single-select-multi-radio_list.png" height="320" />
+    </td>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/checkbox_list-input-text-slider.png" height="320" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>5. Feedback + Flow Layout</strong><br/>
+      <code>input_rating_stars</code>, <code>divider</code>, <code>stepper_horizontal</code>
+    </td>
+    <td width="50%" valign="top">
+      <strong>6. Progress + Positive Status</strong><br/>
+      <code>progress_bar</code>, <code>badge_info</code>, <code>badge_success</code>, <code>badge_warning</code>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/ratings-divider-stepper_horizontal.png" height="320" />
+    </td>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/progress_bar-badge_info-success-warning.png" height="320" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>7. Error + Banner Status</strong><br/>
+      <code>badge_error</code>, <code>status_banner_info</code>, <code>status_banner_success</code>, <code>status_banner_warning</code>
+    </td>
+    <td width="50%" valign="top">
+      <strong>8. Rich Content Blocks</strong><br/>
+      <code>caption</code>, <code>file_content</code>, <code>chart</code> (<code>bar</code>)
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/badge_error-banner-info_sucess_warning.png" height="320" />
+    </td>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/caption-file_content-chart_bar.png" height="320" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>9. Data Visualization Variants</strong><br/>
+      <code>chart</code> (<code>line</code>, <code>pie</code>)
+    </td>
+    <td width="50%" valign="top">
+      <strong>10. Plugins + Error Handling</strong><br/>
+      <code>status_banner_error</code>, plugin-rendered blocks
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/chart_line-chart_pie.png" height="320" />
+    </td>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/banner_error-plugins.png" height="320" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>11. Composite Expanded Content</strong><br/>
+      Mixed block composition, <code>expanded</code> card preview, document draft teaser
+    </td>
+    <td width="50%" valign="top">
+      <strong>12. Survey Host Flow</strong><br/>
+      <code>survey</code> rendered in a host-owned sheet with step navigation
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/compositions1-combo_expanded-doc_draft.png" height="320" />
+    </td>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/sheet_survey_opened.png" height="320" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>13. Document Detail Flow</strong><br/>
+      <code>expanded</code> document/file-style response opened in a detail surface
+    </td>
+    <td width="50%" valign="top"></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/screenshots-all-blocks/sheet_doc_draft_opened.png" height="320" />
+    </td>
+    <td></td>
+  </tr>
+</table>
 
 ## How It Works
 
