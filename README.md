@@ -32,10 +32,10 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/text-heading-caption.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/text-heading-caption.png" height="420" />
     </td>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/button_primary-secondary-quick_replies.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/button_primary-secondary-quick_replies.png" height="420" />
     </td>
   </tr>
   <tr>
@@ -50,10 +50,10 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/chip_select_single-select-multi-radio_list.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/chip_select_single-select-multi-radio_list.png" height="420" />
     </td>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/checkbox_list-input-text-slider.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/checkbox_list-input-text-slider.png" height="420" />
     </td>
   </tr>
   <tr>
@@ -68,10 +68,10 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/ratings-divider-stepper_horizontal.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/ratings-divider-stepper_horizontal.png" height="420" />
     </td>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/progress_bar-badge_info-success-warning.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/progress_bar-badge_info-success-warning.png" height="420" />
     </td>
   </tr>
   <tr>
@@ -86,10 +86,10 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/badge_error-banner-info_sucess_warning.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/badge_error-banner-info_sucess_warning.png" height="420" />
     </td>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/caption-file_content-chart_bar.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/caption-file_content-chart_bar.png" height="420" />
     </td>
   </tr>
   <tr>
@@ -104,10 +104,10 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/chart_line-chart_pie.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/chart_line-chart_pie.png" height="420" />
     </td>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/banner_error-plugins.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/banner_error-plugins.png" height="420" />
     </td>
   </tr>
   <tr>
@@ -122,10 +122,10 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/compositions1-combo_expanded-doc_draft.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/compositions1-combo_expanded-doc_draft.png" height="420" />
     </td>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/sheet_survey_opened.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/sheet_survey_opened.png" height="420" />
     </td>
   </tr>
   <tr>
@@ -137,7 +137,7 @@ Ordered from basic content blocks to richer composite layouts and host-routed de
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/assets/screenshots-all-blocks/sheet_doc_draft_opened.png" height="320" />
+      <img src="docs/assets/screenshots-all-blocks/sheet_doc_draft_opened.png" height="420" />
     </td>
     <td></td>
   </tr>
