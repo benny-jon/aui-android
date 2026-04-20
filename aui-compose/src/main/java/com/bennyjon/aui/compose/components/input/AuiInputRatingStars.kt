@@ -63,7 +63,7 @@ fun AuiInputRatingStars(
                 Icon(
                     imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = "Star $star",
-                    tint = if (isFilled) theme.colors.primary else theme.colors.onSurfaceVariant,
+                    tint = if (isFilled) theme.colors.primary else theme.colors.primaryContainer,
                     modifier = Modifier
                         .size(32.dp)
                         .clickable {
