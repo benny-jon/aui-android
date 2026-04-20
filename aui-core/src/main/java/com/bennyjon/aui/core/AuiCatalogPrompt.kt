@@ -358,6 +358,18 @@ Display:
   heading(text)
   caption(text)
   file_content(content, filename?, language?, title?, description?)
+  chart(variant, title?, x_label?, y_label?, series[]{label, values[]{x, y}})
+    — Native chart. variant: "bar" | "line" | "pie".
+      title: optional heading above the chart.
+      x_label / y_label: optional axis labels (ignored for pie).
+      series: one or more data series. Each series has a label (shown in the legend)
+      and a values array of {x, y} points. For pie, supply one series per slice —
+      each with a single {x, y} where x is the slice label and y is the raw value;
+      the library computes percentages. For bar/line, all series must share the same
+      x labels in the same order. Chart is display-only — do not add feedback.
+    Use chart when the user asks to visualise data, compare values over time,
+    or show a breakdown. Prefer pie for part-of-whole breakdowns (≤6 slices), bar for
+    comparisons across categories, line for trends over time.
 
 Input:
   button_primary(label)
@@ -592,6 +604,7 @@ Quick replies with per-option actions (each chip fires its own feedback):
         "heading",
         "caption",
         "file_content",
+        "chart",
         "chip_select_single",
         "chip_select_multi",
         "button_primary",

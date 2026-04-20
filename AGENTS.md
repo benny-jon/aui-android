@@ -91,6 +91,8 @@ or response model, not chat-product features.
   feedback accumulation, and synced library docs with current renderer behavior
 - Session 40: Refreshed the All Blocks showcase with current component coverage,
   previewable JSON examples, grouped sections, and asset validation tests
+- Session 41: Added a built-in `chart` block (`bar` / `line` / `pie` variants) rendered
+  natively with Compose Canvas, including axis labels and legends; catalog count 25 → 26
 
 ## Next Task
 

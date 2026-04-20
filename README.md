@@ -332,11 +332,11 @@ val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 
 ## Component Catalog
 
-25 built-in component types across these categories:
+26 built-in component types across these categories:
 
 | Category | Components |
 |----------|-----------|
-| **Display** | `text`, `heading`, `caption`, `file_content` |
+| **Display** | `text`, `heading`, `caption`, `file_content`, `chart` |
 | **Input** | `button_primary`, `button_secondary`, `quick_replies`, `chip_select_single`, `chip_select_multi`, `radio_list`, `checkbox_list`, `input_text_single`, `input_slider`, `input_rating_stars` |
 | **Layout** | `divider` |
 | **Progress** | `stepper_horizontal`, `progress_bar` |

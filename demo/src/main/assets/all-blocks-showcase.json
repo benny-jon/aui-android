@@ -39,28 +39,6 @@
     }
   },
   {
-    "category": "Display",
-    "label": "file_content",
-    "description": "Exact artifact rendering with title, filename, language, and description.",
-    "aui": {
-      "display": "expanded",
-      "card_title": "README draft",
-      "card_description": "Single markdown artifact with exact copyable content",
-      "blocks": [
-        {
-          "type": "file_content",
-          "data": {
-            "title": "README preview",
-            "description": "Shows how exact markdown or config payloads should be delivered.",
-            "filename": "README.md",
-            "language": "markdown",
-            "content": "# AUI Android\\n\\nAUI renders AI-generated native UI from JSON.\\n\\n- `inline` stays in flow\\n- `expanded` can open in a detail surface\\n- `survey` collects structured input\\n"
-          }
-        }
-      ]
-    }
-  },
-  {
     "category": "Inputs",
     "label": "button_primary",
     "description": "Primary CTA button using the read-only open_url action plugin.",
@@ -450,6 +428,120 @@
       "display": "inline",
       "blocks": [
         { "type": "status_banner_error", "data": { "text": "Artifact upload failed. Retry after network access is restored." } }
+      ]
+    }
+  },
+  {
+    "category": "Display",
+    "label": "file_content",
+    "description": "Exact artifact rendering with title, filename, language, and description.",
+    "aui": {
+      "display": "expanded",
+      "card_title": "README draft",
+      "card_description": "Single markdown artifact with exact copyable content",
+      "blocks": [
+        {
+          "type": "file_content",
+          "data": {
+            "title": "README preview",
+            "description": "Shows how exact markdown or config payloads should be delivered.",
+            "filename": "README.md",
+            "language": "markdown",
+            "content": "# AUI Android\\n\\nAUI renders AI-generated native UI from JSON.\\n\\n- `inline` stays in flow\\n- `expanded` can open in a detail surface\\n- `survey` collects structured input\\n"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Display",
+    "label": "chart (bar)",
+    "description": "Bar chart rendered natively with axis labels and a legend.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "chart",
+          "data": {
+            "variant": "bar",
+            "title": "Quiz Scores This Week",
+            "x_label": "Day",
+            "y_label": "Score %",
+            "series": [
+              {
+                "label": "Score",
+                "values": [
+                  { "x": "Mon", "y": 72 },
+                  { "x": "Tue", "y": 85 },
+                  { "x": "Wed", "y": 78 },
+                  { "x": "Fri", "y": 91 }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Display",
+    "label": "chart (line)",
+    "description": "Line chart with multiple series and filled area under each line.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "chart",
+          "data": {
+            "variant": "line",
+            "title": "Daily Active Users",
+            "x_label": "Week",
+            "y_label": "Users",
+            "series": [
+              {
+                "label": "Android",
+                "values": [
+                  { "x": "W1", "y": 1200 },
+                  { "x": "W2", "y": 1500 },
+                  { "x": "W3", "y": 1350 },
+                  { "x": "W4", "y": 1800 }
+                ]
+              },
+              {
+                "label": "iOS",
+                "values": [
+                  { "x": "W1", "y": 900 },
+                  { "x": "W2", "y": 1100 },
+                  { "x": "W3", "y": 1050 },
+                  { "x": "W4", "y": 1400 }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "category": "Display",
+    "label": "chart (pie)",
+    "description": "Pie chart with computed slice percentages in the legend.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "chart",
+          "data": {
+            "variant": "pie",
+            "title": "Traffic Sources",
+            "series": [
+              { "label": "Organic", "values": [{ "x": "Organic", "y": 45 }] },
+              { "label": "Direct", "values": [{ "x": "Direct", "y": 28 }] },
+              { "label": "Referral", "values": [{ "x": "Referral", "y": 17 }] },
+              { "label": "Social", "values": [{ "x": "Social", "y": 10 }] }
+            ]
+          }
+        }
       ]
     }
   },

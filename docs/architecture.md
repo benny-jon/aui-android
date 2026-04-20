@@ -58,7 +58,7 @@ AuiRenderer(
 │  │  │  ├── Theme system (AuiTheme + fromMaterialTheme)│     │   │
 │  │  │  ├── Display router (inline / expanded / survey)│     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
-│  │  │  ├── Component catalog (25 built-ins + plugins) │     │   │
+│  │  │  ├── Component catalog (26 built-ins + plugins) │     │   │
 │  │  │  ├── AuiResponseCard (host-rendered stub)       │     │   │
 │  │  │  ├── Plugin system (component + action plugins) │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -453,7 +453,7 @@ AuiRenderer(json = json, pluginRegistry = registry, onFeedback = { ... })
 
 ## Catalog Roadmap
 
-The built-in catalog is deliberately small right now (24 components — see
+The built-in catalog is deliberately small right now (26 components — see
 `AuiCatalogPrompt.ALL_COMPONENT_TYPES`). The types listed below are planned but
 **not yet implemented**; the spec at `spec/aui-spec-v1.md` already describes their
 JSON shapes. Hosts that need any of them today can ship them as
@@ -464,20 +464,19 @@ Grouped roughly by the order we expect to land them.
 
 ### Priority wishlist
 
-Top 10 components that would unlock the most value across general AI-chat use cases,
+Top priority components that would unlock the most value across general AI-chat use cases,
 regardless of domain — cross-cutting primitives we'd reach for first if we were
 shipping a real assistant today.
 
 1. `code_block` — syntax-highlighted code with copy button. Daily use across every coding / devtool chat.
 2. `collapsible` — "show more / less" wrapper. Solves length-vs-depth everywhere: long explanations, optional detail, transcripts.
-3. `chart` (bar / line / donut) — data is universal; even a crude native chart beats prose + numbers.
-4. `tabs` — multiple views of the same topic without bloating the response (e.g. "Summary / Pros / Cons").
-5. `key_value_list` — structured display primitive for specs, metadata, receipts, any "field: value" layout.
-6. `quiz_card` — single-question quiz with feedback/scoring. Killer feature for learning platforms.
-7. `table_simple` — rows × columns. Basic but conspicuously missing today; painful to fake with lists.
-8. `callout` (info / warning / tip) — tone and emphasis inside a response without derailing the flow.
-9. `video_player` with timestamps — media integration; timestamps let the AI deep-link to moments.
-10. `card_carousel` — browsable recommendations (wider cousin of `horizontal_scroll_cards`).
+3. `tabs` — multiple views of the same topic without bloating the response (e.g. "Summary / Pros / Cons").
+4. `key_value_list` — structured display primitive for specs, metadata, receipts, any "field: value" layout.
+5. `quiz_card` — single-question quiz with feedback/scoring. Killer feature for learning platforms.
+6. `table_simple` — rows × columns. Basic but conspicuously missing today; painful to fake with lists.
+7. `callout` (info / warning / tip) — tone and emphasis inside a response without derailing the flow.
+8. `video_player` with timestamps — media integration; timestamps let the AI deep-link to moments.
+9. `card_carousel` — browsable recommendations (wider cousin of `horizontal_scroll_cards`).
 
 ### Text & rich content
 - `rich_text` — styled spans (bold/italic/code/underline/strike) on top of `text`

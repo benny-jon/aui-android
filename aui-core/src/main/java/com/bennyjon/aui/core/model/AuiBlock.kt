@@ -7,6 +7,7 @@ import com.bennyjon.aui.core.model.data.BadgeWarningData
 import com.bennyjon.aui.core.model.data.ButtonPrimaryData
 import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 import com.bennyjon.aui.core.model.data.CaptionData
+import com.bennyjon.aui.core.model.data.ChartData
 import com.bennyjon.aui.core.model.data.CheckboxListData
 import com.bennyjon.aui.core.model.data.ChipSelectMultiData
 import com.bennyjon.aui.core.model.data.ChipSelectSingleData
@@ -93,6 +94,13 @@ sealed class AuiBlock {
     @Serializable
     data class FileContent(
         val data: FileContentData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Native chart — bar, line, or pie. Display-only; feedback is ignored by the renderer. */
+    @Serializable
+    data class Chart(
+        val data: ChartData,
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
@@ -289,6 +297,9 @@ sealed class AuiBlock {
  * Any unrecognized type falls back to [AuiBlock.Unknown].
  */
 internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(AuiBlock::class) {
+
+    private val knownChartVariants = setOf("bar", "line", "pie")
+
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<AuiBlock> {
         val type = element.jsonObject["type"]?.jsonPrimitive?.content
         return when (type) {
@@ -296,6 +307,16 @@ internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(
             "heading" -> AuiBlock.Heading.serializer()
             "caption" -> AuiBlock.Caption.serializer()
             "file_content" -> AuiBlock.FileContent.serializer()
+            "chart" -> {
+                val variant = element.jsonObject["data"]
+                    ?.jsonObject?.get("variant")
+                    ?.jsonPrimitive?.content
+                if (variant != null && variant !in knownChartVariants) {
+                    AuiBlock.Unknown.serializer()
+                } else {
+                    AuiBlock.Chart.serializer()
+                }
+            }
             "chip_select_single" -> AuiBlock.ChipSelectSingle.serializer()
             "chip_select_multi" -> AuiBlock.ChipSelectMulti.serializer()
             "button_primary" -> AuiBlock.ButtonPrimary.serializer()

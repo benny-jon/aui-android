@@ -36,6 +36,7 @@ class AuiCatalogPromptTest {
         // you to update ALL_COMPONENT_TYPES (which in turn fails the coverage test).
         val expected = setOf(
             "text", "heading", "caption", "file_content",
+            "chart",
             "chip_select_single", "chip_select_multi",
             "button_primary", "button_secondary",
             "quick_replies",
@@ -72,7 +73,7 @@ class AuiCatalogPromptTest {
 
     @Test
     fun `generate includes feedback-only comment in block format`() {
-        assertTrue(output.contains("// feedback only on interactive components"))
+        assertTrue(output.contains("\"feedback\" is optional and only present on interactive components."))
     }
 
     @Test
