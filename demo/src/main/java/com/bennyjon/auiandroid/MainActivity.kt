@@ -17,6 +17,8 @@ import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 import com.bennyjon.auiandroid.livechat.LiveChatScreen
 import com.bennyjon.auiandroid.livechat.LiveChatViewModel
+import com.bennyjon.auiandroid.settings.SettingsScreen
+import com.bennyjon.auiandroid.settings.SettingsViewModel
 import com.bennyjon.auiandroid.showcase.ShowcaseScreen
 import com.bennyjon.auiandroid.showcase.ShowcaseViewModel
 import com.bennyjon.auiandroid.ui.theme.AUIAndroidTheme
@@ -90,6 +92,15 @@ private fun DemoNavHost() {
                     auiTheme = auiTheme,
                     selectedThemeName = selectedTheme,
                     onChangeTheme = { vm.switchTheme(it) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+        }
+        composable(DemoDestination.SETTINGS.route) {
+            val settingsVm: SettingsViewModel = hiltViewModel()
+            MaterialTheme(colorScheme = colorScheme, typography = typography) {
+                SettingsScreen(
+                    generatedPrompt = settingsVm.generatedPrompt,
                     onBack = { navController.popBackStack() },
                 )
             }

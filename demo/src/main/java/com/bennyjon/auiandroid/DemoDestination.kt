@@ -26,6 +26,11 @@ enum class DemoDestination(
         homeTitle = "All Blocks Showcase",
         homeSubtitle = "Every AUI component in one scrollable list",
     ),
+    SETTINGS(
+        route = "settings",
+        homeTitle = "Settings",
+        homeSubtitle = "Inspect and copy the generated AUI prompt",
+    ),
     WARM_ORGANIC_CHAT(
         route = "warm_organic",
         homeTitle = "Warm Organic",

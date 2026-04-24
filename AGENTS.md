@@ -105,6 +105,8 @@ or response model, not chat-product features.
   `badge`, read-only `rating`) and horizontal-scroll overflow; catalog count 26 → 27
 - Session 47: Renamed table rating column JSON to `rating` with legacy parsing,
   tightened table column width estimates, and fixed half-star clipping
+- Session 48: Added a demo Settings screen for inspecting and copying the generated
+  `AuiCatalogPrompt` system prompt
 
 ## Next Task
 

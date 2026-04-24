@@ -80,6 +80,22 @@ fun DemoHomeScreen(onDestinationSelected: (DemoDestination) -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
+                text = "Settings",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            ThemeCard(
+                title = DemoDestination.SETTINGS.homeTitle,
+                subtitle = DemoDestination.SETTINGS.homeSubtitle,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                onClick = { onDestinationSelected(DemoDestination.SETTINGS) },
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
                 text = "Themes Showcase (Fake chat)",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
