@@ -62,6 +62,7 @@ class ShowcaseAssetTest {
                     "caption",
                     "file_content",
                     "chart",
+                    "table",
                     "button_primary",
                     "button_secondary",
                     "quick_replies",

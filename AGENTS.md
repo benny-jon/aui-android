@@ -101,6 +101,10 @@ or response model, not chat-product features.
   so partial responses still render instead of dropping the entire AUI payload
 - Session 45: Normalized malformed top-level `data.feedback` into sibling block
   `feedback` during parsing so misnested trigger actions still work
+- Session 46: Added a built-in `table` block with semantic cells (`text`, `number`,
+  `badge`, read-only `rating`) and horizontal-scroll overflow; catalog count 26 → 27
+- Session 47: Renamed table rating column JSON to `rating` with legacy parsing,
+  tightened table column width estimates, and fixed half-star clipping
 
 ## Next Task
 

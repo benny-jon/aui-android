@@ -453,7 +453,7 @@ AuiRenderer(json = json, pluginRegistry = registry, onFeedback = { ... })
 
 ## Catalog Roadmap
 
-The built-in catalog is deliberately small right now (26 components — see
+The built-in catalog is deliberately small right now (27 components — see
 `AuiCatalogPrompt.ALL_COMPONENT_TYPES`). The types listed below are planned but
 **not yet implemented**; the spec at `spec/aui-spec-v1.md` already describes their
 JSON shapes. Hosts that need any of them today can ship them as
@@ -473,10 +473,9 @@ shipping a real assistant today.
 3. `tabs` — multiple views of the same topic without bloating the response (e.g. "Summary / Pros / Cons").
 4. `key_value_list` — structured display primitive for specs, metadata, receipts, any "field: value" layout.
 5. `quiz_card` — single-question quiz with feedback/scoring. Killer feature for learning platforms.
-6. `table_simple` — rows × columns. Basic but conspicuously missing today; painful to fake with lists.
-7. `callout` (info / warning / tip) — tone and emphasis inside a response without derailing the flow.
-8. `video_player` with timestamps — media integration; timestamps let the AI deep-link to moments.
-9. `card_carousel` — browsable recommendations (wider cousin of `horizontal_scroll_cards`).
+6. `callout` (info / warning / tip) — tone and emphasis inside a response without derailing the flow.
+7. `video_player` with timestamps — media integration; timestamps let the AI deep-link to moments.
+8. `card_carousel` — browsable recommendations (wider cousin of `horizontal_scroll_cards`).
 
 ### Text & rich content
 - `rich_text` — styled spans (bold/italic/code/underline/strike) on top of `text`

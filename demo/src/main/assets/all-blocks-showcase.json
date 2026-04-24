@@ -511,6 +511,54 @@
     }
   },
   {
+    "category": "Display",
+    "label": "table",
+    "description": "Semantic-cell table with text, numbers, badges, and read-only star ratings. Overflows horizontally.",
+    "aui": {
+      "display": "inline",
+      "blocks": [
+        {
+          "type": "table",
+          "data": {
+            "title": "Team Leaderboard",
+            "columns": [
+              { "label": "Player", "type": "text" },
+              { "label": "Revenue", "type": "number", "format": "currency" },
+              { "label": "Rating", "type": "rating" },
+              { "label": "Status", "type": "badge" }
+            ],
+            "rows": [
+              [
+                "Ada Lovelace",
+                12450.5,
+                4.5,
+                { "text": "Top", "tone": "success" }
+              ],
+              [
+                "Linus Torvalds",
+                9820,
+                4,
+                { "text": "Steady", "tone": "info" }
+              ],
+              [
+                "Grace Hopper",
+                7600,
+                3.5,
+                { "text": "Review", "tone": "warning" }
+              ],
+              [
+                "Alan Turing",
+                5120.75,
+                5,
+                { "text": "On hold", "tone": "error" }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
     "category": "Plugins",
     "label": "demo_fun_fact",
     "description": "Demo plugin component rendered through the component registry.",

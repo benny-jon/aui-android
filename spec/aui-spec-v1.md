@@ -460,6 +460,49 @@ Code snippet with syntax highlighting.
 data: { code: string, language?: string, title?: string }
 ```
 
+#### `chart`
+Native chart (bar / line / pie) with axis labels and legend.
+```
+data: {
+  variant: "bar" | "line" | "pie",
+  title?: string,
+  x_label?: string,
+  y_label?: string,
+  series: [{ label: string, values: [{ x: string, y: number }] }]
+}
+```
+
+#### `table`
+Display-only tabular data with semantic cells. Overflows horizontally when wider than the
+available width. Row-level feedback is not supported.
+
+Each column declares a `type` that drives alignment and how bare-primitive cell values are
+interpreted. Cells may be written as bare primitives (strings or numbers) or as typed
+objects; unrecognized shapes render as an em-dash.
+
+```
+data: {
+  title?: string,
+  columns: [{
+    label: string,
+    type: "text" | "number" | "badge" | "rating",
+    format?: "integer" | "decimal" | "currency" | "percent",   // only when type = "number"
+    align?: "start" | "center" | "end"                         // defaults per type
+  }],
+  rows: [ [ cell, cell, ... ], ... ]
+}
+
+cell:
+  string                                   // text
+  number                                   // number (uses column format)
+  { "text": string }                       // explicit text
+  { "value": number, "format"?: string }   // explicit number with per-cell format override
+  { "text": string, "tone": "info" | "success" | "warning" | "error" }  // badge
+  null | boolean | other                   // rendered as em-dash
+```
+
+Use `type: "rating"` with a numeric cell (0–5, halves allowed) for read-only ratings.
+
 #### `image_single`
 Standalone image.
 ```
@@ -1129,6 +1172,8 @@ Display:
   card_order_tracking(order_id, status, eta?, tracking_url?, items_summary?)
   card_quote(text, author?, source?)
   card_code(code, language?, title?)
+  chart(variant, title?, x_label?, y_label?, series[]{label, values[]{x, y}})
+  table(title?, columns[]{label, type, format?, align?}, rows[][])
   image_single(src, alt?)
   image_gallery(images[]{src, alt?})
   badge_info(text) | badge_success(text) | badge_warning(text) | badge_error(text)

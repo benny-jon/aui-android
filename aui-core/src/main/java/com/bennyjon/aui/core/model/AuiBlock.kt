@@ -26,6 +26,7 @@ import com.bennyjon.aui.core.model.data.StatusBannerSuccessData
 import com.bennyjon.aui.core.model.data.StatusBannerWarningData
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.AuiInputData
+import com.bennyjon.aui.core.model.data.TableData
 import com.bennyjon.aui.core.model.data.TextData
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -101,6 +102,13 @@ sealed class AuiBlock {
     @Serializable
     data class Chart(
         val data: ChartData,
+        override val feedback: AuiFeedback? = null,
+    ) : AuiBlock()
+
+    /** Tabular data with semantic cells. Display-only in v1. */
+    @Serializable
+    data class Table(
+        val data: TableData,
         override val feedback: AuiFeedback? = null,
     ) : AuiBlock()
 
@@ -317,6 +325,7 @@ internal object AuiBlockSerializer : JsonContentPolymorphicSerializer<AuiBlock>(
                     AuiBlock.Chart.serializer()
                 }
             }
+            "table" -> AuiBlock.Table.serializer()
             "chip_select_single" -> AuiBlock.ChipSelectSingle.serializer()
             "chip_select_multi" -> AuiBlock.ChipSelectMulti.serializer()
             "button_primary" -> AuiBlock.ButtonPrimary.serializer()

@@ -370,6 +370,23 @@ Display:
     Use chart when the user asks to visualise data, compare values over time,
     or show a breakdown. Prefer pie for part-of-whole breakdowns (≤6 slices), bar for
     comparisons across categories, line for trends over time.
+  table(title?, columns[]{label, type, format?, align?}, rows[][])
+    — Tabular data with semantic cells. columns.type is one of
+      "text" | "number" | "badge" | "rating" and drives alignment
+      and bare-cell interpretation. Cells can be bare values (string or number)
+      or typed objects:
+        text         → "Alice"      or { "text": "Alice" }
+        number       → 1280         or { "value": 1280, "format": "currency" }
+        badge        → "Active"     or { "text": "Active", "tone": "success" }
+        rating       → 4.5          or { "value": 4.5 }
+      Badge tones: "info" | "success" | "warning" | "error".
+      Number formats: "integer" | "decimal" | "currency" | "percent".
+      Column align (optional, overrides default): "start" | "center" | "end".
+      Number columns right-align by default — omit align unless you need to override.
+      Tables scroll horizontally when wider than the chat area — prefer ≤6
+      columns and ≤20 rows. Table is display-only — do not add feedback.
+    Use table for structured comparisons, specs, leaderboards, receipts,
+    metadata. Do not fake a table with multiple text blocks.
 
 Input:
   button_primary(label)
@@ -428,10 +445,21 @@ Status:
   - Multi-question feedback / onboarding flow → survey with one question per step
   - A complete file/document artifact (README, markdown file, JSON, config, source file)
     → expanded, one file_content block. Preserve the exact file body in content.
+  - Structured comparison / specs / leaderboard / receipt / metadata → table.
+    Use table whenever items share the same fields and the user is comparing
+    them — do NOT decompose tabular data into multiple text blocks or a stack
+    of cards.
+  - Visualising numbers / trends / breakdowns → chart (bar, line, or pie).
+    Prefer pie for part-of-whole (≤6 slices), bar for category comparisons,
+    line for trends over time.
   - A single product / place / link recommendation → inline, one card + button
-  - 3+ rich cards in one response (products, places, profiles) → expanded
-    (always with card_title + card_description)
-  - Long comparison or gallery the user will want to study → expanded
+  - 3+ rich items the user taps INTO (distinct destinations, rich detail per
+    item, heterogeneous content) → expanded cards with card_title + card_description.
+    If the items instead share a common shape the user is comparing side by
+    side, reach for table first.
+  - Long comparison or gallery the user will want to study → expanded.
+    When the comparison is tabular, put a table inside the expanded payload
+    rather than card stacks.
   - Suggesting next actions → inline, quick_replies at the end"""
 
     internal const val GUIDELINES = """GUIDELINES:
@@ -528,27 +556,46 @@ Survey (2-step feedback flow — library injects Back/Next/Submit):
   }
 }
 
-Expanded response with tappable link buttons (product recommendations):
+Inline table (structured comparison — prefer this over stacked cards or prose):
 {
-  "text": "Here are three solid options:",
+  "text": "Here's how the top noise-cancelling headphones compare:",
   "aui": {
-    "display": "expanded",
-    "card_title": "Headphone picks",
-    "card_description": "Three top noise-cancelling models compared",
+    "display": "inline",
     "blocks": [
-      { "type": "heading", "data": { "text": "Sony WH-1000XM5" } },
-      { "type": "text", "data": { "text": "Top-tier noise cancellation, around $348." } },
-      { "type": "button_primary",
-        "data": { "label": "View on Amazon" },
-        "feedback": { "action": "open_url", "params": { "url": "https://example.com/sony" } }
-      },
-      { "type": "divider" },
-      { "type": "heading", "data": { "text": "Bose QuietComfort Ultra" } },
-      { "type": "text", "data": { "text": "Excellent comfort for long wear, around $379." } },
-      { "type": "button_primary",
-        "data": { "label": "View on Amazon" },
-        "feedback": { "action": "open_url", "params": { "url": "https://example.com/bose" } }
-      }
+      { "type": "table", "data": {
+          "title": "Noise-cancelling headphones",
+          "columns": [
+            { "label": "Model",  "type": "text" },
+            { "label": "Price",  "type": "number", "format": "currency" },
+            { "label": "Rating", "type": "rating" },
+            { "label": "Stock",  "type": "badge" }
+          ],
+          "rows": [
+            [ "Sony WH-1000XM5",        348, 4.5, { "text": "In stock",  "tone": "success" } ],
+            [ "Bose QuietComfort Ultra", 379, 4.0, { "text": "Low",       "tone": "warning" } ],
+            [ "Apple AirPods Max",       549, 4.0, { "text": "Backorder", "tone": "info"    } ]
+          ]
+      }}
+    ]
+  }
+}
+
+Inline chart (data visualisation — pie for part-of-whole, bar for categories, line for trends):
+{
+  "text": "Here's how traffic broke down last week:",
+  "aui": {
+    "display": "inline",
+    "blocks": [
+      { "type": "chart", "data": {
+          "variant": "pie",
+          "title": "Traffic sources",
+          "series": [
+            { "label": "Organic",  "values": [ { "x": "Organic",  "y": 45 } ] },
+            { "label": "Direct",   "values": [ { "x": "Direct",   "y": 28 } ] },
+            { "label": "Referral", "values": [ { "x": "Referral", "y": 17 } ] },
+            { "label": "Social",   "values": [ { "x": "Social",   "y": 10 } ] }
+          ]
+      }}
     ]
   }
 }
@@ -605,6 +652,7 @@ Quick replies with per-option actions (each chip fires its own feedback):
         "caption",
         "file_content",
         "chart",
+        "table",
         "chip_select_single",
         "chip_select_multi",
         "button_primary",

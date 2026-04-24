@@ -37,6 +37,7 @@ class AuiCatalogPromptTest {
         val expected = setOf(
             "text", "heading", "caption", "file_content",
             "chart",
+            "table",
             "chip_select_single", "chip_select_multi",
             "button_primary", "button_secondary",
             "quick_replies",
@@ -169,8 +170,8 @@ class AuiCatalogPromptTest {
     }
 
     @Test
-    fun `expanded link buttons example shows card_title and card_description`() {
-        assertTrue(output.contains("\"card_title\": \"Headphone picks\""))
+    fun `expanded file artifact example shows card_title and card_description`() {
+        assertTrue(output.contains("\"card_title\": \"README draft\""))
         assertTrue(output.contains("\"card_description\":"))
     }
 
@@ -515,10 +516,23 @@ class AuiCatalogPromptTest {
     // ── New built-in examples ───────────────────────────────────────────────
 
     @Test
-    fun `generate includes expanded tappable link buttons example`() {
-        assertTrue(output.contains("Expanded response with tappable link buttons"))
-        assertTrue(output.contains("\"display\": \"expanded\""))
-        assertTrue(output.contains("View on Amazon"))
+    fun `generate includes inline table example for structured comparison`() {
+        assertTrue(output.contains("Inline table (structured comparison"))
+        assertTrue(output.contains("\"type\": \"table\""))
+        assertTrue(output.contains("\"format\": \"currency\""))
+        assertTrue(output.contains("\"type\": \"rating\""))
+        assertTrue(output.contains("\"tone\": \"success\""))
+    }
+
+    @Test
+    fun `generate includes inline chart example for data visualisation`() {
+        assertTrue(output.contains("Inline chart (data visualisation"))
+        assertTrue(output.contains("\"type\": \"chart\""))
+        assertTrue(output.contains("\"variant\": \"pie\""))
+    }
+
+    @Test
+    fun `generate still demonstrates open_url action via quick replies example`() {
         assertTrue(output.contains("action\": \"open_url\""))
     }
 
@@ -640,7 +654,8 @@ class AuiCatalogPromptTest {
         // Built-in signature phrases still present
         assertTrue(result.contains("feature_choice"))
         assertTrue(result.contains("Survey (2-step feedback flow"))
-        assertTrue(result.contains("View on Amazon"))
+        assertTrue(result.contains("Inline table (structured comparison"))
+        assertTrue(result.contains("Inline chart (data visualisation"))
         assertTrue(result.contains("Read the docs"))
         // Custom example also present
         assertTrue(result.contains("Example: My example"))
