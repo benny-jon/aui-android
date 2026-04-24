@@ -6,6 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SystemPromptViewModel @Inject constructor(
     @param:SystemPrompt val generatedPrompt: String,
 ) : ViewModel()

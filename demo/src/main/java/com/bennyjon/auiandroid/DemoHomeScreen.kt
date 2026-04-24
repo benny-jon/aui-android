@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,7 +38,17 @@ import com.bennyjon.auiandroid.ui.theme.DemoThemes
 fun DemoHomeScreen(onDestinationSelected: (DemoDestination) -> Unit) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("AUI Demo") })
+            TopAppBar(
+                title = { Text("AUI Demo") },
+                actions = {
+                    IconButton(onClick = { onDestinationSelected(DemoDestination.SETTINGS) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Settings",
+                        )
+                    }
+                },
+            )
         },
     ) { innerPadding ->
         Column(
@@ -75,22 +89,6 @@ fun DemoHomeScreen(onDestinationSelected: (DemoDestination) -> Unit) {
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 onClick = { onDestinationSelected(DemoDestination.SHOWCASE) },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            ThemeCard(
-                title = DemoDestination.SETTINGS.homeTitle,
-                subtitle = DemoDestination.SETTINGS.homeSubtitle,
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                onClick = { onDestinationSelected(DemoDestination.SETTINGS) },
             )
 
             Spacer(modifier = Modifier.height(8.dp))

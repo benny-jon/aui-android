@@ -29,6 +29,11 @@ enum class DemoDestination(
     SETTINGS(
         route = "settings",
         homeTitle = "Settings",
+        homeSubtitle = "Configure demo settings",
+    ),
+    SYSTEM_PROMPT(
+        route = "settings/system_prompt",
+        homeTitle = "System Prompt",
         homeSubtitle = "Inspect and copy the generated AUI prompt",
     ),
     WARM_ORGANIC_CHAT(
