@@ -16,7 +16,7 @@ object DemoPluginRegistry {
     fun create(context: Context): AuiPluginRegistry =
         AuiPluginRegistry().registerAll(
             DemoFunFactPlugin,
-            ToastNavigatePlugin(context),
+            NavigatePlugin(context),
             OpenUrlPlugin(context),
         )
 }

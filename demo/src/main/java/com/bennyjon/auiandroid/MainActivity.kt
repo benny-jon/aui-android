@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,6 +18,7 @@ import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 import com.bennyjon.auiandroid.livechat.LiveChatScreen
 import com.bennyjon.auiandroid.livechat.LiveChatViewModel
+import com.bennyjon.auiandroid.plugins.DemoActionNavigator
 import com.bennyjon.auiandroid.settings.SettingsScreen
 import com.bennyjon.auiandroid.settings.SettingsViewModel
 import com.bennyjon.auiandroid.settings.SystemPromptScreen
@@ -49,6 +51,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun DemoNavHost() {
     val navController = rememberNavController()
+
+    DisposableEffect(navController) {
+        DemoActionNavigator.setNavigateHandler { screen, _ ->
+            val route = screen.toDemoRoute() ?: return@setNavigateHandler false
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+            true
+        }
+        onDispose {
+            DemoActionNavigator.clearNavigateHandler()
+        }
+    }
 
     val vm: LiveChatViewModel = hiltViewModel()
     val selectedTheme by vm.selectedTheme.collectAsState()
@@ -148,3 +163,14 @@ private val themeChatDestinations = listOf(
     DemoDestination.WARM_ORGANIC_CHAT,
     DemoDestination.EARTHY_GREEN_CHAT,
 )
+
+private fun String.toDemoRoute(): String? = when (this) {
+    "home" -> HomeRoute
+    "live_chat" -> DemoDestination.LIVE_CHAT.route
+    "showcase" -> DemoDestination.SHOWCASE.route
+    "settings" -> DemoDestination.SETTINGS.route
+    "system_prompt" -> DemoDestination.SYSTEM_PROMPT.route
+    "warm_organic" -> DemoDestination.WARM_ORGANIC_CHAT.route
+    "earthy_green" -> DemoDestination.EARTHY_GREEN_CHAT.route
+    else -> null
+}

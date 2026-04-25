@@ -29,11 +29,10 @@
   {
     "category": "Display",
     "label": "caption",
-    "description": "Muted metadata text paired with a heading.",
+    "description": "Muted metadata text on its own.",
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "heading", "data": { "text": "Build Finished" } },
         { "type": "caption", "data": { "text": "Completed 2 minutes ago · 148 tasks · 0 failed" } }
       ]
     }
@@ -599,7 +598,7 @@
     "aui": {
       "display": "inline",
       "blocks": [
-        { "type": "text", "data": { "text": "In the demo this shows a toast, but a real host would navigate to a screen." } },
+        { "type": "text", "data": { "text": "This action plugin routes to a named demo screen through the host app." } },
         {
           "type": "button_secondary",
           "data": { "label": "Open Settings" },

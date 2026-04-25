@@ -109,6 +109,12 @@ or response model, not chat-product features.
   `AuiCatalogPrompt` system prompt
 - Session 49: Added a persisted Settings toggle for live chat repository/extractor
   debug logs and made malformed saved JSON envelopes recoverable on load
+- Session 50: Simplified All Blocks showcase entries so inline examples render as
+  the block itself, leaving `Preview & JSON` for inspection instead of repeated labels/details
+- Session 51: Cleaned up the All Blocks showcase content by making the `caption`
+  example standalone and clarifying category headers as showcase sections
+- Session 52: Wired the demo `navigate` action plugin to real app routes so
+  Settings navigation examples now open the actual Settings screen
 
 ## Next Task
 

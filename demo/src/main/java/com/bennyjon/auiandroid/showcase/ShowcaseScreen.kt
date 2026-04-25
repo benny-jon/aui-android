@@ -207,11 +207,18 @@ private fun EntryList(
 
         categories.forEach { category ->
             item(key = "category_$category") {
-                Text(
-                    text = category,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "Showcase Section",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = category,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
             items(
                 items = entries.filter { it.category == category },
@@ -264,30 +271,6 @@ private fun ShowcaseItem(
     onInspectEntry: (ShowcaseEntry) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = entry.label,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            DisplayPill(display = entry.response.display)
-        }
-        entry.description?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Text(
-            text = "${entry.response.totalBlockCount()} block${if (entry.response.totalBlockCount() == 1) "" else "s"}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
         when (entry.response.display) {
             AuiDisplay.EXPANDED, AuiDisplay.SURVEY -> {
                 AuiResponseCard(
@@ -481,5 +464,3 @@ private fun JsonCodeBlock(json: String) {
         }
     }
 }
-
-private fun AuiResponse.totalBlockCount(): Int = blocks.size + steps.sumOf { it.blocks.size }
