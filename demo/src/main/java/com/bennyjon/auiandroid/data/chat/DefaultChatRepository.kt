@@ -1,5 +1,6 @@
 package com.bennyjon.auiandroid.data.chat
 
+import com.bennyjon.auiandroid.BuildConfig
 import com.bennyjon.auiandroid.data.chat.db.ChatMessageDao
 import com.bennyjon.auiandroid.data.chat.db.ChatMessageEntity
 import com.bennyjon.auiandroid.data.llm.AuiResponseExtractor
@@ -29,6 +30,7 @@ class DefaultChatRepository(
     private val llmClient: LlmClient,
     private val dao: ChatMessageDao,
     private val systemPrompt: String,
+    private val loggingConfig: ChatDebugLoggerConfig = ChatDebugLoggerConfig.Disabled,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ChatRepository {
 
@@ -91,6 +93,10 @@ class DefaultChatRepository(
      */
     private fun ChatMessageEntity.toDomain(): ChatMessage {
         if (role == ROLE_USER) {
+            debugLog(
+                "toDomain user id=$id rawLength=${rawContent?.length ?: 0} " +
+                    "preview=${rawContent.previewForLog()}",
+            )
             return ChatMessage(
                 id = id,
                 createdAt = createdAt,
@@ -100,7 +106,13 @@ class DefaultChatRepository(
             )
         }
 
-        val extracted = rawContent?.let { AuiResponseExtractor.fromRawResponse(it) }
+        val extracted = rawContent?.let { AuiResponseExtractor.fromRawResponse(it, loggingConfig) }
+        debugLog(
+            "toDomain assistant id=$id rawLength=${rawContent?.length ?: 0} " +
+                "hasRawAui=${extracted?.auiJson != null} hasParsedAui=${extracted?.auiResponse != null} " +
+                "hasText=${!extracted?.text.isNullOrBlank()} error=${extracted?.errorMessage ?: errorMessage ?: "none"} " +
+                "preview=${rawContent.previewForLog()}",
+        )
         return ChatMessage(
             id = id,
             createdAt = createdAt,
@@ -125,7 +137,7 @@ class DefaultChatRepository(
                 content = rawContent ?: "",
             )
         }
-        val extracted = rawContent?.let { AuiResponseExtractor.fromRawResponse(it) }
+        val extracted = rawContent?.let { AuiResponseExtractor.fromRawResponse(it, loggingConfig) }
         return LlmMessage(
             role = LlmMessage.Role.ASSISTANT,
             content = extracted?.auiJson ?: extracted?.text ?: rawContent ?: "",
@@ -133,7 +145,20 @@ class DefaultChatRepository(
     }
 
     private companion object {
+        private const val TAG = "DefaultChatRepository"
         const val ROLE_USER = "user"
         const val ROLE_ASSISTANT = "assistant"
+    }
+
+    private fun debugLog(message: String) {
+        if (BuildConfig.DEBUG && loggingConfig.isEnabled()) {
+            println("$TAG: $message")
+        }
+    }
+
+    private fun String?.previewForLog(maxLen: Int = 240): String {
+        if (this == null) return "<null>"
+        val normalized = replace('\n', ' ').replace('\r', ' ')
+        return if (normalized.length <= maxLen) normalized else normalized.take(maxLen) + "..."
     }
 }

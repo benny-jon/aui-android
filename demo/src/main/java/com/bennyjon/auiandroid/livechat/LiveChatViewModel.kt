@@ -6,6 +6,7 @@ import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import com.bennyjon.auiandroid.data.AppSettings
+import com.bennyjon.auiandroid.data.chat.ChatDebugLoggerConfig
 import com.bennyjon.auiandroid.data.chat.ChatMessage
 import com.bennyjon.auiandroid.data.chat.ChatRepository
 import com.bennyjon.auiandroid.data.chat.DefaultChatRepository
@@ -63,6 +64,7 @@ class LiveChatViewModel @Inject constructor(
 
     private var repository: ChatRepository = createRepository(LlmProvider.FAKE)
     private val _currentProvider = MutableStateFlow(LlmProvider.FAKE)
+    private val _chatDebugLogsEnabled = MutableStateFlow(false)
 
     /** All messages in the conversation, with spent-marking applied. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -126,6 +128,9 @@ class LiveChatViewModel @Inject constructor(
     /** The currently selected AUI theme. */
     val selectedTheme: StateFlow<DemoAuiTheme> = _selectedTheme.asStateFlow()
 
+    /** Whether verbose repository/extractor logs are enabled. */
+    val chatDebugLogsEnabled: StateFlow<Boolean> = _chatDebugLogsEnabled.asStateFlow()
+
     init {
         viewModelScope.launch {
             val saved = appSettings.llmProvider.first()
@@ -142,6 +147,11 @@ class LiveChatViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _selectedTheme.value = appSettings.selectedTheme.first()
+        }
+        viewModelScope.launch {
+            appSettings.chatDebugLogsEnabled.collect { enabled ->
+                _chatDebugLogsEnabled.value = enabled
+            }
         }
     }
 
@@ -263,6 +273,7 @@ class LiveChatViewModel @Inject constructor(
             llmClient = createLlmClient(provider),
             dao = dao,
             systemPrompt = systemPrompt,
+            loggingConfig = ChatDebugLoggerConfig { _chatDebugLogsEnabled.value },
         )
 
     private companion object {

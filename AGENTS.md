@@ -107,6 +107,8 @@ or response model, not chat-product features.
   tightened table column width estimates, and fixed half-star clipping
 - Session 48: Added a demo Settings screen for inspecting and copying the generated
   `AuiCatalogPrompt` system prompt
+- Session 49: Added a persisted Settings toggle for live chat repository/extractor
+  debug logs and made malformed saved JSON envelopes recoverable on load
 
 ## Next Task
 

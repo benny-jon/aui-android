@@ -1,5 +1,7 @@
 package com.bennyjon.auiandroid.data.llm
 
+import com.bennyjon.auiandroid.BuildConfig
+import com.bennyjon.auiandroid.data.chat.ChatDebugLoggerConfig
 import com.bennyjon.aui.core.AuiParser
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -50,7 +52,14 @@ internal object AuiResponseExtractor {
      *  - Mixed content: preamble text followed by a fenced or unfenced JSON block
      *  - Plain text — returned as [LlmResponse.text] with no AUI
      */
-    fun fromRawResponse(rawText: String): LlmResponse {
+    fun fromRawResponse(
+        rawText: String,
+        loggingConfig: ChatDebugLoggerConfig = ChatDebugLoggerConfig.Disabled,
+    ): LlmResponse {
+        debugLog(
+            loggingConfig,
+            "fromRawResponse rawLength=${rawText.length} preview=${rawText.previewForLog()}",
+        )
         return try {
             val root = try {
                 json.parseToJsonElement(rawText).jsonObject
@@ -60,13 +69,14 @@ internal object AuiResponseExtractor {
             if (root != null) {
                 when {
                     isClaudeErrorResponse(root) -> parseClaudeErrorResponse(root)
-                    isClaudeApiResponse(root) -> parseClaudeApiResponse(root)
-                    else -> parseContentText(rawText)
+                    isClaudeApiResponse(root) -> parseClaudeApiResponse(root, loggingConfig)
+                    else -> parseContentText(rawText, loggingConfig)
                 }
             } else {
-                parseContentText(rawText)
+                parseContentText(rawText, loggingConfig)
             }
         } catch (e: Exception) {
+            debugLog(loggingConfig, "fromRawResponse fatal error=${e.message}")
             error("Failed to parse LLM response: ${e.message}", e)
         }
     }
@@ -93,7 +103,10 @@ internal object AuiResponseExtractor {
     /**
      * Parses the original structured envelope format: `{ "text": "...", "aui": { ... } }`.
      */
-    private fun parseEnvelope(root: JsonObject): LlmResponse {
+    private fun parseEnvelope(
+        root: JsonObject,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse {
         val text = root["text"]?.jsonPrimitive?.content
             ?: return error("Missing 'text' field in LLM response")
         val id = root["id"]?.jsonPrimitive?.content
@@ -102,6 +115,11 @@ internal object AuiResponseExtractor {
         if (auiElement != null && auiElement is JsonObject) {
             val auiJsonString = auiElement.toString()
             val auiResponse = auiParser.parseOrNull(auiJsonString)
+            debugLog(
+                loggingConfig,
+                "parseEnvelope id=${id ?: "<none>"} hasAui=true parsedAui=${auiResponse != null} " +
+                    "display=${auiResponse?.display ?: "<null>"} auiPreview=${auiJsonString.previewForLog()}",
+            )
             return LlmResponse(
                 id = id,
                 text = text,
@@ -109,6 +127,7 @@ internal object AuiResponseExtractor {
                 auiResponse = auiResponse,
             )
         }
+        debugLog(loggingConfig, "parseEnvelope id=${id ?: "<none>"} hasAui=false")
         return LlmResponse(id = id, text = text)
     }
 
@@ -122,11 +141,18 @@ internal object AuiResponseExtractor {
      * 3. Embedded JSON within mixed content (e.g. text preceding the JSON)
      * 4. Plain text fallback
      */
-    private fun parseClaudeApiResponse(root: JsonObject): LlmResponse {
+    private fun parseClaudeApiResponse(
+        root: JsonObject,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse {
         val id = root["id"]?.jsonPrimitive?.content
         val contentText = extractContentText(root)
             ?: return error("No text content in Claude response")
-        val parsed = parseContentText(contentText)
+        debugLog(
+            loggingConfig,
+            "parseClaudeApiResponse id=${id ?: "<none>"} contentPreview=${contentText.previewForLog()}",
+        )
+        val parsed = parseContentText(contentText, loggingConfig)
         return parsed.copy(id = id ?: parsed.id)
     }
 
@@ -163,12 +189,28 @@ internal object AuiResponseExtractor {
      *  3. Mixed content: preamble text followed by a fenced or unfenced JSON block
      *  4. Plain text
      */
-    private fun parseContentText(contentText: String): LlmResponse {
+    private fun parseContentText(
+        contentText: String,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse {
         val stripped = stripMarkdownCodeFence(contentText)
 
-        tryParseEnvelope(stripped)?.let { return it }
-        tryParseRawAui(stripped)?.let { return it }
-        tryExtractEmbeddedJson(contentText)?.let { return it }
+        tryParseEnvelope(stripped, loggingConfig)?.let {
+            debugLog(loggingConfig, "parseContentText matched=envelope")
+            return it
+        }
+        tryParseRawAui(stripped, loggingConfig)?.let {
+            debugLog(loggingConfig, "parseContentText matched=raw_aui")
+            return it
+        }
+        tryExtractEmbeddedJson(contentText, loggingConfig)?.let {
+            debugLog(loggingConfig, "parseContentText matched=embedded_json")
+            return it
+        }
+        tryRepairAndParseJson(stripped, loggingConfig)?.let {
+            debugLog(loggingConfig, "parseContentText matched=repaired_json")
+            return it
+        }
 
         if (stripped.contains("\"aui\"")) {
             logWarning(
@@ -177,6 +219,7 @@ internal object AuiResponseExtractor {
             )
         }
 
+        debugLog(loggingConfig, "parseContentText matched=plain_text")
         return LlmResponse(text = contentText)
     }
 
@@ -198,13 +241,16 @@ internal object AuiResponseExtractor {
      * Attempts to parse [text] as a structured envelope. Returns null if it
      * is not valid JSON or does not contain the required `text` field.
      */
-    private fun tryParseEnvelope(text: String): LlmResponse? {
+    private fun tryParseEnvelope(
+        text: String,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse? {
         return try {
             val root = json.parseToJsonElement(text).jsonObject
             // Only treat as envelope if it has the `text` key
-            if (root.containsKey("text")) parseEnvelope(root) else null
+            if (root.containsKey("text")) parseEnvelope(root, loggingConfig) else null
         } catch (e: Exception) {
-            logWarning("tryParseEnvelope failed: ${e.message}")
+            debugLog(loggingConfig, "tryParseEnvelope failed: ${e.message}")
             null
         }
     }
@@ -214,12 +260,20 @@ internal object AuiResponseExtractor {
      * This handles the case where the LLM outputs the AUI payload directly instead of
      * wrapping it in the `{ "text", "aui" }` envelope.
      */
-    private fun tryParseRawAui(text: String): LlmResponse? {
+    private fun tryParseRawAui(
+        text: String,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse? {
         return try {
             val root = json.parseToJsonElement(text).jsonObject
             if (root.containsKey("display") && !root.containsKey("text")) {
                 val auiJsonString = root.toString()
                 val auiResponse = auiParser.parseOrNull(auiJsonString)
+                debugLog(
+                    loggingConfig,
+                    "tryParseRawAui parsedAui=${auiResponse != null} " +
+                        "display=${auiResponse?.display ?: "<null>"} auiPreview=${auiJsonString.previewForLog()}",
+                )
                 LlmResponse(
                     text = "",
                     auiJson = auiJsonString,
@@ -229,7 +283,7 @@ internal object AuiResponseExtractor {
                 null
             }
         } catch (e: Exception) {
-            logWarning("tryParseRawAui failed: ${e.message}")
+            debugLog(loggingConfig, "tryParseRawAui failed: ${e.message}")
             null
         }
     }
@@ -242,7 +296,10 @@ internal object AuiResponseExtractor {
      * Extracts the substring from the first `{` to the last `}` and attempts to
      * parse it as an envelope or raw AUI JSON.
      */
-    private fun tryExtractEmbeddedJson(text: String): LlmResponse? {
+    private fun tryExtractEmbeddedJson(
+        text: String,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse? {
         val firstBrace = text.indexOf('{')
         val lastBrace = text.lastIndexOf('}')
         if (firstBrace < 0 || lastBrace <= firstBrace) return null
@@ -250,7 +307,77 @@ internal object AuiResponseExtractor {
         if (firstBrace == 0 && lastBrace == text.length - 1) return null
 
         val candidate = text.substring(firstBrace, lastBrace + 1)
-        return tryParseEnvelope(candidate) ?: tryParseRawAui(candidate)
+        debugLog(loggingConfig, "tryExtractEmbeddedJson candidatePreview=${candidate.previewForLog()}")
+        return tryParseEnvelope(candidate, loggingConfig) ?: tryParseRawAui(candidate, loggingConfig)
+    }
+
+    /**
+     * Repairs a common malformed case where the model emits a valid JSON envelope
+     * but truncates the final closing delimiters before the response is stored.
+     *
+     * Only attempts delimiter balancing outside quoted strings. If the text has
+     * mismatched closers, an unterminated string, or no missing closers, this
+     * returns null rather than guessing.
+     */
+    private fun tryRepairAndParseJson(
+        text: String,
+        loggingConfig: ChatDebugLoggerConfig,
+    ): LlmResponse? {
+        val repaired = repairMissingClosingDelimiters(text) ?: return null
+        debugLog(
+            loggingConfig,
+            "tryRepairAndParseJson repairedSuffix=${repaired.takeLast((repaired.length - text.length).coerceAtLeast(0))}",
+        )
+        return tryParseEnvelope(repaired, loggingConfig) ?: tryParseRawAui(repaired, loggingConfig)
+    }
+
+    private fun repairMissingClosingDelimiters(text: String): String? {
+        if (!text.trimStart().startsWith("{")) return null
+
+        val stack = ArrayDeque<Char>()
+        var inString = false
+        var escaping = false
+
+        for (ch in text) {
+            if (inString) {
+                if (escaping) {
+                    escaping = false
+                    continue
+                }
+                when (ch) {
+                    '\\' -> escaping = true
+                    '"' -> inString = false
+                }
+                continue
+            }
+
+            when (ch) {
+                '"' -> inString = true
+                '{', '[' -> stack.addLast(ch)
+                '}' -> {
+                    if (stack.removeLastOrNull() != '{') return null
+                }
+                ']' -> {
+                    if (stack.removeLastOrNull() != '[') return null
+                }
+            }
+        }
+
+        if (inString || stack.isEmpty()) return null
+
+        val suffix = buildString {
+            while (stack.isNotEmpty()) {
+                append(
+                    when (stack.removeLast()) {
+                        '{' -> '}'
+                        '[' -> ']'
+                        else -> return null
+                    },
+                )
+            }
+        }
+
+        return text + suffix
     }
 
     /**
@@ -267,6 +394,23 @@ internal object AuiResponseExtractor {
     }
 
     private fun logWarning(message: String) {
-        System.err.println("AuiResponseExtractor: $message")
+        if (BuildConfig.DEBUG) {
+            System.err.println("$TAG: $message")
+        } else {
+            System.err.println("AuiResponseExtractor: $message")
+        }
     }
+
+    private fun debugLog(loggingConfig: ChatDebugLoggerConfig, message: String) {
+        if (BuildConfig.DEBUG && loggingConfig.isEnabled()) {
+            println("$TAG: $message")
+        }
+    }
+
+    private fun String.previewForLog(maxLen: Int = 240): String {
+        val normalized = replace('\n', ' ').replace('\r', ' ')
+        return if (normalized.length <= maxLen) normalized else normalized.take(maxLen) + "..."
+    }
+
+    private const val TAG = "AuiResponseExtractor"
 }

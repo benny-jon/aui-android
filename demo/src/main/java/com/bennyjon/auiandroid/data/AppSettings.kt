@@ -2,6 +2,7 @@ package com.bennyjon.auiandroid.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.bennyjon.auiandroid.data.llm.LlmProvider
@@ -48,8 +49,21 @@ class AppSettings @Inject constructor(
         }
     }
 
+    /** Emits whether verbose chat repository/extractor logs are enabled. */
+    val chatDebugLogsEnabled: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_CHAT_DEBUG_LOGS_ENABLED] ?: false
+    }
+
+    /** Persists whether verbose chat repository/extractor logs are enabled. */
+    suspend fun setChatDebugLogsEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_CHAT_DEBUG_LOGS_ENABLED] = enabled
+        }
+    }
+
     private companion object {
         val KEY_LLM_PROVIDER = stringPreferencesKey("llm_provider")
         val KEY_SELECTED_THEME = stringPreferencesKey("selected_theme")
+        val KEY_CHAT_DEBUG_LOGS_ENABLED = booleanPreferencesKey("chat_debug_logs_enabled")
     }
 }

@@ -18,6 +18,7 @@ import com.bennyjon.auiandroid.livechat.DemoAuiTheme
 import com.bennyjon.auiandroid.livechat.LiveChatScreen
 import com.bennyjon.auiandroid.livechat.LiveChatViewModel
 import com.bennyjon.auiandroid.settings.SettingsScreen
+import com.bennyjon.auiandroid.settings.SettingsViewModel
 import com.bennyjon.auiandroid.settings.SystemPromptScreen
 import com.bennyjon.auiandroid.settings.SystemPromptViewModel
 import com.bennyjon.auiandroid.showcase.ShowcaseScreen
@@ -98,12 +99,16 @@ private fun DemoNavHost() {
             }
         }
         composable(DemoDestination.SETTINGS.route) {
+            val settingsVm: SettingsViewModel = hiltViewModel()
+            val chatDebugLogsEnabled by settingsVm.chatDebugLogsEnabled.collectAsState()
             MaterialTheme(colorScheme = colorScheme, typography = typography) {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
                     onOpenSystemPrompt = {
                         navController.navigate(DemoDestination.SYSTEM_PROMPT.route)
                     },
+                    chatDebugLogsEnabled = chatDebugLogsEnabled,
+                    onChatDebugLogsEnabledChange = settingsVm::setChatDebugLogsEnabled,
                 )
             }
         }

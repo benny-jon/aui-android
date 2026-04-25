@@ -107,6 +107,154 @@ class AuiResponseExtractorTest {
     }
 
     @Test
+    fun `envelope with inline info banner and quick replies parses correctly`() {
+        val raw = """
+        {
+          "text": "Let me check the current AUI schema defined in my system prompt...",
+          "aui": {
+            "display": "inline",
+            "blocks": [
+              {
+                "type": "text",
+                "data": {
+                  "text": "❌ No, images are not currently supported in this AUI implementation."
+                }
+              },
+              { "type": "divider" },
+              {
+                "type": "heading",
+                "data": {
+                  "text": "Currently Available Display Components"
+                }
+              },
+              {
+                "type": "text",
+                "data": {
+                  "text": "• text, heading, caption\n• file_content (code/text artifacts)\n• chart (bar, line, pie)\n• table (structured data)\n• divider"
+                }
+              },
+              { "type": "divider" },
+              {
+                "type": "text",
+                "data": {
+                  "text": "This is why I couldn't show you actual photos of tulip fields earlier — I can only describe them with text, tables, and charts. To add image support, you'd need to follow the implementation steps I outlined in my previous response."
+                }
+              },
+              {
+                "type": "status_banner_info",
+                "data": {
+                  "text": "The schema can be extended by adding new component types to the system prompt and implementing their renderers in the UI layer."
+                }
+              },
+              {
+                "type": "quick_replies",
+                "data": {
+                  "options": [
+                    {
+                      "label": "What about the plugin system?",
+                      "feedback": {
+                        "action": "submit",
+                        "params": {
+                          "value": "plugin_components"
+                        }
+                      }
+                    },
+                    {
+                      "label": "Show available components",
+                      "feedback": {
+                        "action": "submit",
+                        "params": {
+                          "value": "list_all_components"
+                        }
+                      }
+                    },
+                    {
+                      "label": "How to extend AUI?",
+                      "feedback": {
+                        "action": "submit",
+                        "params": {
+                          "value": "extend_aui_guide"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+        """.trimIndent()
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals(
+            "Let me check the current AUI schema defined in my system prompt...",
+            result.text,
+        )
+        assertNotNull("auiJson should not be null", result.auiJson)
+        assertNotNull("auiResponse should not be null", result.auiResponse)
+        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(8, result.auiResponse!!.blocks.size)
+        assertNull(result.errorMessage)
+    }
+
+    @Test
+    fun `truncated envelope missing final closers is repaired and parsed`() {
+        val valid = """
+        {
+          "text": "Let me check the current AUI schema defined in my system prompt...",
+          "aui": {
+            "display": "inline",
+            "blocks": [
+              {
+                "type": "text",
+                "data": {
+                  "text": "❌ No, images are not currently supported in this AUI implementation."
+                }
+              },
+              { "type": "divider" },
+              {
+                "type": "heading",
+                "data": {
+                  "text": "Currently Available Display Components"
+                }
+              },
+              {
+                "type": "quick_replies",
+                "data": {
+                  "options": [
+                    {
+                      "label": "How to extend AUI?",
+                      "feedback": {
+                        "action": "submit",
+                        "params": {
+                          "value": "extend_aui_guide"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+        """.trimIndent()
+        val raw = valid.dropLast(1)
+
+        val result = AuiResponseExtractor.fromRawResponse(raw)
+
+        assertEquals(
+            "Let me check the current AUI schema defined in my system prompt...",
+            result.text,
+        )
+        assertNotNull("auiJson should not be null", result.auiJson)
+        assertNotNull("auiResponse should not be null", result.auiResponse)
+        assertEquals(AuiDisplay.INLINE, result.auiResponse!!.display)
+        assertEquals(4, result.auiResponse!!.blocks.size)
+        assertNull(result.errorMessage)
+    }
+
+    @Test
     fun `plain text with no JSON falls back to text`() {
         val result = AuiResponseExtractor.fromRawResponse("not json at all")
 
