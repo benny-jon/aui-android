@@ -216,11 +216,14 @@ The library is a **pure renderer with a callback**. It does not manage chat hist
 ### 1. Add the dependency
 
 ```kotlin
-// build.gradle.kts
+// build.gradle.kts (current state: consume from source)
 dependencies {
-    implementation("com.bennyjon.aui:aui-compose:0.1.0")
+    implementation(project(":aui-compose"))
 }
 ```
+
+The Maven coordinates are not live yet. Until publishing is set up, use the repo
+as a source dependency or copy the modules into your build.
 
 ### 2. Render AI responses
 
@@ -516,11 +519,12 @@ Everything else is `internal`.
 
 - Kotlin 1.9+
 - Jetpack Compose (BOM)
-- Min SDK 26, Target SDK 35
+- Min SDK 26, Target SDK 36
 
 ## Documentation
 
 - [Architecture](docs/architecture.md) — Module structure, public API, design decisions
+- [Live Chat Demo](docs/livechat.md) — Demo-only architecture, provider switching, persistence, and UX behavior
 - [File Content Block](docs/file-content-block.md) — Reusable contract for copyable file/document artifacts across Android and future iOS renderers
 - [AUI Spec](spec/aui-spec-v1.md) — Full JSON format specification
 - [JSON Examples](spec/examples/) — Sample responses for each display level

@@ -58,7 +58,7 @@ AuiRenderer(
 │  │  │  ├── Theme system (AuiTheme + fromMaterialTheme)│     │   │
 │  │  │  ├── Display router (inline / expanded / survey)│     │   │
 │  │  │  ├── Block spacing (Arrangement.spacedBy)       │     │   │
-│  │  │  ├── Component catalog (26 built-ins + plugins) │     │   │
+│  │  │  ├── Component catalog (27 built-ins + plugins) │     │   │
 │  │  │  ├── AuiResponseCard (host-rendered stub)       │     │   │
 │  │  │  ├── Plugin system (component + action plugins) │     │   │
 │  │  │  └── Feedback handler (tap → callback)          │     │   │
@@ -84,7 +84,7 @@ Separate repo / separate module (NOT part of the library):
 ┌──────────────────────────────────────────────────┐
 │  aui-demo (sample app)                           │
 │                                                  │
-│  Chat screen + Claude API integration            │
+│  Live chat + Fake / Claude / OpenAI integrations │
 │  Shows how to use the library end-to-end         │
 │  NOT a dependency — just a reference              │
 └──────────────────────────────────────────────────┘
@@ -92,7 +92,10 @@ Separate repo / separate module (NOT part of the library):
 
 ---
 
-## Published Artifacts
+## Planned Artifacts
+
+These are the intended consumer artifacts once publishing is in place. The repo
+is not published to Maven Central yet.
 
 ```kotlin
 // build.gradle.kts (consumer's app)
@@ -589,20 +592,24 @@ aui/
 │           ├── BlockRenderer.kt      # type → composable routing + entries builder
 │           └── AuiValueRegistry.kt   # shared input-value state across a BlockRenderer
 │
-├── demo/                             # Sample chat app (NOT part of the library)
+├── demo/                             # Sample app (NOT part of the library)
 │   └── src/main/
-│       └── java/com/bennyjon/aui/demo/
+│       └── java/com/bennyjon/auiandroid/
 │           ├── MainActivity.kt
-│           ├── home/                 # Demo home + showcase entry points
-│           ├── livechat/             # Live chat screen / ViewModel / theme switcher
-│           ├── allblocks/            # All-blocks showcase
+│           ├── DemoApp.kt            # Nav host
+│           ├── DemoHomeScreen.kt     # Home cards for live chat / showcase / themes
+│           ├── livechat/             # Live chat screen / ViewModel / spent-marking
+│           ├── showcase/             # All-blocks showcase
+│           ├── settings/             # Settings + generated system prompt viewer
 │           ├── data/
-│           │   ├── llm/              # FakeLlmClient, ClaudeLlmClient, LlmClientFactory
+│           │   ├── llm/              # Fake / Claude / OpenAI clients + extractor
 │           │   └── chat/             # Room-backed repository (provider-agnostic schema)
-│           └── plugins/              # OpenUrlPlugin, ToastNavigatePlugin, FunFactPlugin
+│           └── plugins/              # OpenUrlPlugin, NavigatePlugin, DemoFunFactPlugin
 │
 ├── docs/
 │   ├── architecture.md               # This file
+│   ├── livechat.md                   # Demo-only live chat architecture + UX
+│   ├── file-content-block.md         # file_content contract
 │   └── assets/                       # README gifs
 │
 └── gradle/libs.versions.toml         # Version catalog
@@ -788,7 +795,7 @@ Every component emits correct semantics:
 - [ ] Feedback system working
 - [ ] Custom theme working
 - [ ] Custom component registration working
-- [ ] Demo app with Claude integration
+- [ ] Demo app with provider-swappable live chat integration
 - [ ] README, docs, and one blog post
 
 ### Stretch Goals

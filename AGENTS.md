@@ -115,6 +115,8 @@ or response model, not chat-product features.
   example standalone and clarifying category headers as showcase sections
 - Session 52: Wired the demo `navigate` action plugin to real app routes so
   Settings navigation examples now open the actual Settings screen
+- Docs sync on 2026-04-25: aligned public README/architecture with current code
+  and added `docs/livechat.md` for the demo-only chat architecture
 
 ## Next Task
 
