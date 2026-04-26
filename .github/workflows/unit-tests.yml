@@ -6,14 +6,13 @@ on:
   pull_request:
     branches: [main]
 
-concurrency:
-  group: unit-tests-${{ github.ref }}-${{ matrix.module || 'all' }}
-  cancel-in-progress: true
-
 jobs:
   test:
     name: ${{ matrix.module }} unit tests
     runs-on: ubuntu-latest
+    concurrency:
+      group: unit-tests-${{ github.ref }}-${{ matrix.module }}
+      cancel-in-progress: true
 
     strategy:
       fail-fast: false
