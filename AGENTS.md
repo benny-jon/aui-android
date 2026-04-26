@@ -141,7 +141,12 @@ Polish the live chat demo and update docs:
 - Architecture: `docs/architecture.md`
 - Wire format and component spec: `spec/aui-spec-v1.md`
 - Active execution plan: `.planning/phase5-live-chat.md`
+- Release-readiness plan: `.planning/first-release-readiness.md`
 - Historical plans: `.planning/archive/`
+
+If the user asks to prepare the library for a first release, release readiness,
+publishing, or launch polish, load `.planning/first-release-readiness.md` in
+addition to the current phase plan.
 
 ## Update Rules
 
