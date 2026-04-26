@@ -2,9 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   compile:
@@ -23,9 +21,9 @@ jobs:
           - task_name: aui-compose compile
             gradle_task: :aui-compose:compileDebugKotlin
           - task_name: demo kotlin compile
-            gradle_task: :demo:compileGoogleDebugKotlin
+            gradle_task: :demo:compileDebugKotlin
           - task_name: demo resource compile
-            gradle_task: :demo:compileGoogleDebugResources
+            gradle_task: :demo:assembleDebug
 
     steps:
       - name: Checkout
