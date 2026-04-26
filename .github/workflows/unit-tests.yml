@@ -5,9 +5,54 @@ on:
   pull_request:
 
 jobs:
+  changes:
+    name: Detect relevant changes
+    runs-on: ubuntu-latest
+    outputs:
+      project_changed: ${{ steps.filter.outputs.project_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect relevant files
+        id: filter
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_ref="${{ github.event.pull_request.base.sha }}"
+          else
+            base_ref="${{ github.event.before }}"
+          fi
+
+          head_ref="${{ github.sha }}"
+          project_changed=false
+
+          if [[ "$base_ref" =~ ^0+$ ]] || ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+            echo "project_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          while IFS= read -r path; do
+            [[ -z "$path" ]] && continue
+            case "$path" in
+              AGENTS.md|CLAUDE.md|docs/*|.planning/*)
+                ;;
+              *)
+                project_changed=true
+                break
+                ;;
+            esac
+          done < <(git diff --name-only "$base_ref" "$head_ref")
+
+          echo "project_changed=$project_changed" >> "$GITHUB_OUTPUT"
+
   test:
     name: ${{ matrix.module }} unit tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.project_changed == 'true'
     concurrency:
       group: unit-tests-${{ github.ref }}-${{ matrix.module }}
       cancel-in-progress: true
