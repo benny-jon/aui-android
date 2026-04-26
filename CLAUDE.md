@@ -2,10 +2,6 @@
 
 Authoritative project status now lives in [AGENTS.md](AGENTS.md).
 
-Start every session by reading:
-- `AGENTS.md`
-- `.planning/phase5-live-chat.md`
-
 Use `AGENTS.md` as the source of truth for:
 - current phase
 - latest completed work
