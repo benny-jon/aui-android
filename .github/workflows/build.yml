@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compile:
+    name: ${{ matrix.task_name }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-${{ github.ref }}-${{ matrix.task_name }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task_name: aui-core compile
+            gradle_task: :aui-core:compileDebugKotlin
+          - task_name: aui-compose compile
+            gradle_task: :aui-compose:compileDebugKotlin
+          - task_name: demo kotlin compile
+            gradle_task: :demo:compileGoogleDebugKotlin
+          - task_name: demo resource compile
+            gradle_task: :demo:compileGoogleDebugResources
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Run compile check
+        run: ./gradlew ${{ matrix.gradle_task }} --stacktrace
