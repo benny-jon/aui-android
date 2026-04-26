@@ -32,7 +32,7 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Goal: add a demo chat flow that talks to real LLM providers end-to-end while
   keeping the library itself a pure renderer
 - Current phase plan: `.planning/phase5-live-chat.md`
-- Next recommended task: Session 30, polish live chat UX and documentation
+- Next recommended task: polish live chat UX and documentation
 - Known blockers: none recorded
 - Known issues: none recorded
 
@@ -46,83 +46,24 @@ Phase 5 work is focused on the `demo` module:
 Library-level changes are allowed only when they are intrinsic to the renderer
 or response model, not chat-product features.
 
-## Recent Progress
+## Current Capabilities
 
-- Sessions 1-7: Phase 1 complete
-- Sessions 8-10: Phase 2 complete
-- Sessions 11-14: Phase 3 complete
-- Sessions 15-20: Phase 4 complete
-- Session 21: Added generic LLM contracts, structured response extraction, fake
-  provider, and tests
-- Session 22: Added Room schema, chat repository, DAO/database, and tests
-- Session 23: Added live chat ViewModel/UI wiring, spent-marking, and read-only
-  response support in the library
-- Session 24: Added `ClaudeLlmClient`, provider selection, runtime rebuilding,
-  and config-backed API key wiring
-- Session 25: Added `AuiPromptConfig`, prompt aggressiveness tuning, custom
-  examples, and new prompt tests
-- Session 26: Added inline Markdown support for `AuiText`
-- Session 27: Reintroduced `INLINE`, clarified `EXPANDED`, added response card
-  stub and large-screen host routing guidance
-- Session 28: Replaced `sheet` with `survey`, simplified survey authoring, and
-  synced spec/architecture/README
-- Docs sync on 2026-04-17: updated public docs to match current code
-- Status variants on 2026-04-17: expanded status components and color tokens
-- Session 29: Added `OpenAiLlmClient`, OpenAI provider selection, and config-backed API key wiring
-- Session 30: Refined live chat layout so two-pane only activates when an `EXPANDED`
-  response exists, and landscape single-pane keeps chat at split-pane width
-- Session 32: Added first-class `file_content` artifacts so markdown/config/source
-  files render as single copyable blocks instead of fragmented presentation text
-- Session 33: Added download-to-Downloads support to `file_content`, with scoped-storage
-  saving on Android 10+ and legacy-permission fallback on older Android
-- Session 34: Replaced `file_content` download toasts with an inline themed notice
-  under the header, including "Open" and dismiss actions
-- Session 35: Expanded `AuiColors` with tertiary tokens and mapped them through
-  `AuiColors.fromColorScheme`
-- Session 36: Widened landscape single-pane live chat so the no-detail state keeps
-  a stronger minimum chat width instead of collapsing to split-pane proportions
-- Session 37: Updated the live chat composer to support bounded multiline input
-  instead of forcing a single-line message field
-- Session 38: Added a centered empty state to live chat so a new conversation
-  shows clear guidance before the first message arrives
-- Session 31: Tuned live chat context hints so markdown/document requests steer the
-  model toward `EXPANDED` document-style AUI instead of defaulting to `INLINE`
-- Session 39: Tightened custom component input metadata, preserved multi-input
-  feedback accumulation, and synced library docs with current renderer behavior
-- Session 40: Refreshed the All Blocks showcase with current component coverage,
-  previewable JSON examples, grouped sections, and asset validation tests
-- Session 41: Added a built-in `chart` block (`bar` / `line` / `pie` variants) rendered
-  natively with Compose Canvas, including axis labels and legends; catalog count 25 → 26
-- Session 42: Handled Claude API error payloads explicitly so overload/provider failures
-  surface as readable assistant errors instead of malformed message parsing
-- Session 43: Added live chat retry action on error banners and explicit OpenAI JSON
-  error parsing so provider failures surface cleanly for both real backends
-- Session 44: Made tolerant AUI parsing salvage malformed known blocks as `Unknown`
-  so partial responses still render instead of dropping the entire AUI payload
-- Session 45: Normalized malformed top-level `data.feedback` into sibling block
-  `feedback` during parsing so misnested trigger actions still work
-- Session 46: Added a built-in `table` block with semantic cells (`text`, `number`,
-  `badge`, read-only `rating`) and horizontal-scroll overflow; catalog count 26 → 27
-- Session 47: Renamed table rating column JSON to `rating` with legacy parsing,
-  tightened table column width estimates, and fixed half-star clipping
-- Session 48: Added a demo Settings screen for inspecting and copying the generated
-  `AuiCatalogPrompt` system prompt
-- Session 49: Added a persisted Settings toggle for live chat repository/extractor
-  debug logs and made malformed saved JSON envelopes recoverable on load
-- Session 50: Simplified All Blocks showcase entries so inline examples render as
-  the block itself, leaving `Preview & JSON` for inspection instead of repeated labels/details
-- Session 51: Cleaned up the All Blocks showcase content by making the `caption`
-  example standalone and clarifying category headers as showcase sections
-- Session 52: Wired the demo `navigate` action plugin to real app routes so
-  Settings navigation examples now open the actual Settings screen
-- Docs sync on 2026-04-25: aligned public README/architecture with current code
-  and added `docs/livechat.md` for the demo-only chat architecture
+- Demo live chat supports provider-neutral `LlmClient` integration with real
+  OpenAI and Claude backends, provider switching, and Room-backed persistence.
+- The renderer supports current Phase 5 response needs including Markdown text,
+  tolerant unknown-block parsing, `file_content`, `chart`, and `table` blocks.
+- The demo includes key UX polish already landed: multiline composer, centered
+  empty state, retryable error banners, responsive split-pane behavior, and a
+  Settings screen for prompt/debug inspection.
+- Public docs are synced through 2026-04-25, including `docs/livechat.md`, and
+  CI includes separate unit-test and compile-check workflows.
 
 ## Next Task
 
 Polish the live chat demo and update docs:
-- spinner, empty state, error banner with retry
-- clear confirmation dialog, snackbar on provider switch
+- spinner
+- clear confirmation dialog
+- snackbar on provider switch
 - Phase 5 status/docs sync including `docs/livechat.md`
 
 ## Constraints
@@ -156,7 +97,7 @@ changed.
 Keep updates operational and short:
 - keep `Current Status` accurate
 - update `Next Task` when the recommendation changes
-- append one concise `Recent Progress` line for meaningful completed work
+- refresh `Current Capabilities` only when launch-relevant behavior changes
 - keep the file brief enough to scan quickly on launch
 
 If a tool-specific file exists, it should point back here instead of becoming a
