@@ -358,6 +358,39 @@ Exit criteria:
 - Dependency surface and manifest are minimal and intentional; resource prefix
   enforced.
 
+Findings (executed 2026-04-29):
+- Dependency exposure is already intentionally minimal. `aui-core` keeps
+  `api(libs.kotlinx.serialization.json)` because its public surface directly
+  exposes `kotlinx.serialization` types and contracts, including
+  `AuiBlock.Unknown.rawData: JsonElement?` plus the public `@Serializable`
+  model graph that hosts may encode/decode. `aui-compose` correctly keeps
+  `api(project(":aui-core"))` because its public renderer and plugin APIs take
+  `aui-core` model and plugin types. All remaining `aui-compose` dependencies
+  stay `implementation`; no additional `api` leakage was found.
+- Both published library manifests were already library-safe and minimal:
+  each module ships an otherwise-empty `AndroidManifest.xml` with no
+  `<application>` block, no permissions, no providers, and no launcher or
+  task-affecting intent filters.
+- `namespace` and `minSdk` were already explicit and aligned across the repo:
+  `aui-core` and `aui-compose` both declare `namespace` and `minSdk = 26`
+  directly in Gradle, matching the demo's current floor.
+- Resource-prefix hygiene is now enforced in Gradle: both library modules set
+  `android.resourcePrefix = "aui_"`, matching the existing `strings.xml`
+  naming convention and preventing future unprefixed resource additions from
+  slipping into the published AARs.
+- Verification uncovered one real `minSdk` hygiene gap in
+  `AuiFileContent`'s download helper: the API 29 scoped-storage path used
+  `MediaStore.Downloads.EXTERNAL_CONTENT_URI` behind a runtime SDK check, but
+  the helper method lacked a local API annotation, so lint still flagged it as
+  a `NewApi` risk. The helper is now annotated with `@TargetApi(Q)`, and the
+  composables that assemble download/survey strings now use configuration-aware
+  Compose resource APIs (`stringResource` / `LocalResources`) instead of
+  `LocalContext.getString(...)`, clearing the remaining S6 lint errors.
+- Verification: `./gradlew :aui-core:lintDebug :aui-compose:lintDebug` passed
+  after the above fixes. Residual output was limited to non-blocking warnings
+  outside this session's scope (for example a deprecated `srcDir(...)` Gradle
+  DSL call and Compose's `LocalClipboardManager` deprecation).
+
 ---
 
 ## Session S7 — Code hygiene

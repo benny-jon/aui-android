@@ -8,6 +8,7 @@ plugins {
 
 android {
     namespace = "com.bennyjon.aui_core"
+    resourcePrefix = "aui_"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1

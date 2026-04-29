@@ -35,18 +35,17 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S5 — R8 / ProGuard / serialization keep
-  rules**. `aui-core` now ships consumer keep rules for its public
-  `kotlinx.serialization` model surface; `aui-compose` explicitly documents
-  that it needs no extra consumer rules beyond transitive `aui-core`; and the
-  demo release build now runs with `minifyEnabled = true`. Findings recorded
-  in `.planning/library-sanity-checks.md`. Verified with
-  `./gradlew :aui-core:assembleRelease`,
-  `./gradlew :aui-compose:assembleRelease`, and
-  `./gradlew :demo:assembleRelease` including `:demo:minifyReleaseWithR8`.
-- Next recommended task: Sanity-checks **S6 — Dependencies & manifest hygiene**:
-  audit `api` vs `implementation`, manifests, `namespace`, `minSdk`, and add
-  `android.resourcePrefix = "aui_"` to both library modules if still missing.
+- Last completed: Sanity-checks **S6 — Dependencies & manifest hygiene**.
+  `aui-core` and `aui-compose` now both enforce `android.resourcePrefix =
+  "aui_"`; library manifests remain empty/library-safe; the dependency surface
+  stayed intentionally minimal (`aui-core` keeps public serialization runtime,
+  `aui-compose` only re-exports `aui-core`); and a scoped-storage helper in
+  `AuiFileContent` was annotated/fixed so `minSdk = 26` passes lint cleanly.
+  Findings recorded in `.planning/library-sanity-checks.md`. Verified with
+  `./gradlew :aui-core:lintDebug` and `./gradlew :aui-compose:lintDebug`.
+- Next recommended task: Sanity-checks **S7 — Code hygiene**: audit production
+  logging, `TODO` / `FIXME`, `!!`, broad exception catches, and locale-safe
+  string operations in `aui-core` and `aui-compose`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -84,11 +83,10 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S6 — Dependencies & manifest hygiene** from
+Run **Sanity-checks Session S7 — Code hygiene** from
 `.planning/library-sanity-checks.md`:
-- audit `api` vs `implementation` in `aui-core` and `aui-compose`
-- verify manifests stay minimal and library-safe
-- confirm `namespace` / `minSdk` / resource-prefix hygiene
+- audit production logging, `TODO` / `FIXME`, `!!`, and broad exception catches
+- confirm locale-safe string operations where casing/comparisons matter
 - record findings inline in `.planning/library-sanity-checks.md`
 
 Session 54 (Canonical Host Integration Example) is still queued from

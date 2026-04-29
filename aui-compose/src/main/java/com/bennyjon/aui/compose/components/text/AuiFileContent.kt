@@ -65,11 +65,11 @@ fun AuiFileContent(
 @Composable
 internal fun AuiFileContentSurface(
     content: String,
+    modifier: Modifier = Modifier,
     filename: String? = null,
     language: String? = null,
     title: String? = null,
     description: String? = null,
-    modifier: Modifier = Modifier,
 ) {
     val theme = LocalAuiTheme.current
     val bodyColor = LocalAuiBodyColor.current
@@ -102,14 +102,8 @@ internal fun AuiFileContentSurface(
                             )
                         }
                         downloadNotice = savedName?.let {
-                            DownloadNotice(
-                                message = context.getString(R.string.aui_file_download_saved, it),
-                                showOpenAction = true,
-                            )
-                        } ?: DownloadNotice(
-                            message = context.getString(R.string.aui_file_download_failed),
-                            showOpenAction = false,
-                        )
+                            DownloadNotice.Saved(filename = it)
+                        } ?: DownloadNotice.Failed
                     }
                 },
                 onCopy = { clipboard.setText(AnnotatedString(content)) },
@@ -226,6 +220,10 @@ private fun FileDownloadNotice(
     onDismiss: () -> Unit,
 ) {
     val theme = LocalAuiTheme.current
+    val message = when (notice) {
+        is DownloadNotice.Saved -> stringResource(R.string.aui_file_download_saved, notice.filename)
+        DownloadNotice.Failed -> stringResource(R.string.aui_file_download_failed)
+    }
 
     Surface(
         modifier = Modifier
@@ -250,12 +248,12 @@ private fun FileDownloadNotice(
             horizontalArrangement = Arrangement.spacedBy(theme.spacing.small),
         ) {
             Text(
-                text = notice.message,
+                text = message,
                 modifier = Modifier.weight(1f),
                 style = theme.typography.caption,
                 color = theme.colors.onPrimaryContainer,
             )
-            if (notice.showOpenAction) {
+            if (notice is DownloadNotice.Saved) {
                 TextButton(
                     onClick = onOpen,
                     contentPadding = ButtonDefaults.TextButtonContentPadding,
@@ -302,10 +300,10 @@ private fun FileContentBody(
     }
 }
 
-private data class DownloadNotice(
-    val message: String,
-    val showOpenAction: Boolean,
-)
+private sealed interface DownloadNotice {
+    data class Saved(val filename: String) : DownloadNotice
+    data object Failed : DownloadNotice
+}
 
 @Preview(showBackground = true, name = "AuiFileContent")
 @Composable

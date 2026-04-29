@@ -1,6 +1,7 @@
 package com.bennyjon.aui.compose.internal
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.app.DownloadManager
 import android.content.ContentValues
 import android.content.Context
@@ -51,6 +52,7 @@ internal fun openDownloadsFolder(context: Context): Boolean {
     }
 }
 
+@TargetApi(Build.VERSION_CODES.Q)
 private fun saveFileToDownloadsScoped(
     context: Context,
     filename: String,

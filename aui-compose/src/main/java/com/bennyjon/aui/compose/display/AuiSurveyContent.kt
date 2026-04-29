@@ -23,7 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.bennyjon.aui_compose.R
@@ -106,13 +106,15 @@ fun AuiSurveyContent(
     if (steps.isEmpty()) return
 
     val flowState = remember(steps) { SurveyFlowState(steps, pluginRegistry) }
-    val context = LocalContext.current
-    val surveyFormatStrings = remember(context) {
+    val resources = LocalResources.current
+    val skippedLabel = stringResource(R.string.aui_survey_skipped)
+    val submittedLabel = stringResource(R.string.aui_survey_submitted)
+    val surveyFormatStrings = remember(resources, skippedLabel, submittedLabel) {
         SurveyFormatStrings(
-            skipped = context.getString(R.string.aui_survey_skipped),
-            submitted = context.getString(R.string.aui_survey_submitted),
+            skipped = skippedLabel,
+            submitted = submittedLabel,
             questionsSkippedNote = { count ->
-                context.resources.getQuantityString(
+                resources.getQuantityString(
                     R.plurals.aui_survey_questions_skipped_note, count, count,
                 )
             },
