@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -48,19 +47,6 @@ fun AuiBadgeWarning(
             text = block.data.text,
             style = theme.typography.label,
             color = theme.colors.onWarningContainer,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiBadgeWarningPreview() {
-    AuiThemeProvider {
-        AuiBadgeWarning(
-            block = AuiBlock.BadgeWarning(
-                data = BadgeWarningData(text = "Low stock"),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

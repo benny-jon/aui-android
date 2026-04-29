@@ -32,15 +32,12 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.openDownloadsFolder
 import com.bennyjon.aui.compose.internal.saveFileToDownloads
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
-import com.bennyjon.aui.core.model.data.FileContentData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -306,23 +303,4 @@ private fun FileContentBody(
 private sealed interface DownloadNotice {
     data class Saved(val filename: String) : DownloadNotice
     data object Failed : DownloadNotice
-}
-
-@Preview(showBackground = true, name = "AuiFileContent")
-@Composable
-private fun AuiFileContentPreview() {
-    AuiThemeProvider {
-        AuiFileContent(
-            block = AuiBlock.FileContent(
-                data = FileContentData(
-                    filename = "README.md",
-                    language = "markdown",
-                    title = "Project README",
-                    description = "Setup and usage guide",
-                    content = "# Hello\n\nRun `./gradlew build`.",
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
-    }
 }

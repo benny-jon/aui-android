@@ -37,6 +37,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.SaveableStateHolder
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,6 +83,7 @@ fun ShowcaseScreen(
     val entries by viewModel.entries.collectAsState()
     var activeDetailLabel by remember { mutableStateOf<String?>(null) }
     var sheetLabel by remember { mutableStateOf<String?>(null) }
+    val rendererStateHolder = rememberSaveableStateHolder()
 
     Scaffold(
         topBar = {
@@ -137,6 +140,7 @@ fun ShowcaseScreen(
                         pluginRegistry = pluginRegistry,
                         activeLabel = detailPaneEntry?.label,
                         onInspectEntry = openEntry,
+                        rendererStateHolder = rendererStateHolder,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -146,6 +150,7 @@ fun ShowcaseScreen(
                         entry = detailPaneEntry,
                         pluginRegistry = pluginRegistry,
                         auiTheme = auiTheme,
+                        rendererStateHolder = rendererStateHolder,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -158,6 +163,7 @@ fun ShowcaseScreen(
                     pluginRegistry = pluginRegistry,
                     activeLabel = null,
                     onInspectEntry = openEntry,
+                    rendererStateHolder = rendererStateHolder,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -167,6 +173,7 @@ fun ShowcaseScreen(
                     entry = entry,
                     pluginRegistry = pluginRegistry,
                     auiTheme = auiTheme,
+                    rendererStateHolder = rendererStateHolder,
                     onFeedback = { feedback ->
                         Log.d("Showcase", "Feedback: ${feedback.action}")
                         // Survey step-level feedbacks (non-submit) keep the sheet open so the
@@ -192,6 +199,7 @@ private fun EntryList(
     pluginRegistry: AuiPluginRegistry,
     activeLabel: String?,
     onInspectEntry: (ShowcaseEntry) -> Unit,
+    rendererStateHolder: SaveableStateHolder,
     modifier: Modifier = Modifier,
 ) {
     val categories = entries.map { it.category }.distinct()
@@ -230,6 +238,7 @@ private fun EntryList(
                     pluginRegistry = pluginRegistry,
                     isActiveDetail = entry.label == activeLabel,
                     onInspectEntry = onInspectEntry,
+                    rendererStateHolder = rendererStateHolder,
                 )
             }
         }
@@ -269,6 +278,7 @@ private fun ShowcaseItem(
     pluginRegistry: AuiPluginRegistry,
     isActiveDetail: Boolean,
     onInspectEntry: (ShowcaseEntry) -> Unit,
+    rendererStateHolder: SaveableStateHolder,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         when (entry.response.display) {
@@ -281,12 +291,14 @@ private fun ShowcaseItem(
                 )
             }
             AuiDisplay.INLINE -> {
-                AuiRenderer(
-                    response = entry.response,
-                    theme = auiTheme,
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = { Log.d("Showcase", "Feedback: ${it.action}") },
-                )
+                rendererStateHolder.SaveableStateProvider(key = "showcase:list:${entry.label}") {
+                    AuiRenderer(
+                        response = entry.response,
+                        theme = auiTheme,
+                        pluginRegistry = pluginRegistry,
+                        onFeedback = { Log.d("Showcase", "Feedback: ${it.action}") },
+                    )
+                }
                 TextButton(
                     onClick = { onInspectEntry(entry) },
                     modifier = Modifier.align(Alignment.End),
@@ -309,6 +321,7 @@ private fun DetailPane(
     entry: ShowcaseEntry?,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
+    rendererStateHolder: SaveableStateHolder,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -329,6 +342,7 @@ private fun DetailPane(
             entry = entry,
             pluginRegistry = pluginRegistry,
             auiTheme = auiTheme,
+            rendererStateHolder = rendererStateHolder,
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
@@ -344,6 +358,7 @@ private fun ShowcaseDetailSheet(
     entry: ShowcaseEntry,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
+    rendererStateHolder: SaveableStateHolder,
     onFeedback: (AuiFeedback) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -357,6 +372,7 @@ private fun ShowcaseDetailSheet(
             entry = entry,
             pluginRegistry = pluginRegistry,
             auiTheme = auiTheme,
+            rendererStateHolder = rendererStateHolder,
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
@@ -371,6 +387,7 @@ private fun ShowcaseDetailContent(
     entry: ShowcaseEntry,
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
+    rendererStateHolder: SaveableStateHolder,
     modifier: Modifier = Modifier,
     onFeedback: (AuiFeedback) -> Unit,
 ) {
@@ -410,13 +427,15 @@ private fun ShowcaseDetailContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        AuiRenderer(
-            response = entry.response,
-            modifier = Modifier.fillMaxWidth(),
-            theme = auiTheme,
-            pluginRegistry = pluginRegistry,
-            onFeedback = onFeedback,
-        )
+        rendererStateHolder.SaveableStateProvider(key = "showcase:detail:${entry.label}") {
+            AuiRenderer(
+                response = entry.response,
+                modifier = Modifier.fillMaxWidth(),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+            )
+        }
         Text(
             text = "Example JSON",
             style = MaterialTheme.typography.titleSmall,

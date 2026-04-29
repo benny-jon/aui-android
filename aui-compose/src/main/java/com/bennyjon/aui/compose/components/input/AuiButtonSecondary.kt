@@ -8,7 +8,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -47,19 +46,6 @@ fun AuiButtonSecondary(
         Text(
             text = block.data.label,
             style = theme.typography.button,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiButtonSecondaryPreview() {
-    AuiThemeProvider {
-        AuiButtonSecondary(
-            block = AuiBlock.ButtonSecondary(
-                data = ButtonSecondaryData(label = "Skip"),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

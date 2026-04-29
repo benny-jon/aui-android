@@ -35,7 +35,6 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
@@ -590,88 +589,5 @@ private fun formatTick(value: Float): String {
         rounded.toLong().toString()
     } else {
         "%.1f".format(rounded)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun AuiChartBarPreview() {
-    AuiThemeProvider {
-        AuiChart(
-            data = ChartData(
-                variant = ChartVariant.Bar,
-                title = "Quiz Scores This Week",
-                xLabel = "Day",
-                yLabel = "Score %",
-                series = listOf(
-                    ChartSeries(
-                        label = "Score",
-                        values = listOf(
-                            ChartPoint("Mon", 72f),
-                            ChartPoint("Tue", 85f),
-                            ChartPoint("Wed", 78f),
-                            ChartPoint("Fri", 91f),
-                        ),
-                    ),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun AuiChartLinePreview() {
-    AuiThemeProvider {
-        AuiChart(
-            data = ChartData(
-                variant = ChartVariant.Line,
-                title = "Daily Active Users",
-                xLabel = "Week",
-                yLabel = "Users",
-                series = listOf(
-                    ChartSeries(
-                        label = "Android",
-                        values = listOf(
-                            ChartPoint("W1", 1200f),
-                            ChartPoint("W2", 1500f),
-                            ChartPoint("W3", 1350f),
-                            ChartPoint("W4", 1800f),
-                        ),
-                    ),
-                    ChartSeries(
-                        label = "iOS",
-                        values = listOf(
-                            ChartPoint("W1", 900f),
-                            ChartPoint("W2", 1100f),
-                            ChartPoint("W3", 1050f),
-                            ChartPoint("W4", 1400f),
-                        ),
-                    ),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun AuiChartPiePreview() {
-    AuiThemeProvider {
-        AuiChart(
-            data = ChartData(
-                variant = ChartVariant.Pie,
-                title = "Traffic Sources",
-                series = listOf(
-                    ChartSeries("Organic", listOf(ChartPoint("Organic", 45f))),
-                    ChartSeries("Direct", listOf(ChartPoint("Direct", 28f))),
-                    ChartSeries("Referral", listOf(ChartPoint("Referral", 17f))),
-                    ChartSeries("Social", listOf(ChartPoint("Social", 10f))),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
     }
 }

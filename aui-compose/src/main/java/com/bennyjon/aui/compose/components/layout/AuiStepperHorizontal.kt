@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -151,25 +150,5 @@ fun AuiStepperHorizontal(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiStepperHorizontalPreview() {
-    AuiThemeProvider {
-        AuiStepperHorizontal(
-            block = AuiBlock.StepperHorizontal(
-                data = StepperHorizontalData(
-                    steps = listOf(
-                        StepperStep("Experience"),
-                        StepperStep("Features"),
-                        StepperStep("Feedback"),
-                    ),
-                    current = 1,
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
     }
 }

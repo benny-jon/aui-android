@@ -20,6 +20,9 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,7 +109,12 @@ fun AuiSurveyContent(
 ) {
     if (steps.isEmpty()) return
 
-    val flowState = remember(steps) { SurveyFlowState(steps, pluginRegistry) }
+    val flowState = rememberSaveable(
+        inputs = arrayOf(steps),
+        saver = SurveyFlowState.saver(steps, pluginRegistry),
+    ) {
+        SurveyFlowState(steps, pluginRegistry)
+    }
     val resources = LocalResources.current
     val skippedLabel = stringResource(R.string.aui_survey_skipped)
     val submittedLabel = stringResource(R.string.aui_survey_submitted)
@@ -156,6 +164,11 @@ internal class SurveyFlowState(
 
     val registry: MutableState<Map<String, String>> = mutableStateOf(emptyMap())
 
+    internal fun restore(stepIndex: Int, registryValue: Map<String, String>) {
+        this.stepIndex = stepIndex.coerceIn(0, steps.lastIndex)
+        registry.value = registryValue
+    }
+
     fun back() {
         if (stepIndex > 0) stepIndex--
     }
@@ -189,6 +202,32 @@ internal class SurveyFlowState(
             formattedEntries = buildSurveyFormattedEntries(entries, skipped, formatStrings),
             stepsSkipped = skipped,
             stepsTotal = steps.size,
+        )
+    }
+
+    companion object {
+        private const val StepIndexKey = "stepIndex"
+        private const val RegistryKey = "registry"
+
+        fun saver(
+            steps: List<AuiStep>,
+            pluginRegistry: AuiPluginRegistry,
+        ): Saver<SurveyFlowState, Any> = mapSaver(
+            save = { state ->
+                mapOf(
+                    StepIndexKey to state.stepIndex,
+                    RegistryKey to state.registry.value.toMap(),
+                )
+            },
+            restore = { restored ->
+                SurveyFlowState(steps, pluginRegistry).apply {
+                    @Suppress("UNCHECKED_CAST")
+                    restore(
+                        stepIndex = restored[StepIndexKey] as? Int ?: 0,
+                        registryValue = restored[RegistryKey] as? Map<String, String> ?: emptyMap(),
+                    )
+                }
+            },
         )
     }
 }

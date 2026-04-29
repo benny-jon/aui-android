@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import com.bennyjon.aui.compose.components.input.AuiButtonPrimary
@@ -19,6 +20,7 @@ import com.bennyjon.aui.compose.components.input.AuiInputSlider
 import com.bennyjon.aui.compose.components.input.AuiInputTextSingle
 import com.bennyjon.aui.compose.components.input.AuiQuickReplies
 import com.bennyjon.aui.compose.components.input.AuiRadioList
+import com.bennyjon.aui.compose.components.input.RegistryStateSaver
 import com.bennyjon.aui.compose.components.layout.AuiDivider
 import com.bennyjon.aui.compose.components.layout.AuiProgressBar
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
@@ -150,7 +152,9 @@ internal fun BlockRenderer(
     collectingFeedbackEnabled: Boolean = true,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
-    val localRegistry = remember { mutableStateOf(emptyMap<String, String>()) }
+    val localRegistry = rememberSaveable(saver = RegistryStateSaver) {
+        mutableStateOf(emptyMap<String, String>())
+    }
     val registry = registryOverride ?: localRegistry
     val entryBlocks = allBlocksForEntries ?: blocks
     val wrappedOnFeedback: (AuiFeedback) -> Unit = { feedback ->

@@ -9,22 +9,14 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.RadioListData
-import com.bennyjon.aui.core.model.data.SelectionOption
 
 /**
  * Renders a `radio_list` block.
@@ -43,7 +35,7 @@ fun AuiRadioList(
 ) {
     val theme = LocalAuiTheme.current
     val registry = LocalAuiValueRegistry.current
-    var selectedValue by remember { mutableStateOf(block.data.selected) }
+    val selectedValue = registry.value.uiStateValue(block.data.key) ?: block.data.selected
 
     Column(modifier = modifier) {
         block.data.label?.let { label ->
@@ -84,8 +76,9 @@ fun AuiRadioList(
                         )
                     },
                     onClick = {
-                        selectedValue = option.value
-                        registry.value = registry.value + (block.data.key to option.label)
+                        registry.value = registry.value
+                            .updateValue(block.data.key, option.label)
+                            .updateUiStateValue(block.data.key, option.value)
                         block.feedback?.let { feedback ->
                             val updatedParams = feedback.params + mapOf(block.data.key to option.value)
                             onFeedback(feedback.copy(params = updatedParams))
@@ -94,46 +87,5 @@ fun AuiRadioList(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiRadioListPreview() {
-    AuiThemeProvider {
-        AuiRadioList(
-            block = AuiBlock.RadioList(
-                data = RadioListData(
-                    key = "satisfaction",
-                    label = "How satisfied are you?",
-                    options = listOf(
-                        SelectionOption(
-                            label = "Very satisfied",
-                            description = "I had a great experience overall",
-                            value = "very_satisfied",
-                        ),
-                        SelectionOption(
-                            label = "Somewhat satisfied",
-                            description = "It was okay but could be better",
-                            value = "somewhat_satisfied",
-                        ),
-                        SelectionOption(
-                            label = "Neutral",
-                            value = "neutral",
-                        ),
-                        SelectionOption(
-                            label = "Not satisfied",
-                            description = "I had issues that need to be addressed",
-                            value = "not_satisfied",
-                        ),
-                    ),
-                    selected = "somewhat_satisfied",
-                ),
-            ),
-            modifier = Modifier.padding(
-                horizontal = LocalAuiTheme.current.spacing.medium,
-                vertical = LocalAuiTheme.current.spacing.small,
-            ),
-        )
     }
 }

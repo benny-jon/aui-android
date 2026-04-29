@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -65,32 +64,5 @@ fun AuiQuickReplies(
                 ),
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiQuickRepliesPreview() {
-    AuiThemeProvider {
-        AuiQuickReplies(
-            block = AuiBlock.QuickReplies(
-                data = QuickRepliesData(
-                    options = listOf(
-                        QuickReplyOption(
-                            label = "Yes",
-                            feedback = AuiFeedback(action = "poll_answer", params = mapOf("value" to "yes")),
-                        ),
-                        QuickReplyOption(
-                            label = "No",
-                            feedback = AuiFeedback(action = "poll_answer", params = mapOf("value" to "no")),
-                        ),
-                        QuickReplyOption(
-                            label = "Maybe",
-                            feedback = AuiFeedback(action = "poll_answer", params = mapOf("value" to "maybe")),
-                        ),
-                    ),
-                ),
-            ),
-        )
     }
 }

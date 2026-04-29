@@ -19,7 +19,6 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -68,19 +67,6 @@ fun AuiStatusBannerInfo(
             text = block.data.text,
             style = theme.typography.body,
             color = theme.colors.onInfoContainer,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiStatusBannerInfoPreview() {
-    AuiThemeProvider {
-        AuiStatusBannerInfo(
-            block = AuiBlock.StatusBannerInfo(
-                data = StatusBannerInfoData(text = "Heads up: we updated our privacy policy."),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

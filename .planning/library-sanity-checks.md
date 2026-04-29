@@ -462,6 +462,86 @@ Exit criteria:
 - Rotation/back-stack/recompose behaviors are reviewed for each input
   component.
 
+Findings (executed 2026-04-29):
+- `LaunchedEffect` usage was already narrow: the only production effect lived in
+  `AuiInputSlider`, but it keyed only on `data.key`, so the shared value
+  registry did not automatically refresh when a restored slider value changed.
+  The effect now keys on both `data.key` and the rendered `displayValue`, so
+  the registry stays synchronized across restore/recompose.
+- Library-owned interactive state in `aui-compose` was not restore-safe. Survey
+  progress used `remember(steps)` with an in-memory `SurveyFlowState`, and the
+  built-in inputs (`input_text_single`, `input_slider`, `input_rating_stars`,
+  `chip_select_single`, `chip_select_multi`, `radio_list`, `checkbox_list`)
+  all used plain `remember`, which meant rotation dropped visible selections and
+  orphaned the shared feedback registry. Fixed in-session by:
+  - making `SurveyFlowState` saveable via a custom `mapSaver` that restores both
+    `stepIndex` and the cross-step registry map
+  - switching every library-owned input state holder to `rememberSaveable`
+  - pushing restored values back into the shared registry via keyed
+    `LaunchedEffect`, using a small `updateValue(...)` helper so blank / cleared
+    values remove keys cleanly
+- `Context` capture audit came back clean. The only `LocalContext.current`
+  usage in `aui-compose/src/main` is `AuiFileContent`, where the current
+  `Context` is read per composition and used immediately from click handlers; it
+  is **not** stored in remembered lambdas, savers, or long-lived state objects.
+- Preview hygiene audit found all preview composables living under
+  `aui-compose/src/main`, and `ui-tooling-preview` was wired as a normal
+  `implementation`, so preview-only code and dependency references were part of
+  the published main source set. Fixed in-session by:
+  - removing every `@Preview` function from `src/main`
+  - moving `ui-tooling-preview` to `debugImplementation`
+  - adding a small `src/debug/java/com/bennyjon/aui/compose/DebugPreviews.kt`
+    file so preview support still exists for local development without shipping
+    preview code in the release artifact
+- Verification:
+  - `rg -n '@Preview|tooling.preview.Preview' aui-compose/src/main/java/com/bennyjon/aui/compose`
+    returns no matches
+  - `./gradlew :aui-compose:compileDebugKotlin` passed
+  - `./gradlew :aui-compose:testDebugUnitTest` passed
+
+### Session S8b — Explicit host-owned renderer state follow-up
+
+Goal: replace the current composition/saveable-state workaround with a simpler,
+host-owned renderer state model.
+
+Why this exists:
+- Session S8 added restore logic inside `aui-compose` using saveable registries
+  plus demo-side `SaveableStateHolder` plumbing so renderer-owned input state
+  survives configuration changes and layout branching.
+- That implementation works better than the original plain `remember` version,
+  but it is still too implicit and too tied to composition structure. The host
+  app already knows the real identity of a rendered response (`message.id`,
+  showcase entry id, etc.), so the long-term design should let the host supply
+  that state directly instead of the library trying to infer it from subtree
+  position.
+
+Target direction:
+- Introduce an explicit `AuiRenderState` (or similarly named) public type in
+  `aui-compose`.
+- Add `rememberAuiRenderState()` for simple cases.
+- Add `state: AuiRenderState = rememberAuiRenderState()` to `AuiRenderer`.
+- Route all renderer input values through that state object instead of hidden
+  `rememberSaveable` / `SaveableStateHolder` identity tricks.
+- Document the host pattern: one render state per logical response/message id,
+  typically owned by the host ViewModel.
+
+When implementing S8b:
+- Remove the temporary complexity added in S8/S8-follow-up where possible:
+  - internal saveable registry persistence in `BlockRenderer` / `DisplayRouter`
+  - any demo-side `SaveableStateHolder` plumbing added only to preserve state
+    across portrait/sheet/detail-pane branch changes
+  - widget-local state workarounds whose only purpose is configuration-change
+    restore via composition-local identity
+- Preserve the S8 preview cleanup and `Context` audit outcome; those are still
+  correct and not part of the rollback target.
+
+Success criteria:
+- Hosts can share renderer state across portrait/landscape, sheet/detail, or
+  duplicate surfaces by passing the same explicit state object.
+- Hosts can isolate state by passing separate state instances.
+- Demo integrations no longer need complicated renderer save-state key routing
+  for the same logical message.
+
 ---
 
 ## Session S9 — Build artifact inspection

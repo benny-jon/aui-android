@@ -30,7 +30,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.components.text.AuiHeading
@@ -442,42 +441,5 @@ private fun formatDouble(value: Double, format: TableNumberFormat): String {
         TableNumberFormat.Percent -> NumberFormat.getPercentInstance(locale).apply {
             maximumFractionDigits = 1
         }.format(value)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiTablePreview() {
-    AuiThemeProvider {
-        AuiTable(
-            data = TableData(
-                title = "Weekly Leaderboard",
-                columns = listOf(
-                    TableColumn(label = "Player", type = TableColumnType.Text),
-                    TableColumn(
-                        label = "Score",
-                        type = TableColumnType.Number,
-                        format = TableNumberFormat.Integer,
-                    ),
-                    TableColumn(label = "Rating", type = TableColumnType.RatingStars),
-                    TableColumn(label = "Status", type = TableColumnType.Badge),
-                ),
-                rows = listOf(
-                    listOf(
-                        TableCell.Text("Alice"),
-                        TableCell.Number(1280.0),
-                        TableCell.RatingStars(5f),
-                        TableCell.Badge("Leading", BadgeTone.Success),
-                    ),
-                    listOf(
-                        TableCell.Text("Bob"),
-                        TableCell.Number(980.0),
-                        TableCell.RatingStars(4.5f),
-                        TableCell.Badge("Rising", BadgeTone.Info),
-                    ),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
     }
 }

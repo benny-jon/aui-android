@@ -35,22 +35,28 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S7 — Code hygiene**. Removed production
-  renderer logging in favor of the existing `onUnknownBlock` callback contract,
-  replaced the last library `!!` assertion in `AuiChart`, narrowed broad
-  exception catches in parser/download/plugin-data paths to concrete failure
-  types, and made comparison-oriented case folding explicitly `Locale.ROOT`
-  while leaving display capitalization locale-aware. Findings recorded in
-  `.planning/library-sanity-checks.md`. Verified with `./gradlew :aui-core:test`,
-  `./gradlew :aui-compose:testDebugUnitTest`, and
+- Last completed: Sanity-checks **S8 — Compose-specific correctness**. Made
+  `SurveyFlowState` saveable across configuration changes, switched
+  library-owned input widgets to `rememberSaveable`, re-synced restored values
+  back into the shared feedback registry via keyed `LaunchedEffect`, confirmed
+  `LocalContext` is not captured in remembered lambdas, and moved preview-only
+  code out of `src/main` by putting `ui-tooling-preview` behind
+  `debugImplementation` with debug-only preview entry points. Findings recorded
+  in `.planning/library-sanity-checks.md`. Verified with
+  `./gradlew :aui-compose:testDebugUnitTest` and
   `./gradlew :aui-compose:compileDebugKotlin`.
-- Next recommended task: Sanity-checks **S8 — Compose-specific correctness**:
-  audit `LaunchedEffect` / `rememberSaveable` / lifecycle correctness,
-  `Context` capture in remembered lambdas, and preview placement in
-  `aui-compose`.
+- Next recommended task: Sanity-checks **S9 — Build artifact inspection**:
+  publish `aui-core` and `aui-compose` to `mavenLocal`, inspect the generated
+  AARs / POMs for debug leakage or missing metadata, and smoke-test a consumer
+  build against the local artifacts.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
+- Follow-up queued: **S8b — explicit host-owned renderer state**. Session S8's
+  restore work improved configuration-change behavior, but the long-term fix
+  should replace demo/library saveable-state plumbing with a host-supplied
+  renderer state object keyed by logical response/message id. See
+  `.planning/library-sanity-checks.md`.
 
 ## Current Direction
 
@@ -85,13 +91,11 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S8 — Compose-specific correctness** from
+Run **Sanity-checks Session S9 — Build artifact inspection** from
 `.planning/library-sanity-checks.md`:
-- audit `LaunchedEffect` keys and `rememberSaveable` coverage for library-owned
-  input state
-- confirm `Context` is not captured across configuration changes in remembered
-  lambdas and that previews stay out of published `main` artifacts
-- record findings inline in `.planning/library-sanity-checks.md`
+- publish `aui-core` and `aui-compose` to `mavenLocal`
+- inspect produced AARs / sources / javadoc / POM metadata for release hygiene
+- smoke-test local artifact consumption from a tiny external sample build
 
 Session 54 (Canonical Host Integration Example) is still queued from
 `.planning/first-release-readiness.md` and should run after the sanity-checks

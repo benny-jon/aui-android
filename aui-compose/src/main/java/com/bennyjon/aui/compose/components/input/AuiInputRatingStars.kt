@@ -12,10 +12,6 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -26,15 +22,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.InputRatingStarsData
 
 private const val STAR_COUNT = 5
 
@@ -53,11 +46,13 @@ fun AuiInputRatingStars(
 ) {
     val theme = LocalAuiTheme.current
     val registry = LocalAuiValueRegistry.current
-    var rating by remember { mutableIntStateOf(block.data.value ?: 0) }
+    val rating = registry.value.uiStateValue(block.data.key)?.toIntOrNull() ?: (block.data.value ?: 0)
 
     val rate: (Int) -> Unit = { star ->
-        rating = star
-        registry.value = registry.value + mapOf(block.data.key to star.toString(), "value" to star.toString())
+        registry.value = registry.value
+            .updateUiStateValue(block.data.key, star.toString())
+            .updateValue(block.data.key, star.toString())
+            .updateValue("value", star.toString())
         block.feedback?.let { feedback ->
             val updatedParams = feedback.params + mapOf(block.data.key to star.toString(), "value" to star.toString())
             onFeedback(feedback.copy(params = updatedParams))
@@ -105,22 +100,5 @@ fun AuiInputRatingStars(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiInputRatingStarsPreview() {
-    AuiThemeProvider {
-        AuiInputRatingStars(
-            block = AuiBlock.InputRatingStars(
-                data = InputRatingStarsData(
-                    key = "rating",
-                    label = "Tap to rate",
-                    value = 3,
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
     }
 }

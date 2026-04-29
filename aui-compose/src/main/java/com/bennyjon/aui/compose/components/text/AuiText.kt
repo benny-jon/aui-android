@@ -11,7 +11,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.text.MarkdownSegment
 import com.bennyjon.aui.compose.text.parseInlineMarkdown
@@ -88,31 +87,5 @@ fun AuiText(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, name = "AuiText — Inline Markdown")
-@Composable
-private fun AuiTextMarkdownPreview() {
-    AuiThemeProvider {
-        AuiText(
-            block = AuiBlock.Text(
-                data = TextData(
-                    text = "Here is **bold**, *italic*, `code`, and a [link](https://example.com)."
-                ),
-            ),
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "AuiText — Unclosed Bold (Graceful)")
-@Composable
-private fun AuiTextUnterminatedPreview() {
-    AuiThemeProvider {
-        AuiText(
-            block = AuiBlock.Text(
-                data = TextData(text = "This has **unterminated bold that renders literally."),
-            ),
-        )
     }
 }

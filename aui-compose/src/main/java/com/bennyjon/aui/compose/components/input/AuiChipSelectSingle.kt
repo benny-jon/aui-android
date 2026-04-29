@@ -9,21 +9,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.ChipOption
-import com.bennyjon.aui.core.model.data.ChipSelectSingleData
 
 /**
  * Renders a `chip_select_single` block.
@@ -41,7 +33,7 @@ fun AuiChipSelectSingle(
 ) {
     val theme = LocalAuiTheme.current
     val registry = LocalAuiValueRegistry.current
-    var selectedValue by remember { mutableStateOf(block.data.selected) }
+    val selectedValue = registry.value.uiStateValue(block.data.key) ?: block.data.selected
 
     Column(modifier = modifier) {
         block.data.label?.let { label ->
@@ -61,8 +53,9 @@ fun AuiChipSelectSingle(
                 FilterChip(
                     selected = isSelected,
                     onClick = {
-                        selectedValue = option.value
-                        registry.value = registry.value + (block.data.key to option.label)
+                        registry.value = registry.value
+                            .updateValue(block.data.key, option.label)
+                            .updateUiStateValue(block.data.key, option.value)
                         block.feedback?.let { feedback ->
                             val updatedParams = feedback.params + mapOf(block.data.key to option.value)
                             onFeedback(feedback.copy(params = updatedParams))
@@ -84,31 +77,5 @@ fun AuiChipSelectSingle(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiChipSelectSinglePreview() {
-    AuiThemeProvider {
-        AuiChipSelectSingle(
-            block = AuiBlock.ChipSelectSingle(
-                data = ChipSelectSingleData(
-                    key = "experience",
-                    label = "How was your experience?",
-                    options = listOf(
-                        ChipOption(label = "Great", value = "great"),
-                        ChipOption(label = "Good", value = "good"),
-                        ChipOption(label = "Okay", value = "okay"),
-                        ChipOption(label = "Poor", value = "poor"),
-                    ),
-                    selected = "good",
-                ),
-            ),
-            modifier = Modifier.padding(
-                horizontal = LocalAuiTheme.current.spacing.medium,
-                vertical = LocalAuiTheme.current.spacing.small,
-            ),
-        )
     }
 }

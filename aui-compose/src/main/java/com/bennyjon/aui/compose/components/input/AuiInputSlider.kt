@@ -8,20 +8,12 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.InputSliderData
 import kotlin.math.roundToInt
 
 /**
@@ -40,7 +32,7 @@ fun AuiInputSlider(
     val theme = LocalAuiTheme.current
     val registry = LocalAuiValueRegistry.current
     val data = block.data
-    var sliderValue by remember { mutableFloatStateOf(data.value ?: data.min) }
+    val sliderValue = registry.value.uiStateValue(data.key)?.toFloatOrNull() ?: (data.value ?: data.min)
 
     val step = data.step
     val steps = if (step != null && step > 0f) {
@@ -53,11 +45,6 @@ fun AuiInputSlider(
         sliderValue.roundToInt().toString()
     } else {
         "%.1f".format(sliderValue)
-    }
-
-    // Register initial value so buttons on the same page can read it before the user drags.
-    LaunchedEffect(data.key) {
-        registry.value = registry.value + mapOf(data.key to displayValue, "value" to displayValue)
     }
 
     Column(modifier = modifier) {
@@ -78,11 +65,20 @@ fun AuiInputSlider(
         }
         Slider(
             value = sliderValue,
-            onValueChange = { sliderValue = it },
+            onValueChange = {
+                val valueText = if (step != null && step >= 1f) {
+                    it.toInt().toString()
+                } else {
+                    "%.1f".format(it)
+                }
+                registry.value = registry.value
+                    .updateUiStateValue(data.key, it.toString())
+                    .updateValue(data.key, valueText)
+                    .updateValue("value", valueText)
+            },
             valueRange = data.min..data.max,
             steps = steps,
             onValueChangeFinished = {
-                registry.value = registry.value + mapOf(data.key to displayValue, "value" to displayValue)
                 block.feedback?.let { feedback ->
                     val updatedParams = feedback.params + mapOf(data.key to displayValue, "value" to displayValue)
                     onFeedback(feedback.copy(params = updatedParams))
@@ -94,26 +90,6 @@ fun AuiInputSlider(
                 inactiveTrackColor = theme.colors.primaryContainer,
             ),
             modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiInputSliderPreview() {
-    AuiThemeProvider {
-        AuiInputSlider(
-            block = AuiBlock.InputSlider(
-                data = InputSliderData(
-                    key = "nps",
-                    label = "0 = Not likely, 10 = Very likely",
-                    min = 0f,
-                    max = 10f,
-                    value = 5f,
-                    step = 1f,
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

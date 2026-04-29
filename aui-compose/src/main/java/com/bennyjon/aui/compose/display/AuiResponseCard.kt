@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
@@ -173,54 +172,3 @@ private fun List<AuiBlock>.firstFileDescription(): String? =
 
 private fun List<AuiBlock>.firstNonHeadingText(): String? =
     firstNotNullOfOrNull { (it as? AuiBlock.Text)?.data?.text }
-
-@Preview(showBackground = true, name = "AuiResponseCard — Expanded")
-@Composable
-private fun AuiResponseCardExpandedPreview() {
-    AuiThemeProvider {
-        AuiResponseCard(
-            response = AuiResponse(
-                display = AuiDisplay.EXPANDED,
-                cardTitle = "Headphone picks",
-                cardDescription = "Three top noise-cancelling models compared",
-            ),
-            onClick = {},
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "AuiResponseCard — Survey")
-@Composable
-private fun AuiResponseCardSurveyPreview() {
-    AuiThemeProvider {
-        AuiResponseCard(
-            response = AuiResponse(
-                display = AuiDisplay.SURVEY,
-                surveyTitle = "Quick feedback",
-                steps = listOf(
-                    AuiStep(blocks = emptyList(), question = "How was your experience?"),
-                    AuiStep(blocks = emptyList(), question = "Any additional comments?"),
-                ),
-            ),
-            onClick = {},
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "AuiResponseCard — Active")
-@Composable
-private fun AuiResponseCardActivePreview() {
-    AuiThemeProvider {
-        AuiResponseCard(
-            response = AuiResponse(
-                display = AuiDisplay.EXPANDED,
-                cardTitle = "Currently viewed",
-            ),
-            onClick = {},
-            isActive = true,
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
-    }
-}

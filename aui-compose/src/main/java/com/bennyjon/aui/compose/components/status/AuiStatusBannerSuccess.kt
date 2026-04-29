@@ -19,7 +19,6 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -68,19 +67,6 @@ fun AuiStatusBannerSuccess(
             text = block.data.text,
             style = theme.typography.body,
             color = theme.colors.onSuccessContainer,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiStatusBannerSuccessPreview() {
-    AuiThemeProvider {
-        AuiStatusBannerSuccess(
-            block = AuiBlock.StatusBannerSuccess(
-                data = StatusBannerSuccessData(text = "Survey complete!"),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

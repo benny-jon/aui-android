@@ -11,22 +11,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.InputTextSingleData
 
 /**
  * Renders an `input_text_single` block.
@@ -43,7 +36,7 @@ fun AuiInputTextSingle(
 ) {
     val theme = LocalAuiTheme.current
     val registry = LocalAuiValueRegistry.current
-    var text by remember { mutableStateOf("") }
+    val text = registry.value.uiStateValue(block.data.key) ?: registry.value[block.data.key].orEmpty()
 
     Column(modifier = modifier) {
         Text(
@@ -56,8 +49,9 @@ fun AuiInputTextSingle(
             OutlinedTextField(
                 value = text,
                 onValueChange = {
-                    text = it
-                    registry.value = registry.value + (block.data.key to it)
+                    registry.value = registry.value
+                        .updateUiStateValue(block.data.key, it.ifBlank { null })
+                        .updateValue(block.data.key, it.ifBlank { null })
                 },
                 placeholder = block.data.placeholder?.let {
                     { Text(text = it, style = theme.typography.body) }
@@ -94,22 +88,5 @@ fun AuiInputTextSingle(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiInputTextSinglePreview() {
-    AuiThemeProvider {
-        AuiInputTextSingle(
-            block = AuiBlock.InputTextSingle(
-                data = InputTextSingleData(
-                    key = "open_feedback",
-                    label = "Your feedback",
-                    placeholder = "Optional — type anything here...",
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-        )
     }
 }

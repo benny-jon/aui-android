@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 
@@ -22,12 +21,4 @@ fun AuiDivider(modifier: Modifier = Modifier) {
         thickness = theme.spacing.dividerThickness,
         color = theme.colors.outline,
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiDividerPreview() {
-    AuiThemeProvider {
-        AuiDivider()
-    }
 }

@@ -9,7 +9,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -42,23 +41,6 @@ fun AuiProgressBar(
             modifier = Modifier.fillMaxWidth(),
             color = theme.colors.primary,
             trackColor = theme.colors.primaryContainer,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AuiProgressBarPreview() {
-    AuiThemeProvider {
-        AuiProgressBar(
-            block = AuiBlock.ProgressBar(
-                data = ProgressBarData(
-                    label = "Step 2 of 3",
-                    progress = 2f,
-                    max = 3f,
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

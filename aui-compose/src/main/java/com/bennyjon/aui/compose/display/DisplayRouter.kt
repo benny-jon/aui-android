@@ -2,25 +2,17 @@ package com.bennyjon.aui.compose.display
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import com.bennyjon.aui.compose.components.input.RegistryStateSaver
 import com.bennyjon.aui.compose.internal.BlockRenderer
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
-import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiResponse
-import com.bennyjon.aui.core.model.AuiStep
-import com.bennyjon.aui.core.model.data.ButtonPrimaryData
-import com.bennyjon.aui.core.model.data.ChipOption
-import com.bennyjon.aui.core.model.data.ChipSelectSingleData
-import com.bennyjon.aui.core.model.data.HeadingData
-import com.bennyjon.aui.core.model.data.TextData
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 
 /**
@@ -84,7 +76,9 @@ internal fun DisplayRouter(
             // Shared registry so all inputs across both split renderers are visible to
             // buildEntriesFromBlocks. allBlocksForEntries = response.blocks ensures headings in
             // bubbleBlocks are correctly associated with inputs in contentBlocks.
-            val sharedRegistry = remember { mutableStateOf(emptyMap<String, String>()) }
+            val sharedRegistry = rememberSaveable(saver = RegistryStateSaver) {
+                mutableStateOf(emptyMap<String, String>())
+            }
             Column(modifier = modifier.fillMaxWidth()) {
                 if (bubbleBlocks.isNotEmpty()) {
                     BlockRenderer(
@@ -126,81 +120,5 @@ internal fun splitBlocks(blocks: List<AuiBlock>): Pair<List<AuiBlock>, List<AuiB
         Pair(blocks, emptyList())
     } else {
         Pair(blocks.subList(0, splitIndex), blocks.subList(splitIndex, blocks.size))
-    }
-}
-
-@Preview(showBackground = true, name = "DisplayRouter — Expanded")
-@Composable
-private fun DisplayRouterExpandedPreview() {
-    AuiThemeProvider {
-        DisplayRouter(
-            response = AuiResponse(
-                display = AuiDisplay.EXPANDED,
-                blocks = listOf(
-                    AuiBlock.Heading(data = HeadingData(text = "What features do you use most?")),
-                    AuiBlock.Text(data = TextData(text = "Select all that apply.")),
-                    AuiBlock.ChipSelectSingle(
-                        data = ChipSelectSingleData(
-                            key = "feature",
-                            options = listOf(
-                                ChipOption(label = "Chat", value = "chat"),
-                                ChipOption(label = "Search", value = "search"),
-                                ChipOption(label = "Orders", value = "orders"),
-                            ),
-                        ),
-                    ),
-                    AuiBlock.ButtonPrimary(
-                        data = ButtonPrimaryData(label = "Submit"),
-                        feedback = AuiFeedback(action = "poll_submit", params = mapOf("poll_id" to "features")),
-                    ),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-            onFeedback = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "DisplayRouter — Survey Flow")
-@Composable
-private fun DisplayRouterSurveyFlowPreview() {
-    AuiThemeProvider {
-        DisplayRouter(
-            response = AuiResponse(
-                display = AuiDisplay.SURVEY,
-                surveyTitle = "Quick Survey",
-                steps = listOf(
-                    AuiStep(
-                        question = "How was your experience?",
-                        blocks = listOf(
-                            AuiBlock.ChipSelectSingle(
-                                data = ChipSelectSingleData(
-                                    key = "experience",
-                                    options = listOf(
-                                        ChipOption(label = "😊 Great", value = "great"),
-                                        ChipOption(label = "🙂 Good", value = "good"),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                    AuiStep(
-                        question = "Any additional comments?",
-                        blocks = listOf(
-                            AuiBlock.ChipSelectSingle(
-                                data = ChipSelectSingleData(
-                                    key = "comments",
-                                    options = listOf(
-                                        ChipOption(label = "None", value = "none"),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
-            onFeedback = {},
-        )
     }
 }
