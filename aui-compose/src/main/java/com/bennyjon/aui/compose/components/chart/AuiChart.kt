@@ -271,8 +271,9 @@ private fun DrawScope.drawBarOrLineChart(
         textMeasurer.measure(formatTick(value), captionStyle).size.width.toFloat()
     }
     val yLabelMaxWidth = (yLabelWidths.maxOrNull() ?: 0f)
-    val yRotatedLabelWidth = if (!data.yLabel.isNullOrBlank()) {
-        textMeasurer.measure(data.yLabel!!, captionStyle).size.height.toFloat() + theme.spacing.xSmall.toPx()
+    val yLabel = data.yLabel?.takeIf { it.isNotBlank() }
+    val yRotatedLabelWidth = if (yLabel != null) {
+        textMeasurer.measure(yLabel, captionStyle).size.height.toFloat() + theme.spacing.xSmall.toPx()
     } else 0f
     val xLabelHeight = textMeasurer.measure("X", captionStyle).size.height.toFloat()
 
@@ -312,8 +313,8 @@ private fun DrawScope.drawBarOrLineChart(
     }
 
     // Rotated y_label.
-    if (!data.yLabel.isNullOrBlank()) {
-        val measured = textMeasurer.measure(data.yLabel!!, captionStyle)
+    if (yLabel != null) {
+        val measured = textMeasurer.measure(yLabel, captionStyle)
         val centerY = plotTop + plotHeight / 2f
         rotate(degrees = -90f, pivot = Offset(measured.size.height.toFloat() / 2f + theme.spacing.xxSmall.toPx(), centerY)) {
             drawText(

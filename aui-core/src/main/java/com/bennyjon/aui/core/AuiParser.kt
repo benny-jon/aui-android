@@ -65,13 +65,17 @@ class AuiParser {
     private fun parseResilientOrNull(jsonString: String): AuiResponse? {
         val root = try {
             normalizeResponseRoot(json.parseToJsonElement(jsonString)) as? JsonObject
-        } catch (_: Exception) {
+        } catch (_: SerializationException) {
+            null
+        } catch (_: IllegalArgumentException) {
             null
         } ?: return null
 
         val display = try {
             root["display"]?.let { json.decodeFromJsonElement<AuiDisplay>(it) }
-        } catch (_: Exception) {
+        } catch (_: SerializationException) {
+            null
+        } catch (_: IllegalArgumentException) {
             null
         } ?: return null
 
@@ -89,7 +93,13 @@ class AuiParser {
         val obj = element as? JsonObject ?: return null
         return try {
             json.decodeFromJsonElement<AuiStep>(obj)
-        } catch (_: Exception) {
+        } catch (_: SerializationException) {
+            AuiStep(
+                blocks = obj["blocks"].asJsonArrayOrEmpty().mapNotNull(::decodeBlockSafely),
+                question = obj.primitiveContentOrNull("question"),
+                label = obj.primitiveContentOrNull("label"),
+            )
+        } catch (_: IllegalArgumentException) {
             AuiStep(
                 blocks = obj["blocks"].asJsonArrayOrEmpty().mapNotNull(::decodeBlockSafely),
                 question = obj.primitiveContentOrNull("question"),
@@ -102,7 +112,13 @@ class AuiParser {
         val obj = element as? JsonObject ?: return null
         return try {
             json.decodeFromJsonElement<AuiBlock>(obj)
-        } catch (_: Exception) {
+        } catch (_: SerializationException) {
+            AuiBlock.Unknown(
+                type = obj.primitiveContentOrNull("type") ?: "unknown",
+                feedback = decodeFeedbackOrNull(obj["feedback"]),
+                rawData = obj["data"],
+            )
+        } catch (_: IllegalArgumentException) {
             AuiBlock.Unknown(
                 type = obj.primitiveContentOrNull("type") ?: "unknown",
                 feedback = decodeFeedbackOrNull(obj["feedback"]),
@@ -113,7 +129,9 @@ class AuiParser {
 
     private fun decodeFeedbackOrNull(element: JsonElement?): AuiFeedback? = try {
         element?.let { json.decodeFromJsonElement<AuiFeedback>(it) }
-    } catch (_: Exception) {
+    } catch (_: SerializationException) {
+        null
+    } catch (_: IllegalArgumentException) {
         null
     }
 

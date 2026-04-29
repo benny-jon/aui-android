@@ -3,6 +3,7 @@ package com.bennyjon.aui.compose.internal
 import android.Manifest
 import android.annotation.TargetApi
 import android.app.DownloadManager
+import android.content.ActivityNotFoundException
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -13,6 +14,8 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import java.io.File
+import java.io.IOException
+import java.util.Locale
 
 internal fun saveFileToDownloads(
     context: Context,
@@ -47,7 +50,9 @@ internal fun openDownloadsFolder(context: Context): Boolean {
         }
         context.startActivity(intent)
         true
-    } catch (_: Exception) {
+    } catch (_: ActivityNotFoundException) {
+        false
+    } catch (_: SecurityException) {
         false
     }
 }
@@ -78,7 +83,10 @@ private fun saveFileToDownloadsScoped(
         }
         resolver.update(uri, finalizeValues, null, null)
         filename
-    } catch (_: Exception) {
+    } catch (_: IOException) {
+        resolver.delete(uri, null, null)
+        null
+    } catch (_: SecurityException) {
         resolver.delete(uri, null, null)
         null
     }
@@ -110,7 +118,9 @@ private fun saveFileToDownloadsLegacy(
             null,
         )
         file.name
-    } catch (_: Exception) {
+    } catch (_: IOException) {
+        null
+    } catch (_: SecurityException) {
         null
     }
 }
@@ -138,7 +148,7 @@ private fun resolveFilename(filename: String?, language: String?): String {
         ?.takeIf { it.isNotEmpty() }
     if (sanitized != null) return sanitized
 
-    val extension = when (language?.lowercase()) {
+    val extension = when (language?.lowercase(Locale.ROOT)) {
         "markdown", "md" -> "md"
         "json" -> "json"
         "yaml", "yml" -> "yml"
@@ -157,7 +167,7 @@ private fun resolveFilename(filename: String?, language: String?): String {
 
 private fun inferMimeType(filename: String, language: String?): String {
     val extension = filename.substringAfterLast('.', "").ifBlank {
-        when (language?.lowercase()) {
+        when (language?.lowercase(Locale.ROOT)) {
             "markdown", "md" -> "md"
             "json" -> "json"
             "yaml", "yml" -> "yml"
@@ -167,8 +177,8 @@ private fun inferMimeType(filename: String, language: String?): String {
         }
     }
     return MimeTypeMap.getSingleton()
-        .getMimeTypeFromExtension(extension.lowercase())
-        ?: when (language?.lowercase()) {
+        .getMimeTypeFromExtension(extension.lowercase(Locale.ROOT))
+        ?: when (language?.lowercase(Locale.ROOT)) {
             "markdown", "md" -> "text/markdown"
             "json" -> "application/json"
             "yaml", "yml" -> "application/yaml"

@@ -1,5 +1,6 @@
 package com.bennyjon.aui.compose.components.text
 
+import java.util.Locale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
@@ -12,9 +13,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
-import com.bennyjon.aui.compose.text.splitMarkdownBlocks
 import com.bennyjon.aui.compose.text.MarkdownSegment
 import com.bennyjon.aui.compose.text.parseInlineMarkdown
+import com.bennyjon.aui.compose.text.splitMarkdownBlocks
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -79,7 +80,9 @@ fun AuiText(
                     AuiFileContentSurface(
                         content = segment.content,
                         language = segment.language,
-                        title = segment.language?.replaceFirstChar { it.uppercase() }
+                        title = segment.language?.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                        }
                             ?: stringResource(R.string.aui_text_fenced_code_default_title),
                     )
                 }

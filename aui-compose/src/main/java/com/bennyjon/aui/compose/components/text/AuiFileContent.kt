@@ -1,5 +1,6 @@
 package com.bennyjon.aui.compose.components.text
 
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -132,7 +133,9 @@ private fun FileContentHeader(
     onCopy: () -> Unit,
 ) {
     val theme = LocalAuiTheme.current
-    val headline = title ?: filename ?: language?.replaceFirstChar { it.uppercase() }
+    val headline = title ?: filename ?: language?.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+    }
         ?: stringResource(R.string.aui_file_default_headline)
     val metadata = listOfNotNull(filename?.takeIf { it != title }, language)
         .joinToString(" · ")

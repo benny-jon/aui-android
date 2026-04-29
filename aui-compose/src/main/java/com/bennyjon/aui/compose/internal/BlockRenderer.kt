@@ -1,6 +1,4 @@
 package com.bennyjon.aui.compose.internal
-
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,9 +46,8 @@ import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiInputBlock
 import com.bennyjon.aui.core.model.isReadOnly
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-
-private const val TAG = "BlockRenderer"
 
 /**
  * Scans [blocks] for heading→input pairs and maps them to [AuiEntry] instances using the
@@ -111,7 +108,9 @@ internal fun AuiComponentPlugin<*>.parseData(block: AuiBlock.Unknown): Any? {
     val rawData = block.rawData ?: return null
     return try {
         pluginJson.decodeFromJsonElement(dataSerializer, rawData)
-    } catch (_: Exception) {
+    } catch (_: SerializationException) {
+        null
+    } catch (_: IllegalArgumentException) {
         null
     }
 }
@@ -136,8 +135,9 @@ internal fun AuiComponentPlugin<*>.parseData(block: AuiBlock.Unknown): Any? {
  *   (those with non-read-only feedback) are rendered at reduced alpha with their feedback
  *   callbacks suppressed. Pass-through blocks (no feedback, or only read-only plugin actions)
  *   remain fully visible and functional. Defaults to `true`.
- * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] that has no matching
- *   plugin, in addition to the default warning log.
+ * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] the renderer skips,
+ *   including unmatched block types and plugin-backed unknown blocks whose data is missing or
+ *   malformed.
  */
 @Composable
 internal fun BlockRenderer(
@@ -231,10 +231,10 @@ internal fun BlockRenderer(
                                 block = block,
                                 registry = registry,
                                 onFeedback = blockFeedback,
+                                onUnknownBlock = onUnknownBlock,
                             )
                         }
                     } else {
-                        Log.w(TAG, "Skipping unknown block type: ${block.type}")
                         onUnknownBlock?.invoke(block)
                     }
                 }
@@ -246,8 +246,8 @@ internal fun BlockRenderer(
 
 /**
  * Parses [AuiBlock.Unknown.rawData] via the plugin's [AuiComponentPlugin.dataSerializer]
- * and delegates to [AuiComponentPlugin.Render]. On parse failure, logs a warning and
- * renders nothing — the renderer never crashes on bad plugin data.
+ * and delegates to [AuiComponentPlugin.Render]. On missing/malformed plugin data the block is
+ * skipped via [onUnknownBlock] — the renderer never crashes on bad plugin data.
  */
 @Composable
 private fun RenderPluginBlock(
@@ -255,13 +255,14 @@ private fun RenderPluginBlock(
     block: AuiBlock.Unknown,
     registry: MutableState<Map<String, String>>,
     onFeedback: (AuiFeedback) -> Unit,
+    onUnknownBlock: ((AuiBlock.Unknown) -> Unit)?,
 ) {
     if (block.rawData == null) {
-        Log.w(TAG, "Plugin block '${block.type}' has no data field — skipping")
+        onUnknownBlock?.invoke(block)
         return
     }
     val data = plugin.parseData(block) ?: run {
-        Log.w(TAG, "Failed to parse data for plugin block '${block.type}'")
+        onUnknownBlock?.invoke(block)
         return
     }
     val pluginOnFeedback: (() -> Unit)? = block.feedback?.let { feedback ->

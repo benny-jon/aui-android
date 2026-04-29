@@ -90,8 +90,9 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * @param onStepFeedback Called for any non-terminal feedback fired by blocks inside a step
  *   (e.g. an `open_url` button the AI added to a step). Action plugin routing is handled
  *   upstream by [com.bennyjon.aui.compose.AuiRenderer]. Defaults to a no-op.
- * @param onUnknownBlock If provided, called for each unrecognized block type that has no
- *   matching component plugin.
+ * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] the renderer skips,
+ *   including unmatched block types and plugin-backed unknown blocks whose data is missing or
+ *   malformed.
  */
 @Composable
 fun AuiSurveyContent(

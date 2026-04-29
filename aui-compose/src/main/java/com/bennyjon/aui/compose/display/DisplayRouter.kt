@@ -53,8 +53,9 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * @param collectingFeedbackEnabled When `false`, blocks that collect conversational feedback
  *   are rendered at reduced alpha with their feedback suppressed. Pass-through blocks remain
  *   fully visible and functional. Defaults to `true`.
- * @param onUnknownBlock If provided, called for each unrecognized block type that has no matching
- *   component plugin, in addition to the default warning log.
+ * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] the renderer skips,
+ *   including unmatched block types and plugin-backed unknown blocks whose data is missing or
+ *   malformed.
  */
 @Composable
 internal fun DisplayRouter(

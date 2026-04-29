@@ -35,17 +35,19 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S6 — Dependencies & manifest hygiene**.
-  `aui-core` and `aui-compose` now both enforce `android.resourcePrefix =
-  "aui_"`; library manifests remain empty/library-safe; the dependency surface
-  stayed intentionally minimal (`aui-core` keeps public serialization runtime,
-  `aui-compose` only re-exports `aui-core`); and a scoped-storage helper in
-  `AuiFileContent` was annotated/fixed so `minSdk = 26` passes lint cleanly.
-  Findings recorded in `.planning/library-sanity-checks.md`. Verified with
-  `./gradlew :aui-core:lintDebug` and `./gradlew :aui-compose:lintDebug`.
-- Next recommended task: Sanity-checks **S7 — Code hygiene**: audit production
-  logging, `TODO` / `FIXME`, `!!`, broad exception catches, and locale-safe
-  string operations in `aui-core` and `aui-compose`.
+- Last completed: Sanity-checks **S7 — Code hygiene**. Removed production
+  renderer logging in favor of the existing `onUnknownBlock` callback contract,
+  replaced the last library `!!` assertion in `AuiChart`, narrowed broad
+  exception catches in parser/download/plugin-data paths to concrete failure
+  types, and made comparison-oriented case folding explicitly `Locale.ROOT`
+  while leaving display capitalization locale-aware. Findings recorded in
+  `.planning/library-sanity-checks.md`. Verified with `./gradlew :aui-core:test`,
+  `./gradlew :aui-compose:testDebugUnitTest`, and
+  `./gradlew :aui-compose:compileDebugKotlin`.
+- Next recommended task: Sanity-checks **S8 — Compose-specific correctness**:
+  audit `LaunchedEffect` / `rememberSaveable` / lifecycle correctness,
+  `Context` capture in remembered lambdas, and preview placement in
+  `aui-compose`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -83,10 +85,12 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S7 — Code hygiene** from
+Run **Sanity-checks Session S8 — Compose-specific correctness** from
 `.planning/library-sanity-checks.md`:
-- audit production logging, `TODO` / `FIXME`, `!!`, and broad exception catches
-- confirm locale-safe string operations where casing/comparisons matter
+- audit `LaunchedEffect` keys and `rememberSaveable` coverage for library-owned
+  input state
+- confirm `Context` is not captured across configuration changes in remembered
+  lambdas and that previews stay out of published `main` artifacts
 - record findings inline in `.planning/library-sanity-checks.md`
 
 Session 54 (Canonical Host Integration Example) is still queued from

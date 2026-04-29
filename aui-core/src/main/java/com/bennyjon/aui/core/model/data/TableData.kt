@@ -1,5 +1,6 @@
 package com.bennyjon.aui.core.model.data
 
+import java.util.Locale
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -79,7 +80,7 @@ internal object TableColumnTypeSerializer : KSerializer<TableColumnType> {
         )
     }
 
-    override fun deserialize(decoder: Decoder): TableColumnType = when (decoder.decodeString().lowercase()) {
+    override fun deserialize(decoder: Decoder): TableColumnType = when (decoder.decodeString().lowercase(Locale.ROOT)) {
         "text" -> TableColumnType.Text
         "number" -> TableColumnType.Number
         "badge" -> TableColumnType.Badge
@@ -123,7 +124,7 @@ internal object TableAlignSerializer : KSerializer<TableAlign> {
     // "start"/"end" values — LLMs consistently reach for the directional words,
     // and rejecting the whole column would drop the entire table via the
     // tolerant-parse fallback to Unknown.
-    override fun deserialize(decoder: Decoder): TableAlign = when (decoder.decodeString().lowercase()) {
+    override fun deserialize(decoder: Decoder): TableAlign = when (decoder.decodeString().lowercase(Locale.ROOT)) {
         "start", "left" -> TableAlign.Start
         "center", "centre", "middle" -> TableAlign.Center
         "end", "right" -> TableAlign.End
@@ -244,14 +245,14 @@ internal object TableCellSerializer : KSerializer<TableCell> {
         return TableCell.Empty
     }
 
-    private fun toneFromString(raw: String): BadgeTone = when (raw.lowercase()) {
+    private fun toneFromString(raw: String): BadgeTone = when (raw.lowercase(Locale.ROOT)) {
         "success" -> BadgeTone.Success
         "warning" -> BadgeTone.Warning
         "error" -> BadgeTone.Error
         else -> BadgeTone.Info
     }
 
-    private fun numberFormatFromString(raw: String): TableNumberFormat? = when (raw.lowercase()) {
+    private fun numberFormatFromString(raw: String): TableNumberFormat? = when (raw.lowercase(Locale.ROOT)) {
         "integer" -> TableNumberFormat.Integer
         "decimal" -> TableNumberFormat.Decimal
         "currency" -> TableNumberFormat.Currency

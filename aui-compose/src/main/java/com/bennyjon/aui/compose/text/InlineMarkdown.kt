@@ -1,5 +1,6 @@
 package com.bennyjon.aui.compose.text
 
+import java.util.Locale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -192,7 +193,7 @@ internal fun splitMarkdownBlocks(source: String): List<MarkdownSegment> {
 }
 
 private fun isSupportedUrl(url: String): Boolean {
-    val lower = url.lowercase()
+    val lower = url.lowercase(Locale.ROOT)
     return lower.startsWith("http://") ||
         lower.startsWith("https://") ||
         lower.startsWith("mailto:")

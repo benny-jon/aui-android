@@ -413,6 +413,37 @@ Exit criteria:
 - No production logging, no unjustified `!!`, no silent catches outside the
   documented error contract.
 
+Findings (executed 2026-04-29):
+- Clean: `aui-core/src/main` and `aui-compose/src/main` contain no `TODO` /
+  `FIXME` / `XXX` markers, and the S7 sweep removed the remaining production
+  `Log.w(...)` usage from `BlockRenderer`.
+- Clean: the only `!!` usage in library production code was in
+  `AuiChart.drawBarOrLineChart(...)` for `data.yLabel`; it was replaced with a
+  local non-blank `yLabel` value so chart rendering no longer relies on a
+  nullable assertion.
+- Fixed: skipped `AuiBlock.Unknown` cases now route through the existing
+  `onUnknownBlock` callback for both unmatched block types and plugin-backed
+  unknown blocks whose data is missing or malformed. KDoc on `AuiRenderer`,
+  `DisplayRouter`, `AuiSurveyContent`, and `BlockRenderer` was updated to match
+  the actual tolerant-rendering contract, which let the session remove renderer
+  logging without adding new public API.
+- Fixed: broad `catch (Exception)` handlers were narrowed to concrete failure
+  modes. `AuiParser` now catches only `SerializationException` and
+  `IllegalArgumentException` during tolerant parse fallback; plugin unknown-block
+  decoding in `BlockRenderer` does the same; `FileDownloads` now catches
+  `ActivityNotFoundException`, `SecurityException`, and `IOException` rather
+  than swallowing every runtime error.
+- Fixed: locale-sensitive string comparisons now consistently use
+  `Locale.ROOT` in parser/renderer comparison paths (`TableData`,
+  `InlineMarkdown`, `FileDownloads`) so host locale cannot change block-type,
+  URL-scheme, or file-extension matching. Display-only capitalization in
+  `AuiText` and `AuiFileContent` now uses `Locale.getDefault()`.
+- Verified with `./gradlew :aui-core:test`,
+  `./gradlew :aui-compose:testDebugUnitTest`, and
+  `./gradlew :aui-compose:compileDebugKotlin`. The compose checks emitted one
+  pre-existing deprecation warning for `LocalClipboardManager` in
+  `AuiFileContent`; no follow-up opened here because it is orthogonal to S7.
+
 ---
 
 ## Session S8 — Compose-specific correctness
