@@ -2,6 +2,7 @@ package com.bennyjon.aui.compose.text
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -20,6 +21,7 @@ class InlineMarkdownTest {
         source = source,
         codeStyle = codeStyle,
         linkColor = linkColor,
+        boldStyle = SpanStyle(fontWeight = FontWeight.Bold),
     )
 
     // ── Plain text ──────────────────────────────────────────────────────────

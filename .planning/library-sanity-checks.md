@@ -74,7 +74,7 @@ Findings (executed 2026-04-28):
 
 ---
 
-## Session S2 — Theming: no hardcoded colors / dimens / typography
+## Session S2 — Theming: no hardcoded colors / dimens / typography ✅
 
 Goal: every visual property routes through `AuiTheme` (colors, spacing,
 typography, shapes), not literals or `MaterialTheme.*` directly.
@@ -92,6 +92,32 @@ Checks:
 
 Exit criteria:
 - All visual styling reads from `AuiTheme` or is an explicit parameter.
+
+Findings (executed 2026-04-28):
+- The audit found non-theme visual literals in `AuiResponseCard`, `AuiSurveyContent`,
+  `AuiFileContent`, `AuiButtonSecondary`, `AuiInputRatingStars`,
+  `AuiStepperHorizontal`, `AuiTable`, `AuiChart`, and `InlineMarkdown`.
+  Offenders included hardcoded border widths / paddings / icon sizes, direct
+  `CircleShape` / `RoundedCornerShape` usage, one `FontWeight` override in the
+  survey shell, table header typography overrides, a `Color.Black` striped-row
+  overlay, and a custom chart palette using literal teal/amber colors.
+- `AuiSpacing` now owns the previously hardcoded dimensional tokens needed by
+  renderer components, including micro-spacing, chart sizing, table width
+  budgets, rating-star sizing, and stepper indicator sizing. Components now
+  read those values through `LocalAuiTheme` instead of local `.dp` literals.
+- `AuiTable` now routes its border shape through `theme.shapes.banner`, uses
+  `theme.typography.label` for header cells, and uses a themed
+  `surfaceVariant` overlay for alternating rows rather than `Color.Black`.
+- `AuiChart` now reads sizing from `AuiTheme.spacing`, uses
+  `theme.shapes.badge` for legend markers, and derives its secondary/tertiary
+  series colors from semantic theme colors (`info` / `warning`) instead of
+  literal `Color(...)` values.
+- `InlineMarkdown` no longer hardcodes bold weight internally; callers provide
+  the emphasis span style so text emphasis can stay aligned with AUI typography.
+- Verification: `rg` scans for `Color(`, `.dp`, `MaterialTheme.*`, and
+  `FontWeight` / shape literals outside `theme/` returned no matches after the
+  refactor. `./gradlew :aui-compose:compileDebugKotlin` and
+  `./gradlew :aui-compose:testDebugUnitTest` both passed.
 
 ---
 

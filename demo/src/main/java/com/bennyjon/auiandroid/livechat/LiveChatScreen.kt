@@ -57,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
@@ -618,7 +619,10 @@ private fun AssistantMessage(
                 val spannedText = parseInlineMarkdown(
                     source = text,
                     codeStyle = auiTheme.typography.code,
-                    linkColor = auiTheme.colors.primary
+                    linkColor = auiTheme.colors.primary,
+                    boldStyle = SpanStyle(
+                        fontWeight = auiTheme.typography.label.fontWeight,
+                    ),
                 )
                 Text(
                     text = spannedText,

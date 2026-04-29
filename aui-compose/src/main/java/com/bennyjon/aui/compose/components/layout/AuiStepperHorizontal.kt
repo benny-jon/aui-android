@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
@@ -20,15 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.data.StepperHorizontalData
 import com.bennyjon.aui.core.model.data.StepperStep
-
-private val CircleSize = 24.dp
-private val ConnectorHeight = 1.dp
 
 /**
  * Renders a `stepper_horizontal` block.
@@ -69,7 +64,7 @@ fun AuiStepperHorizontal(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(ConnectorHeight)
+                                .height(theme.spacing.dividerThickness)
                                 .background(leftLineColor),
                         )
                     } else {
@@ -79,15 +74,15 @@ fun AuiStepperHorizontal(
                     // Step circle
                     Box(
                         modifier = Modifier
-                            .size(CircleSize)
+                            .size(theme.spacing.stepperIndicatorSize)
                             .background(
                                 color = if (isCompleted || isCurrent) activeColor else theme.colors.surface,
-                                shape = CircleShape,
+                                shape = theme.shapes.badge,
                             )
                             .border(
-                                width = if (isCompleted || isCurrent) 0.dp else 1.dp,
+                                width = if (isCompleted || isCurrent) theme.spacing.zero else theme.spacing.dividerThickness,
                                 color = if (isCompleted || isCurrent) activeColor else inactiveColor,
-                                shape = CircleShape,
+                                shape = theme.shapes.badge,
                             ),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -96,7 +91,7 @@ fun AuiStepperHorizontal(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
                                 tint = theme.colors.onPrimary,
-                                modifier = Modifier.size(14.dp),
+                                modifier = Modifier.size(theme.spacing.stepperIndicatorIconSize),
                             )
                         } else {
                             Text(
@@ -112,7 +107,7 @@ fun AuiStepperHorizontal(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(ConnectorHeight)
+                                .height(theme.spacing.dividerThickness)
                                 .background(rightLineColor),
                         )
                     } else {

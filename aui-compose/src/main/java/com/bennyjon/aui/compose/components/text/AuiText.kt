@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.text.splitMarkdownBlocks
@@ -55,6 +56,9 @@ fun AuiText(
                                 source = segment.value,
                                 codeStyle = theme.typography.code,
                                 linkColor = theme.colors.primary,
+                                boldStyle = SpanStyle(
+                                    fontWeight = theme.typography.label.fontWeight,
+                                ),
                             )
                         }
                         Text(

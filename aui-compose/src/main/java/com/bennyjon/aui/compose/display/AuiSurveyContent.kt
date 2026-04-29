@@ -26,8 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.internal.BlockRenderer
@@ -237,7 +235,7 @@ private fun SurveyStepScaffold(
         if (surveyTitle != null) {
             Text(
                 text = surveyTitle,
-                style = theme.typography.heading.copy(fontWeight = FontWeight.SemiBold),
+                style = theme.typography.heading,
                 color = LocalAuiHeadingColor.current,
             )
             Spacer(modifier = Modifier.height(theme.spacing.medium))
@@ -356,7 +354,7 @@ private fun SurveyNavSecondaryButton(
         onClick = onClick,
         modifier = modifier,
         shape = theme.shapes.button,
-        border = BorderStroke(width = 1.dp, color = theme.colors.outline),
+        border = BorderStroke(width = theme.spacing.dividerThickness, color = theme.colors.outline),
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = theme.colors.primary,
         ),

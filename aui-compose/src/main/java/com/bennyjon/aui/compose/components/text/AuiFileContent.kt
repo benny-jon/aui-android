@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.openDownloadsFolder
 import com.bennyjon.aui.compose.internal.saveFileToDownloads
@@ -238,7 +237,7 @@ private fun FileDownloadNotice(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
-                    width = 1.dp,
+                    width = theme.spacing.dividerThickness,
                     color = theme.colors.primary.copy(alpha = 0.35f),
                     shape = theme.shapes.banner,
                 )
@@ -317,7 +316,7 @@ private fun AuiFileContentPreview() {
                     content = "# Hello\n\nRun `./gradlew build`.",
                 ),
             ),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

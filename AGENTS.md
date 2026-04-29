@@ -35,15 +35,17 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S1 — Localization & user-visible strings**.
-  Extracted every user-visible literal in `aui-compose` (survey nav, response
-  card fallbacks, file-content actions/notices, rating-star a11y, text fenced
-  code title, input-text submit fallback) into
-  `aui-compose/src/main/res/values/strings.xml` with `aui_` prefixed keys
-  (plurals where appropriate); `aui-core` had none.
-- Next recommended task: Sanity-checks **S2 — Theming**: every visual property
-  must route through `AuiTheme` (no literal `Color(...)` / `.dp` / `.sp` /
-  `MaterialTheme.*` outside the `theme/` package).
+- Last completed: Sanity-checks **S2 — Theming**. Audited `aui-compose` for
+  direct styling literals and routed the remaining offenders through
+  `AuiTheme`: new spacing tokens cover chart/table/stepper/card dimensions,
+  table/chart colors no longer use hardcoded `Color(...)`, and the audit grep
+  for `Color(` / `.dp` / `MaterialTheme.*` / stray shape-weight literals is
+  clean outside `theme/`. Verified with
+  `./gradlew :aui-compose:compileDebugKotlin` and
+  `./gradlew :aui-compose:testDebugUnitTest`.
+- Next recommended task: Sanity-checks **S3 — Accessibility**: audit
+  TalkBack semantics, 48dp touch targets, font scaling, and RTL behavior in
+  `aui-compose/src/main`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -81,15 +83,12 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S2 — Theming** from
+Run **Sanity-checks Session S3 — Accessibility** from
 `.planning/library-sanity-checks.md`:
-- audit `aui-compose/src/main` for literal `Color(...)`, `.dp`, `.sp`,
-  `MaterialTheme.*`, and stray `FontWeight` / `TextStyle` / `Shape` literals
-  outside the `theme/` package
-- everything that is user-visible styling should route through `AuiTheme`
-  (colors, spacing, typography, shapes) or be an explicit parameter
-- record findings inline in `.planning/library-sanity-checks.md` (mark S2 ✅
-  even if nothing needed changing — explicit "no findings" matters)
+- review `aui-compose/src/main` for TalkBack labels/roles, minimum touch
+  targets, large-font resilience, and RTL-safe spacing/alignment
+- fix obvious semantics / sizing gaps in-session and record findings inline in
+  `.planning/library-sanity-checks.md`
 
 Session 54 (Canonical Host Integration Example) is still queued from
 `.planning/first-release-readiness.md` and should run after the sanity-checks

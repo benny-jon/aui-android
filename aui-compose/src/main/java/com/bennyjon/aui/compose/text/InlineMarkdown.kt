@@ -8,7 +8,6 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
@@ -34,6 +33,7 @@ fun parseInlineMarkdown(
     source: String,
     codeStyle: TextStyle,
     linkColor: Color,
+    boldStyle: SpanStyle,
 ): AnnotatedString = buildAnnotatedString {
     var i = 0
     val len = source.length
@@ -92,7 +92,7 @@ fun parseInlineMarkdown(
             val closeIndex = source.indexOf("**", i + 2)
             if (closeIndex != -1) {
                 val boldText = source.substring(i + 2, closeIndex)
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                withStyle(boldStyle) {
                     append(boldText)
                 }
                 i = closeIndex + 2

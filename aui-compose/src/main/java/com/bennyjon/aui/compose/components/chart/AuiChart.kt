@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -48,9 +46,6 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
-
-/** Default on-canvas chart height. Callers may override via [Modifier]. */
-private val ChartCanvasHeight = 200.dp
 
 /**
  * Renders a `chart` block as a native Canvas drawing.
@@ -83,7 +78,7 @@ internal fun AuiChart(
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(ChartCanvasHeight),
+                .height(theme.spacing.chartCanvasHeight),
         ) {
             when (data.variant) {
                 ChartVariant.Bar -> drawBarOrLineChart(
@@ -148,8 +143,8 @@ private fun ChartLegend(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
+                        .size(theme.spacing.chartLegendMarkerSize)
+                        .clip(theme.shapes.badge)
                         .background(palette[index % palette.size]),
                 )
                 Text(
@@ -207,14 +202,14 @@ private fun DrawScope.drawBarOrLineChart(
     }
     val yLabelMaxWidth = (yLabelWidths.maxOrNull() ?: 0f)
     val yRotatedLabelWidth = if (!data.yLabel.isNullOrBlank()) {
-        textMeasurer.measure(data.yLabel!!, captionStyle).size.height.toFloat() + 4.dp.toPx()
+        textMeasurer.measure(data.yLabel!!, captionStyle).size.height.toFloat() + theme.spacing.xSmall.toPx()
     } else 0f
     val xLabelHeight = textMeasurer.measure("X", captionStyle).size.height.toFloat()
 
-    val leftGutter = yRotatedLabelWidth + yLabelMaxWidth + 6.dp.toPx()
-    val rightGutter = 8.dp.toPx()
-    val topGutter = 4.dp.toPx()
-    val bottomGutter = xLabelHeight + 6.dp.toPx()
+    val leftGutter = yRotatedLabelWidth + yLabelMaxWidth + (theme.spacing.xSmall + theme.spacing.xxSmall).toPx()
+    val rightGutter = theme.spacing.small.toPx()
+    val topGutter = theme.spacing.xSmall.toPx()
+    val bottomGutter = xLabelHeight + (theme.spacing.xSmall + theme.spacing.xxSmall).toPx()
 
     val plotLeft = leftGutter
     val plotRight = size.width - rightGutter
@@ -225,14 +220,14 @@ private fun DrawScope.drawBarOrLineChart(
     if (plotWidth <= 0f || plotHeight <= 0f) return
 
     // Horizontal grid + y tick labels.
-    val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()))
+    val dash = PathEffect.dashPathEffect(floatArrayOf(theme.spacing.xSmall.toPx(), theme.spacing.xSmall.toPx()))
     tickValues.forEach { value ->
         val y = plotBottom - (value / niceMax) * plotHeight
         drawLine(
             color = axisColor,
             start = Offset(plotLeft, y),
             end = Offset(plotRight, y),
-            strokeWidth = 1.dp.toPx(),
+            strokeWidth = theme.spacing.dividerThickness.toPx(),
             pathEffect = dash.takeIf { value > 0f },
         )
         val label = formatTick(value)
@@ -240,7 +235,7 @@ private fun DrawScope.drawBarOrLineChart(
         drawText(
             textLayoutResult = measured,
             topLeft = Offset(
-                x = plotLeft - 4.dp.toPx() - measured.size.width,
+                x = plotLeft - theme.spacing.xSmall.toPx() - measured.size.width,
                 y = y - measured.size.height / 2f,
             ),
         )
@@ -250,11 +245,11 @@ private fun DrawScope.drawBarOrLineChart(
     if (!data.yLabel.isNullOrBlank()) {
         val measured = textMeasurer.measure(data.yLabel!!, captionStyle)
         val centerY = plotTop + plotHeight / 2f
-        rotate(degrees = -90f, pivot = Offset(measured.size.height.toFloat() / 2f + 2.dp.toPx(), centerY)) {
+        rotate(degrees = -90f, pivot = Offset(measured.size.height.toFloat() / 2f + theme.spacing.xxSmall.toPx(), centerY)) {
             drawText(
                 textLayoutResult = measured,
                 topLeft = Offset(
-                    x = 2.dp.toPx() + measured.size.height.toFloat() / 2f - measured.size.width / 2f,
+                    x = theme.spacing.xxSmall.toPx() + measured.size.height.toFloat() / 2f - measured.size.width / 2f,
                     y = centerY - measured.size.height / 2f,
                 ),
             )
@@ -266,7 +261,7 @@ private fun DrawScope.drawBarOrLineChart(
         color = axisColor,
         start = Offset(plotLeft, plotBottom),
         end = Offset(plotRight, plotBottom),
-        strokeWidth = 1.dp.toPx(),
+        strokeWidth = theme.spacing.dividerThickness.toPx(),
     )
 
     val groupCount = xLabels.size
@@ -286,21 +281,22 @@ private fun DrawScope.drawBarOrLineChart(
             textLayoutResult = measured,
             topLeft = Offset(
                 x = centerX - measured.size.width / 2f,
-                y = plotBottom + 4.dp.toPx(),
+                y = plotBottom + theme.spacing.xSmall.toPx(),
             ),
         )
     }
 
     if (isLine) {
-        drawLineSeries(series, palette, plotLeft, plotTop, plotRight, plotBottom, niceMax, groupWidth)
+        drawLineSeries(series, palette, theme, plotLeft, plotTop, plotRight, plotBottom, niceMax, groupWidth)
     } else {
-        drawBarSeries(series, palette, plotLeft, plotTop, plotBottom, niceMax, groupWidth)
+        drawBarSeries(series, palette, theme, plotLeft, plotTop, plotBottom, niceMax, groupWidth)
     }
 }
 
 private fun DrawScope.drawBarSeries(
     series: List<ChartSeries>,
     palette: List<Color>,
+    theme: AuiTheme,
     plotLeft: Float,
     plotTop: Float,
     plotBottom: Float,
@@ -311,9 +307,9 @@ private fun DrawScope.drawBarSeries(
     val seriesCount = series.size
     val groupPadding = groupWidth * 0.2f
     val barsArea = groupWidth - groupPadding
-    val innerGap = if (seriesCount > 1) 2.dp.toPx() else 0f
+    val innerGap = if (seriesCount > 1) theme.spacing.xxSmall.toPx() else 0f
     val barWidth = ((barsArea - innerGap * (seriesCount - 1)) / seriesCount).coerceAtLeast(1f)
-    val radius = 4.dp.toPx()
+    val radius = theme.spacing.xSmall.toPx()
 
     val pointCount = series.first().values.size
     for (groupIndex in 0 until pointCount) {
@@ -339,6 +335,7 @@ private fun DrawScope.drawBarSeries(
 private fun DrawScope.drawLineSeries(
     series: List<ChartSeries>,
     palette: List<Color>,
+    theme: AuiTheme,
     plotLeft: Float,
     plotTop: Float,
     plotRight: Float,
@@ -347,7 +344,7 @@ private fun DrawScope.drawLineSeries(
     groupWidth: Float,
 ) {
     val plotHeight = plotBottom - plotTop
-    val pointRadius = 4.dp.toPx()
+    val pointRadius = theme.spacing.xSmall.toPx()
     series.forEachIndexed { seriesIndex, s ->
         val color = palette[seriesIndex % palette.size]
         val points = s.values.mapIndexed { i, point ->
@@ -382,7 +379,7 @@ private fun DrawScope.drawLineSeries(
         drawPath(
             path = linePath,
             color = color,
-            style = Stroke(width = 2.dp.toPx()),
+            style = Stroke(width = theme.spacing.xxSmall.toPx()),
         )
 
         // Data point dots.
@@ -450,7 +447,7 @@ private fun DrawScope.drawPieChart(
     val total = slices.sumOf { it.second.toDouble() }.toFloat()
     if (total <= 0f) return
 
-    val diameter = minOf(size.width, size.height) - 8.dp.toPx()
+    val diameter = minOf(size.width, size.height) - theme.spacing.small.toPx()
     if (diameter <= 0f) return
     val topLeft = Offset(
         x = (size.width - diameter) / 2f,
@@ -459,8 +456,8 @@ private fun DrawScope.drawPieChart(
     val arcSize = Size(diameter, diameter)
     val radius = diameter / 2f
 
-    // Session plan: gap of 2.dp along circumference, expressed as an angle.
-    val gapDegrees = (2.dp.toPx() / radius.coerceAtLeast(1f)) * (180f / PI.toFloat())
+    // Gap along the circumference, expressed as an angle.
+    val gapDegrees = (theme.spacing.xxSmall.toPx() / radius.coerceAtLeast(1f)) * (180f / PI.toFloat())
 
     var startAngle = -90f
     slices.forEachIndexed { index, (_, value) ->
@@ -483,8 +480,8 @@ private fun DrawScope.drawPieChart(
 
 private fun seriesPalette(theme: AuiTheme): List<Color> {
     val primary = theme.colors.primary
-    val secondary = Color(0xFF009688) // Teal 500 — stable on light + dark surfaces.
-    val warm = Color(0xFFFFB300) // Amber 600.
+    val secondary = theme.colors.info
+    val warm = theme.colors.warning
     return listOf(
         primary,
         secondary,
@@ -547,7 +544,7 @@ private fun AuiChartBarPreview() {
                     ),
                 ),
             ),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }
@@ -583,7 +580,7 @@ private fun AuiChartLinePreview() {
                     ),
                 ),
             ),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }
@@ -603,8 +600,7 @@ private fun AuiChartPiePreview() {
                     ChartSeries("Social", listOf(ChartPoint("Social", 10f))),
                 ),
             ),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }
-

@@ -17,10 +17,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiResponse
@@ -73,7 +73,7 @@ fun AuiResponseCard(
     val titleColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurface
     val descriptionColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurfaceVariant
     val borderColor = if (isActive) theme.colors.primary else theme.colors.outline
-    val borderWidth = if (isActive) 2.dp else 1.dp
+    val borderWidth = if (isActive) theme.spacing.xxSmall else theme.spacing.dividerThickness
     val arrowColor = if (isActive) theme.colors.primary else descriptionColor
     val labelColor = if (isActive) theme.colors.primary else theme.colors.onSurfaceVariant
 
@@ -84,11 +84,11 @@ fun AuiResponseCard(
             shape = theme.shapes.card,
             color = containerColor,
             border = BorderStroke(borderWidth, borderColor),
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp,
+            tonalElevation = theme.spacing.zero,
+            shadowElevation = theme.spacing.zero,
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = theme.spacing.medium, vertical = 12.dp),
+                modifier = Modifier.padding(horizontal = theme.spacing.medium, vertical = theme.spacing.smallMedium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -97,7 +97,7 @@ fun AuiResponseCard(
                             text = stringResource(R.string.aui_card_label_viewing),
                             style = theme.typography.label,
                             color = labelColor,
-                            modifier = Modifier.padding(bottom = 4.dp),
+                            modifier = Modifier.padding(bottom = theme.spacing.xSmall),
                         )
                     }
                     Text(
@@ -114,7 +114,7 @@ fun AuiResponseCard(
                             color = descriptionColor,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 2.dp),
+                            modifier = Modifier.padding(top = theme.spacing.xxSmall),
                         )
                     }
                 }
@@ -122,7 +122,7 @@ fun AuiResponseCard(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = arrowColor,
-                    modifier = Modifier.padding(start = 12.dp),
+                    modifier = Modifier.padding(start = theme.spacing.smallMedium),
                 )
             }
         }
@@ -185,7 +185,7 @@ private fun AuiResponseCardExpandedPreview() {
                 cardDescription = "Three top noise-cancelling models compared",
             ),
             onClick = {},
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }
@@ -204,7 +204,7 @@ private fun AuiResponseCardSurveyPreview() {
                 ),
             ),
             onClick = {},
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }
@@ -220,7 +220,7 @@ private fun AuiResponseCardActivePreview() {
             ),
             onClick = {},
             isActive = true,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(LocalAuiTheme.current.spacing.medium),
         )
     }
 }

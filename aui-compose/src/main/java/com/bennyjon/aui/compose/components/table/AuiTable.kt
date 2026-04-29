@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -26,12 +25,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -46,25 +43,6 @@ import com.bennyjon.aui.core.model.data.TableData
 import com.bennyjon.aui.core.model.data.TableNumberFormat
 import java.text.NumberFormat
 import java.util.Locale
-
-/** Conservative width bounds keep tables readable without wasting horizontal space. */
-private val MinColumnWidth = 72.dp
-private val MaxTextColumnWidth = 220.dp
-private val MaxCompactColumnWidth = 144.dp
-private val MaxNumberColumnWidth = 184.dp
-private val CellHorizontalPadding = 32.dp
-private val BadgeHorizontalPadding = 32.dp
-private val EstimatedBodyCharWidth = 8.dp
-private val EstimatedCaptionCharWidth = 7.dp
-// Digits, commas, currency symbols render wider than an average body glyph, so number
-// columns reserve more space per character. Without this bump, formatted currency
-// strings like "$12,450.50" get ellipsized at the 144dp compact cap.
-private val EstimatedNumericCharWidth = 10.dp
-
-/** Width budgeted for each star in a rating cell — 5 stars + gaps ≈ 96dp. */
-private val StarSize = 16.dp
-private val StarGap = 2.dp
-private val RatingColumnWidth = 120.dp
 
 private const val EmDash = "—"
 
@@ -91,15 +69,15 @@ internal fun AuiTable(
         }
 
         val columns = data.columns
-        val columnWidths = remember(columns, data.rows) { estimateColumnWidths(columns, data.rows) }
-        val tableWidth = columnWidths.fold(0.dp) { total, width -> total + width }
+        val columnWidths = remember(columns, data.rows, theme) { estimateColumnWidths(columns, data.rows, theme) }
+        val tableWidth = columnWidths.fold(theme.spacing.zero) { total, width -> total + width }
         val scrollState = rememberScrollState()
         Box(
             modifier = Modifier
                 .border(
-                    width = 1.dp,
+                    width = theme.spacing.dividerThickness,
                     color = theme.colors.outline.copy(alpha = 0.38f),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = theme.shapes.banner,
                 )
                 .clipToBounds()
                 .horizontalScroll(scrollState),
@@ -109,6 +87,7 @@ internal fun AuiTable(
                 HorizontalHairline(
                     color = theme.colors.outline.copy(alpha = 0.38f),
                     modifier = Modifier.width(tableWidth),
+                    thickness = theme.spacing.dividerThickness,
                 )
                 data.rows.forEachIndexed { rowIndex, rawRow ->
                     val row = normalizeRowLength(rawRow, columns.size)
@@ -133,7 +112,7 @@ private fun HeaderRow(columns: List<TableColumn>, columnWidths: List<Dp>) {
         columns.forEachIndexed { index, column ->
             Box(
                 modifier = Modifier
-                    .width(columnWidths.getOrElse(index) { MinColumnWidth })
+                    .width(columnWidths.getOrElse(index) { theme.spacing.tableMinColumnWidth })
                     .padding(
                         horizontal = theme.spacing.medium,
                         vertical = theme.spacing.small,
@@ -142,7 +121,7 @@ private fun HeaderRow(columns: List<TableColumn>, columnWidths: List<Dp>) {
             ) {
                 Text(
                     text = column.label,
-                    style = theme.typography.caption.copy(fontWeight = FontWeight.Medium),
+                    style = theme.typography.label,
                     color = theme.colors.bodyColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -160,7 +139,7 @@ private fun DataRow(
     isAlternate: Boolean,
 ) {
     val theme = LocalAuiTheme.current
-    val background = if (isAlternate) Color.Black.copy(alpha = 0.04f) else Color.Transparent
+    val background = if (isAlternate) theme.colors.surfaceVariant.copy(alpha = 0.18f) else Color.Transparent
     Row(
         modifier = Modifier.background(background),
     ) {
@@ -168,7 +147,7 @@ private fun DataRow(
             val cell = row.getOrElse(index) { TableCell.Empty }
             Box(
                 modifier = Modifier
-                    .width(columnWidths.getOrElse(index) { MinColumnWidth })
+                    .width(columnWidths.getOrElse(index) { theme.spacing.tableMinColumnWidth })
                     .padding(
                         horizontal = theme.spacing.medium,
                         vertical = theme.spacing.small,
@@ -305,15 +284,15 @@ private fun RatingStarsCell(cell: TableCell) {
 private fun ReadonlyRatingStars(value: Float, max: Int = 5) {
     val theme = LocalAuiTheme.current
     val clamped = value.coerceIn(0f, max.toFloat())
-    Row(horizontalArrangement = Arrangement.spacedBy(StarGap)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(theme.spacing.tableRatingStarGap)) {
         for (i in 1..max) {
             val fillFraction = (clamped - (i - 1)).coerceIn(0f, 1f)
-            Box(modifier = Modifier.size(StarSize)) {
+            Box(modifier = Modifier.size(theme.spacing.tableRatingStarSize)) {
                 Icon(
                     imageVector = Icons.Outlined.Star,
                     contentDescription = null,
                     tint = theme.colors.outline,
-                    modifier = Modifier.size(StarSize),
+                    modifier = Modifier.size(theme.spacing.tableRatingStarSize),
                 )
                 if (fillFraction > 0f) {
                     Icon(
@@ -321,7 +300,7 @@ private fun ReadonlyRatingStars(value: Float, max: Int = 5) {
                         contentDescription = null,
                         tint = theme.colors.primary,
                         modifier = Modifier
-                            .size(StarSize)
+                            .size(theme.spacing.tableRatingStarSize)
                             .clipLeftFraction(fillFraction),
                     )
                 }
@@ -352,7 +331,7 @@ private fun EmptyText() {
 }
 
 @Composable
-private fun HorizontalHairline(color: Color, modifier: Modifier = Modifier, thickness: Dp = 1.dp) {
+private fun HorizontalHairline(color: Color, modifier: Modifier = Modifier, thickness: Dp) {
     Box(
         modifier = modifier
             .height(thickness)
@@ -377,31 +356,35 @@ private fun normalizeRowLength(row: List<TableCell>, size: Int): List<TableCell>
     else -> row.subList(0, size)
 }
 
-private fun estimateColumnWidths(columns: List<TableColumn>, rows: List<List<TableCell>>): List<Dp> {
+private fun estimateColumnWidths(
+    columns: List<TableColumn>,
+    rows: List<List<TableCell>>,
+    theme: com.bennyjon.aui.compose.theme.AuiTheme,
+): List<Dp> {
     return columns.mapIndexed { index, column ->
-        if (column.type == TableColumnType.RatingStars) return@mapIndexed RatingColumnWidth
+        if (column.type == TableColumnType.RatingStars) return@mapIndexed theme.spacing.tableRatingColumnWidth
 
         val bodyCharWidth = if (column.type == TableColumnType.Number) {
-            EstimatedNumericCharWidth
+            theme.spacing.tableEstimatedNumericCharWidth
         } else {
-            EstimatedBodyCharWidth
+            theme.spacing.tableEstimatedBodyCharWidth
         }
-        val headerWidth = estimateTextWidth(column.label, EstimatedCaptionCharWidth)
+        val headerWidth = estimateTextWidth(column.label, theme.spacing.tableEstimatedCaptionCharWidth)
         val maxCellWidth = rows.maxOfOrNull { row ->
             estimateTextWidth(
                 text = cellTextForWidth(column, row.getOrElse(index) { TableCell.Empty }),
                 charWidth = bodyCharWidth,
             )
-        } ?: 0.dp
-        val badgePadding = if (column.type == TableColumnType.Badge) BadgeHorizontalPadding else 0.dp
-        val rawWidth = maxOf(headerWidth, maxCellWidth + badgePadding) + CellHorizontalPadding
+        } ?: theme.spacing.zero
+        val badgePadding = if (column.type == TableColumnType.Badge) theme.spacing.tableBadgeHorizontalPadding else theme.spacing.zero
+        val rawWidth = maxOf(headerWidth, maxCellWidth + badgePadding) + theme.spacing.tableCellHorizontalPadding
         val maxWidth = when (column.type) {
-            TableColumnType.Text -> MaxTextColumnWidth
-            TableColumnType.Number -> MaxNumberColumnWidth
-            TableColumnType.Badge -> MaxCompactColumnWidth
-            TableColumnType.RatingStars -> RatingColumnWidth
+            TableColumnType.Text -> theme.spacing.tableMaxTextColumnWidth
+            TableColumnType.Number -> theme.spacing.tableMaxNumberColumnWidth
+            TableColumnType.Badge -> theme.spacing.tableMaxCompactColumnWidth
+            TableColumnType.RatingStars -> theme.spacing.tableRatingColumnWidth
         }
-        rawWidth.coerceIn(MinColumnWidth, maxWidth)
+        rawWidth.coerceIn(theme.spacing.tableMinColumnWidth, maxWidth)
     }
 }
 
@@ -436,7 +419,7 @@ private fun cellTextForWidth(column: TableColumn, cell: TableCell): String = whe
 }
 
 private fun Dp.coerceIn(minimumValue: Dp, maximumValue: Dp): Dp =
-    value.coerceIn(minimumValue.value, maximumValue.value).dp
+    Dp(value.coerceIn(minimumValue.value, maximumValue.value))
 
 private fun formatDouble(value: Double, format: TableNumberFormat): String {
     val locale: Locale = Locale.getDefault()
