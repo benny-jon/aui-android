@@ -17,7 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
@@ -86,7 +88,7 @@ fun AuiInputTextSingle(
                     ),
                 ) {
                     Text(
-                        text = block.data.submitLabel ?: "Submit",
+                        text = block.data.submitLabel ?: stringResource(R.string.aui_input_text_submit_default),
                         style = theme.typography.button,
                     )
                 }

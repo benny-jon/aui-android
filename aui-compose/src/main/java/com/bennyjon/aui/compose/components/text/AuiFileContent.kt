@@ -28,9 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.openDownloadsFolder
 import com.bennyjon.aui.compose.internal.saveFileToDownloads
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
@@ -101,11 +103,11 @@ internal fun AuiFileContentSurface(
                         }
                         downloadNotice = savedName?.let {
                             DownloadNotice(
-                                message = "Saved to Downloads: $it",
+                                message = context.getString(R.string.aui_file_download_saved, it),
                                 showOpenAction = true,
                             )
                         } ?: DownloadNotice(
-                            message = "Couldn't save to Downloads",
+                            message = context.getString(R.string.aui_file_download_failed),
                             showOpenAction = false,
                         )
                     }
@@ -136,7 +138,8 @@ private fun FileContentHeader(
     onCopy: () -> Unit,
 ) {
     val theme = LocalAuiTheme.current
-    val headline = title ?: filename ?: language?.replaceFirstChar { it.uppercase() } ?: "File"
+    val headline = title ?: filename ?: language?.replaceFirstChar { it.uppercase() }
+        ?: stringResource(R.string.aui_file_default_headline)
     val metadata = listOfNotNull(filename?.takeIf { it != title }, language)
         .joinToString(" · ")
         .ifBlank { null }
@@ -199,7 +202,7 @@ private fun FileContentActions(
         ) {
             Icon(
                 imageVector = Icons.Filled.Download,
-                contentDescription = "Download file",
+                contentDescription = stringResource(R.string.aui_file_action_download),
                 tint = theme.colors.onSurfaceVariant,
             )
         }
@@ -209,7 +212,7 @@ private fun FileContentActions(
         ) {
             Icon(
                 imageVector = Icons.Filled.ContentCopy,
-                contentDescription = "Copy file contents",
+                contentDescription = stringResource(R.string.aui_file_action_copy),
                 tint = theme.colors.onSurfaceVariant,
             )
         }
@@ -254,7 +257,7 @@ private fun FileDownloadNotice(
             )
             if (notice.showOpenAction) {
                 Text(
-                    text = "Open",
+                    text = stringResource(R.string.aui_file_action_open),
                     style = theme.typography.label,
                     color = theme.colors.primary,
                     modifier = Modifier.clickable(onClick = onOpen),
@@ -266,7 +269,7 @@ private fun FileDownloadNotice(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Dismiss download notice",
+                    contentDescription = stringResource(R.string.aui_file_dismiss_notice),
                     tint = theme.colors.onPrimaryContainer,
                 )
             }

@@ -6,7 +6,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.text.splitMarkdownBlocks
 import com.bennyjon.aui.compose.text.MarkdownSegment
 import com.bennyjon.aui.compose.text.parseInlineMarkdown
@@ -67,7 +69,8 @@ fun AuiText(
                     AuiFileContentSurface(
                         content = segment.content,
                         language = segment.language,
-                        title = segment.language?.replaceFirstChar { it.uppercase() } ?: "Text",
+                        title = segment.language?.replaceFirstChar { it.uppercase() }
+                            ?: stringResource(R.string.aui_text_fenced_code_default_title),
                     )
                 }
             }

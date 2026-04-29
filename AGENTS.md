@@ -28,15 +28,22 @@ Do not treat `.planning/archive/` as current execution guidance.
 
 ## Current Status
 
-- Current phase: First Release Readiness (Sessions 53–58)
+- Current phase: First Release Readiness (Sessions 53–58) +
+  library-sanity-checks pre-tag audit (S1–S10)
 - Goal: prepare AUI Android for its first external release as a usable,
   documented, test-backed library
 - Current phase plan: `.planning/first-release-readiness.md`
+- Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Session 53 — Maven Central distribution path locked,
-  `vanniktech-maven-publish` scaffolded in `aui-core` and `aui-compose`,
-  README install snippet sharpened
-- Next recommended task: Session 54 — Canonical Host Integration Example
+- Last completed: Sanity-checks **S1 — Localization & user-visible strings**.
+  Extracted every user-visible literal in `aui-compose` (survey nav, response
+  card fallbacks, file-content actions/notices, rating-star a11y, text fenced
+  code title, input-text submit fallback) into
+  `aui-compose/src/main/res/values/strings.xml` with `aui_` prefixed keys
+  (plurals where appropriate); `aui-core` had none.
+- Next recommended task: Sanity-checks **S2 — Theming**: every visual property
+  must route through `AuiTheme` (no literal `Color(...)` / `.dp` / `.sp` /
+  `MaterialTheme.*` outside the `theme/` package).
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -74,13 +81,19 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Session 54: Canonical Host Integration Example** from
-`.planning/first-release-readiness.md`:
-- add or refine one canonical host integration example showing assistant
-  text-only, assistant text + AUI in one turn, and `onFeedback` routing
-- clarify recommended host-side message model in docs
-- document recommended handling of `EXPANDED` and `SURVEY` responses
-- keep examples aligned with current public API only
+Run **Sanity-checks Session S2 — Theming** from
+`.planning/library-sanity-checks.md`:
+- audit `aui-compose/src/main` for literal `Color(...)`, `.dp`, `.sp`,
+  `MaterialTheme.*`, and stray `FontWeight` / `TextStyle` / `Shape` literals
+  outside the `theme/` package
+- everything that is user-visible styling should route through `AuiTheme`
+  (colors, spacing, typography, shapes) or be an explicit parameter
+- record findings inline in `.planning/library-sanity-checks.md` (mark S2 ✅
+  even if nothing needed changing — explicit "no findings" matters)
+
+Session 54 (Canonical Host Integration Example) is still queued from
+`.planning/first-release-readiness.md` and should run after the sanity-checks
+sweep (S1–S10) finishes.
 
 ## Constraints
 

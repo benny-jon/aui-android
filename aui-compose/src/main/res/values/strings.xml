@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      User-visible strings rendered by the AUI library. All keys use the `aui_` prefix
+      so host apps can override them per-locale without colliding with their own
+      resources. This file is English-only by design — translations belong in the host
+      app's res/values-XX/ folders.
+    -->
+
+    <!-- Survey navigation buttons. -->
+    <string name="aui_survey_back">Back</string>
+    <string name="aui_survey_next">Next</string>
+    <string name="aui_survey_submit">Submit</string>
+
+    <!-- Survey submission summary text echoed in the user's outgoing message. -->
+    <string name="aui_survey_skipped">Survey skipped</string>
+    <string name="aui_survey_submitted">Survey submitted</string>
+    <plurals name="aui_survey_questions_skipped_note">
+        <item quantity="one">(%1$d question skipped)</item>
+        <item quantity="other">(%1$d questions skipped)</item>
+    </plurals>
+
+    <!-- AuiResponseCard fallback labels and step-count description. -->
+    <string name="aui_card_label_viewing">Viewing</string>
+    <string name="aui_card_fallback_survey_title">Survey</string>
+    <string name="aui_card_fallback_expanded_title">Tap to view</string>
+    <plurals name="aui_card_step_count">
+        <item quantity="one">%1$d question</item>
+        <item quantity="other">%1$d questions</item>
+    </plurals>
+
+    <!-- AuiInputTextSingle default submit-button label. -->
+    <string name="aui_input_text_submit_default">Submit</string>
+
+    <!-- AuiInputRatingStars accessibility description for each star icon. -->
+    <string name="aui_input_rating_star_content_description">Star %1$d</string>
+
+    <!-- AuiFileContent action labels and download notices. -->
+    <string name="aui_file_default_headline">File</string>
+    <string name="aui_file_action_download">Download file</string>
+    <string name="aui_file_action_copy">Copy file contents</string>
+    <string name="aui_file_action_open">Open</string>
+    <string name="aui_file_dismiss_notice">Dismiss download notice</string>
+    <string name="aui_file_download_saved">Saved to Downloads: %1$s</string>
+    <string name="aui_file_download_failed">Couldn\'t save to Downloads</string>
+
+    <!-- AuiText fallback title for fenced code blocks with no language hint. -->
+    <string name="aui_text_fenced_code_default_title">Text</string>
+</resources>

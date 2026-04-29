@@ -17,8 +17,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
@@ -62,7 +64,7 @@ fun AuiInputRatingStars(
                 val isFilled = star <= rating
                 Icon(
                     imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
-                    contentDescription = "Star $star",
+                    contentDescription = stringResource(R.string.aui_input_rating_star_content_description, star),
                     tint = if (isFilled) theme.colors.primary else theme.colors.primaryContainer,
                     modifier = Modifier
                         .size(32.dp)

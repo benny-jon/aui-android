@@ -13,9 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.core.model.AuiBlock
@@ -58,8 +61,14 @@ fun AuiResponseCard(
     theme: AuiTheme = AuiTheme.Default,
     isActive: Boolean = false,
 ) {
-    val title = response.cardStubTitle()
-    val description = response.cardStubDescription()
+    val stepCountSummary = response.steps
+        .takeIf { it.isNotEmpty() }
+        ?.let { pluralStringResource(R.plurals.aui_card_step_count, it.size, it.size) }
+    val title = response.cardStubTitle(
+        surveyFallback = stringResource(R.string.aui_card_fallback_survey_title),
+        expandedFallback = stringResource(R.string.aui_card_fallback_expanded_title),
+    )
+    val description = response.cardStubDescription(stepCountSummary = stepCountSummary)
     val containerColor = if (isActive) theme.colors.primaryContainer else theme.colors.surfaceVariant
     val titleColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurface
     val descriptionColor = if (isActive) theme.colors.onPrimaryContainer else theme.colors.onSurfaceVariant
@@ -85,7 +94,7 @@ fun AuiResponseCard(
                 Column(modifier = Modifier.weight(1f)) {
                     if (isActive) {
                         Text(
-                            text = "Viewing",
+                            text = stringResource(R.string.aui_card_label_viewing),
                             style = theme.typography.label,
                             color = labelColor,
                             modifier = Modifier.padding(bottom = 4.dp),
@@ -120,32 +129,29 @@ fun AuiResponseCard(
     }
 }
 
-private fun AuiResponse.cardStubTitle(): String = when (display) {
+private fun AuiResponse.cardStubTitle(
+    surveyFallback: String,
+    expandedFallback: String,
+): String = when (display) {
     AuiDisplay.SURVEY -> surveyTitle
         ?: cardTitle
         ?: steps.firstStepQuestion()
-        ?: "Survey"
+        ?: surveyFallback
 
     else -> cardTitle
         ?: blocks.firstHeadingText()
         ?: blocks.firstFileTitle()
         ?: blocks.firstTextText()
-        ?: "Tap to view"
+        ?: expandedFallback
 }
 
-private fun AuiResponse.cardStubDescription(): String? = when (display) {
-    AuiDisplay.SURVEY -> cardDescription ?: steps.stepCountSummary()
+private fun AuiResponse.cardStubDescription(stepCountSummary: String?): String? = when (display) {
+    AuiDisplay.SURVEY -> cardDescription ?: stepCountSummary
     else -> cardDescription ?: blocks.firstFileDescription() ?: blocks.firstNonHeadingText()
 }
 
 private fun List<AuiStep>.firstStepQuestion(): String? =
     firstNotNullOfOrNull { it.question?.takeIf { q -> q.isNotBlank() } }
-
-private fun List<AuiStep>.stepCountSummary(): String? = when (size) {
-    0 -> null
-    1 -> "1 question"
-    else -> "$size questions"
-}
 
 private fun List<AuiBlock>.firstHeadingText(): String? =
     firstNotNullOfOrNull { (it as? AuiBlock.Heading)?.data?.text }

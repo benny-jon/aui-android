@@ -23,9 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.compose.internal.inputMetadata
@@ -105,6 +108,18 @@ fun AuiSurveyContent(
     if (steps.isEmpty()) return
 
     val flowState = remember(steps) { SurveyFlowState(steps, pluginRegistry) }
+    val context = LocalContext.current
+    val surveyFormatStrings = remember(context) {
+        SurveyFormatStrings(
+            skipped = context.getString(R.string.aui_survey_skipped),
+            submitted = context.getString(R.string.aui_survey_submitted),
+            questionsSkippedNote = { count ->
+                context.resources.getQuantityString(
+                    R.plurals.aui_survey_questions_skipped_note, count, count,
+                )
+            },
+        )
+    }
 
     SurveyStepScaffold(
         steps = steps,
@@ -114,7 +129,7 @@ fun AuiSurveyContent(
         modifier = modifier,
         onBack = { flowState.back() },
         onNext = { flowState.next() },
-        onSubmit = { onSubmit(flowState.finalize()) },
+        onSubmit = { onSubmit(flowState.finalize(surveyFormatStrings)) },
         onStepFeedback = onStepFeedback,
         onUnknownBlock = onUnknownBlock,
     )
@@ -153,7 +168,7 @@ internal class SurveyFlowState(
      * shared registry. Steps with no collected answer increment [AuiFeedback.stepsSkipped];
      * steps with answers contribute [AuiEntry] rows (one per input).
      */
-    fun finalize(): AuiFeedback {
+    fun finalize(formatStrings: SurveyFormatStrings = SurveyFormatStrings()): AuiFeedback {
         val registryValue = registry.value
         val entries = mutableListOf<AuiEntry>()
         var skipped = 0
@@ -170,12 +185,27 @@ internal class SurveyFlowState(
             action = "submit",
             params = params,
             entries = entries,
-            formattedEntries = buildSurveyFormattedEntries(entries, skipped),
+            formattedEntries = buildSurveyFormattedEntries(entries, skipped, formatStrings),
             stepsSkipped = skipped,
             stepsTotal = steps.size,
         )
     }
 }
+
+/**
+ * Localizable string snippets used to assemble [AuiFeedback.formattedEntries] for a submitted
+ * survey. The composable [AuiSurveyContent] resolves these from the host's `strings.xml`
+ * (keys with the `aui_survey_*` prefix); the defaults are the library's English fallbacks
+ * and exist so non-Composable callers (tests, internal helpers) can build a feedback string
+ * without an Android `Context`.
+ */
+internal data class SurveyFormatStrings(
+    val skipped: String = "Survey skipped",
+    val submitted: String = "Survey submitted",
+    val questionsSkippedNote: (Int) -> String = { count ->
+        if (count == 1) "(1 question skipped)" else "($count questions skipped)"
+    },
+)
 
 // ── Scaffolded step body ─────────────────────────────────────────────────────
 
@@ -258,7 +288,7 @@ private fun SurveyStepScaffold(
         ) {
             if (flowState.stepIndex > 0) {
                 SurveyNavSecondaryButton(
-                    label = "Back",
+                    label = stringResource(R.string.aui_survey_back),
                     onClick = onBack,
                     modifier = Modifier.testTag(SurveyTestTags.BACK),
                 )
@@ -266,13 +296,13 @@ private fun SurveyStepScaffold(
             Spacer(modifier = Modifier.weight(1f))
             if (flowState.stepIndex < steps.lastIndex) {
                 SurveyNavPrimaryButton(
-                    label = "Next",
+                    label = stringResource(R.string.aui_survey_next),
                     onClick = onNext,
                     modifier = Modifier.testTag(SurveyTestTags.NEXT),
                 )
             } else {
                 SurveyNavPrimaryButton(
-                    label = "Submit",
+                    label = stringResource(R.string.aui_survey_submit),
                     onClick = onSubmit,
                     modifier = Modifier.testTag(SurveyTestTags.SUBMIT),
                 )
@@ -371,18 +401,21 @@ internal fun getAllStepEntries(
  * Builds the human-readable summary string for the feedback bubble after a survey completes.
  *
  * - All steps answered -> Q+A pairs joined by blank lines
- * - Some answered, some skipped -> Q+A pairs followed by "(N questions skipped)"
- * - All steps skipped -> "Survey skipped"
- * - Submitted with no input answered -> "Survey submitted"
+ * - Some answered, some skipped -> Q+A pairs followed by the localized "questions skipped" note
+ * - All steps skipped -> [SurveyFormatStrings.skipped]
+ * - Submitted with no input answered -> [SurveyFormatStrings.submitted]
  */
-internal fun buildSurveyFormattedEntries(entries: List<AuiEntry>, skippedCount: Int): String {
+internal fun buildSurveyFormattedEntries(
+    entries: List<AuiEntry>,
+    skippedCount: Int,
+    formatStrings: SurveyFormatStrings = SurveyFormatStrings(),
+): String {
     return when {
-        entries.isEmpty() && skippedCount > 0 -> "Survey skipped"
-        entries.isEmpty() -> "Survey submitted"
+        entries.isEmpty() && skippedCount > 0 -> formatStrings.skipped
+        entries.isEmpty() -> formatStrings.submitted
         skippedCount > 0 -> {
             val answered = entries.joinToString("\n\n") { "${it.question}\n${it.answer}" }
-            val note = if (skippedCount == 1) "(1 question skipped)" else "($skippedCount questions skipped)"
-            "$answered\n\n$note"
+            "$answered\n\n${formatStrings.questionsSkippedNote(skippedCount)}"
         }
         else -> entries.joinToString("\n\n") { "${it.question}\n${it.answer}" }
     }
