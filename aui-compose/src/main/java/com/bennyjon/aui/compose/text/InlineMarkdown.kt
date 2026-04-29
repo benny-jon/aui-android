@@ -29,7 +29,7 @@ import androidx.compose.ui.text.withStyle
  * elements. Hosts needing full CommonMark can register an `AuiComponentPlugin` override
  * for the `text` component type.
  */
-fun parseInlineMarkdown(
+internal fun parseInlineMarkdown(
     source: String,
     codeStyle: TextStyle,
     linkColor: Color,
@@ -142,12 +142,12 @@ fun parseInlineMarkdown(
     }
 }
 
-sealed interface MarkdownSegment {
+internal sealed interface MarkdownSegment {
     data class Text(val value: String) : MarkdownSegment
     data class FencedCode(val content: String, val language: String?) : MarkdownSegment
 }
 
-fun splitMarkdownBlocks(source: String): List<MarkdownSegment> {
+internal fun splitMarkdownBlocks(source: String): List<MarkdownSegment> {
     if (source.isEmpty()) return listOf(MarkdownSegment.Text(""))
 
     val segments = mutableListOf<MarkdownSegment>()

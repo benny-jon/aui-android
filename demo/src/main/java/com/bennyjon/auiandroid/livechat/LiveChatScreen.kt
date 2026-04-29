@@ -62,7 +62,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.display.AuiResponseCard
-import com.bennyjon.aui.compose.text.parseInlineMarkdown
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
@@ -616,7 +615,7 @@ private fun AssistantMessage(
                 color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.widthIn(max = 420.dp),
             ) {
-                val spannedText = parseInlineMarkdown(
+                val spannedText = parseAssistantInlineMarkdown(
                     source = text,
                     codeStyle = auiTheme.typography.code,
                     linkColor = auiTheme.colors.primary,

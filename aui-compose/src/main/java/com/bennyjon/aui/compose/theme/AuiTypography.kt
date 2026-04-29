@@ -3,6 +3,7 @@ package com.bennyjon.aui.compose.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.sp
  * Use [AuiTypography.Default] for Material3-inspired defaults, or [AuiTypography.fromMaterialTheme]
  * to derive styles from the host app's active [MaterialTheme].
  */
+@Immutable
 data class AuiTypography(
     /** Bold section headings (`heading` block). */
     val heading: TextStyle = TextStyle(

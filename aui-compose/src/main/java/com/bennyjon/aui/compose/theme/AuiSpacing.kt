@@ -1,5 +1,6 @@
 package com.bennyjon.aui.compose.theme
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -9,6 +10,7 @@ import androidx.compose.ui.unit.dp
  * All AUI components read spacing values exclusively from this class via [LocalAuiTheme].
  * No component hardcodes a `Dp` value directly.
  */
+@Immutable
 data class AuiSpacing(
     /** Zero dp — convenient token for components that should not hardcode `0.dp`. */
     val zero: Dp = 0.dp,

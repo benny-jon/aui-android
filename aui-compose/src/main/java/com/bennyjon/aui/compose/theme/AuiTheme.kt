@@ -2,6 +2,7 @@ package com.bennyjon.aui.compose.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 
 /**
@@ -17,6 +18,7 @@ import androidx.compose.runtime.compositionLocalOf
  * }
  * ```
  */
+@Immutable
 data class AuiTheme(
     val colors: AuiColors = AuiColors.Default,
     val typography: AuiTypography = AuiTypography.Default,

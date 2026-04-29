@@ -57,7 +57,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  *   component plugin, in addition to the default warning log.
  */
 @Composable
-fun DisplayRouter(
+internal fun DisplayRouter(
     response: AuiResponse,
     modifier: Modifier = Modifier,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,

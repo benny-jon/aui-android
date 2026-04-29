@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
  * contexts (inline bubble, expanded, sheet) to match their background surface.
  * Read by [AuiHeading][com.bennyjon.aui.compose.components.text.AuiHeading].
  */
-val LocalAuiHeadingColor = compositionLocalOf { Color.Black }
+internal val LocalAuiHeadingColor = compositionLocalOf { Color.Black }
 
 /**
  * Content color for body text in the current display context.
@@ -19,7 +19,7 @@ val LocalAuiHeadingColor = compositionLocalOf { Color.Black }
  * contexts to match their background surface.
  * Read by [AuiText][com.bennyjon.aui.compose.components.text.AuiText] and input content text.
  */
-val LocalAuiBodyColor = compositionLocalOf { Color.Black }
+internal val LocalAuiBodyColor = compositionLocalOf { Color.Black }
 
 /**
  * Content color for caption and label text in the current display context.
@@ -28,4 +28,4 @@ val LocalAuiBodyColor = compositionLocalOf { Color.Black }
  * contexts to match their background surface.
  * Read by [AuiCaption][com.bennyjon.aui.compose.components.text.AuiCaption] and input labels.
  */
-val LocalAuiCaptionColor = compositionLocalOf { Color.Black }
+internal val LocalAuiCaptionColor = compositionLocalOf { Color.Black }

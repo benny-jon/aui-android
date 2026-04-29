@@ -4,6 +4,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.dp
  * Use [AuiShapes.Default] for Material3-inspired defaults, or [AuiShapes.fromMaterialTheme]
  * to derive shapes from the host app's active [MaterialTheme].
  */
+@Immutable
 data class AuiShapes(
     /** Fully rounded pill shape used for chips and quick-reply options. */
     val chip: Shape = CircleShape,

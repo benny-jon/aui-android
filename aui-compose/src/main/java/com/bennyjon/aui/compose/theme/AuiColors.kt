@@ -3,6 +3,7 @@ package com.bennyjon.aui.compose.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.luminance
  * stable light or dark values independent of the host's brand palette so severity is
  * consistent across themes. Hosts can still override any individual token.
  */
+@Immutable
 data class AuiColors(
     /** Brand/interactive primary color. */
     val primary: Color = Color(0xFF6750A4),

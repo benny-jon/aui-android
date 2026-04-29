@@ -35,25 +35,19 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S3 — Accessibility** (with second pass
-  after device TalkBack testing). First pass: RTL/font-scale/touch-target
-  checks clean; selection-row Role wiring; rating-star Role.Button; file
-  "Open" TextButton; table rating-stars merged contentDescription. Second
-  pass: `AuiText` now merges descendants with the plain annotated text so
-  TalkBack actually announces it; `AuiChart` Canvas exposes a generated
-  content description (variant + title + axis + series/slices) via
-  `clearAndSetSemantics`; status badges and banners announce
-  intent-prefixed text ("Success: …" / "Error: …"), and banners use
-  `LiveRegionMode.Polite`; rating-star group collapses to one node with
-  custom actions for "Rate N stars"; horizontal stepper collapses to one
-  node summarizing position, name, and remaining count. Findings recorded
-  in `.planning/library-sanity-checks.md`. Verified with
-  `./gradlew :aui-compose:compileDebugKotlin` and
-  `./gradlew :aui-compose:testDebugUnitTest`.
-- Next recommended task: Sanity-checks **S4 — Public API surface review**:
-  walk public symbols in `aui-compose` and `aui-core`, confirm
-  internal-only types aren't leaking, and lock down the published surface
-  before first tag.
+- Last completed: Sanity-checks **S4 — Public API surface review**. Public
+  host/plugin surface pinned for `0.1.0-alpha01`; no inline / reified /
+  `@PublishedApi` leakage found; `parseInlineMarkdown`,
+  `splitMarkdownBlocks`, `MarkdownSegment`, `DisplayRouter`, and the internal
+  content-color locals were reduced to `internal`; `AuiTheme`, `AuiColors`,
+  `AuiTypography`, `AuiSpacing`, and `AuiShapes` now carry `@Immutable`.
+  Findings recorded in `.planning/library-sanity-checks.md`. Verified with
+  `./gradlew :aui-compose:compileDebugKotlin`,
+  `./gradlew :aui-compose:testDebugUnitTest`, and
+  `./gradlew :demo:compileDebugKotlin`.
+- Next recommended task: Sanity-checks **S5 — R8 / ProGuard / serialization
+  keep rules**: verify consumer rules are sufficient and run a minified
+  release-build smoke check before first tag.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -91,11 +85,11 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S4 — Public API surface review** from
+Run **Sanity-checks Session S5 — R8 / ProGuard / serialization keep rules** from
 `.planning/library-sanity-checks.md`:
-- enumerate the public Kotlin surface of `aui-core` and `aui-compose`
-- confirm `internal` symbols aren't leaking via inline / reified APIs
-- pin the surface area we're committing to for `0.1.0-alpha01`
+- verify both modules ship correct consumer keep rules
+- confirm release/minified hosts won't hit serialization or reflection crashes
+- run a release-build smoke test with minification enabled
 - record findings inline in `.planning/library-sanity-checks.md`
 
 Session 54 (Canonical Host Integration Example) is still queued from

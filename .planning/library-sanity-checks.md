@@ -244,6 +244,48 @@ Exit criteria:
 - Surface is intentional and documented; ideally an `.api` baseline is checked
   in.
 
+Findings (executed 2026-04-29):
+- No inline / reified / `@PublishedApi` leakage found in either module. The
+  audit scan for `inline`, `reified`, and `@PublishedApi` returned no public
+  ABI hazards, so there is no hidden dependency on `internal` symbols through
+  inline call sites for `0.1.0-alpha01`.
+- `aui-core` public surface is intentionally model- and plugin-centric:
+  `AuiParser`, `AuiCatalogPrompt` prompt types, `AuiResponse` / `AuiBlock` /
+  `AuiFeedback` / `AuiStep` / `AuiEntry`, the catalog data classes under
+  `core/model/data/**`, and plugin registration via `AuiPlugin`,
+  `AuiActionPlugin`, and `AuiPluginRegistry`. The read-only helpers
+  `AuiBlock.allFeedbacks()`, `AuiBlock.isReadOnly(...)`, and
+  `AuiResponse.isReadOnly(...)` are part of the committed host-facing surface.
+- `aui-compose` public surface is intentionally split between host entry points
+  and plugin/theming hooks:
+  `AuiRenderer` overloads, `AuiResponseCard`, `AuiSurveyContent`,
+  `SurveyTestTags`, `AuiComponentPlugin`, `AuiPluginRegistry.componentPlugin`,
+  `AuiPluginRegistry.allComponentPlugins`, `AuiTheme`, `AuiColors`,
+  `AuiTypography`, `AuiSpacing`, `AuiShapes`, `AuiThemeProvider`, and
+  `LocalAuiTheme`. Built-in block composables (for example `AuiText`,
+  `AuiButtonPrimary`, `AuiStatusBannerSuccess`) remain public for now; they are
+  documented as supported leaf renderers rather than package-private internals.
+- Fixed in-session: accidental helper APIs were leaking from `aui-compose` and
+  are now `internal` before the first tag:
+  `parseInlineMarkdown`, `splitMarkdownBlocks`, `MarkdownSegment`,
+  `DisplayRouter`, and the display-context content-color locals
+  (`LocalAuiHeadingColor`, `LocalAuiBodyColor`, `LocalAuiCaptionColor`).
+  The demo had been depending on `parseInlineMarkdown`; it now owns a private
+  assistant-bubble helper instead of coupling to that renderer implementation
+  detail.
+- Added `@Immutable` to the public Compose theme model types
+  `AuiTheme`, `AuiColors`, `AuiTypography`, `AuiSpacing`, and `AuiShapes` so
+  the Compose-facing public surface advertises stable semantics explicitly.
+- Verification: `./gradlew :aui-compose:compileDebugKotlin`,
+  `./gradlew :aui-compose:testDebugUnitTest`, and
+  `./gradlew :demo:compileDebugKotlin` all passed.
+
+Still deferred:
+- Binary Compatibility Validator is still not wired up, so the surface is
+  intentional by audit but not yet enforced by checked-in `.api` baselines.
+- A full "every public symbol gets one-line KDoc" sweep is still worth doing,
+  but it is broader than the first-tag leak fixes completed here.
+
 ---
 
 ## Session S5 — R8 / ProGuard / serialization keep rules
