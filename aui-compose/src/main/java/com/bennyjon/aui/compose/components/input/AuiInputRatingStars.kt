@@ -17,7 +17,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
@@ -47,6 +55,27 @@ fun AuiInputRatingStars(
     val registry = LocalAuiValueRegistry.current
     var rating by remember { mutableIntStateOf(block.data.value ?: 0) }
 
+    val rate: (Int) -> Unit = { star ->
+        rating = star
+        registry.value = registry.value + mapOf(block.data.key to star.toString(), "value" to star.toString())
+        block.feedback?.let { feedback ->
+            val updatedParams = feedback.params + mapOf(block.data.key to star.toString(), "value" to star.toString())
+            onFeedback(feedback.copy(params = updatedParams))
+        }
+    }
+
+    val groupAnnounce = if (rating > 0) {
+        stringResource(R.string.aui_input_rating_announce_rated, rating, STAR_COUNT)
+    } else {
+        stringResource(R.string.aui_input_rating_announce_unrated, STAR_COUNT)
+    }
+    val rateActions = (1..STAR_COUNT).map { star ->
+        CustomAccessibilityAction(
+            label = pluralStringResource(R.plurals.aui_input_rating_action_rate, star, star),
+            action = { rate(star); true },
+        )
+    }
+
     Column(modifier = modifier) {
         block.data.label?.let { label ->
             Text(
@@ -58,23 +87,21 @@ fun AuiInputRatingStars(
         }
         Row(
             horizontalArrangement = Arrangement.spacedBy(theme.spacing.xSmall),
+            modifier = Modifier.clearAndSetSemantics {
+                role = Role.Button
+                contentDescription = groupAnnounce
+                customActions = rateActions
+            },
         ) {
             for (star in 1..STAR_COUNT) {
                 val isFilled = star <= rating
                 Icon(
                     imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
-                    contentDescription = stringResource(R.string.aui_input_rating_star_content_description, star),
+                    contentDescription = null,
                     tint = if (isFilled) theme.colors.primary else theme.colors.primaryContainer,
                     modifier = Modifier
                         .size(theme.spacing.minimumTouchTarget)
-                        .clickable {
-                            rating = star
-                            registry.value = registry.value + mapOf(block.data.key to star.toString(), "value" to star.toString())
-                            block.feedback?.let { feedback ->
-                                val updatedParams = feedback.params + mapOf(block.data.key to star.toString(), "value" to star.toString())
-                                onFeedback(feedback.copy(params = updatedParams))
-                            }
-                        },
+                        .clickable { rate(star) },
                 )
             }
         }

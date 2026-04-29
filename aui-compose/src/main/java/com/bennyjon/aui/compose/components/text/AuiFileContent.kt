@@ -2,7 +2,6 @@ package com.bennyjon.aui.compose.components.text
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +17,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -255,12 +256,16 @@ private fun FileDownloadNotice(
                 color = theme.colors.onPrimaryContainer,
             )
             if (notice.showOpenAction) {
-                Text(
-                    text = stringResource(R.string.aui_file_action_open),
-                    style = theme.typography.label,
-                    color = theme.colors.primary,
-                    modifier = Modifier.clickable(onClick = onOpen),
-                )
+                TextButton(
+                    onClick = onOpen,
+                    contentPadding = ButtonDefaults.TextButtonContentPadding,
+                    colors = ButtonDefaults.textButtonColors(contentColor = theme.colors.primary),
+                ) {
+                    Text(
+                        text = stringResource(R.string.aui_file_action_open),
+                        style = theme.typography.label,
+                    )
+                }
             }
             IconButton(
                 onClick = onDismiss,

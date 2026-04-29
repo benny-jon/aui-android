@@ -17,8 +17,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -40,8 +45,28 @@ fun AuiStepperHorizontal(
     val steps = block.data.steps
     val current = block.data.current
 
+    val announce = if (current >= steps.size) {
+        stringResource(
+            R.string.aui_stepper_announce_complete,
+            steps.size,
+            steps.lastOrNull()?.label.orEmpty(),
+        )
+    } else {
+        val remainingCount = (steps.size - 1 - current).coerceAtLeast(0)
+        val remaining = pluralStringResource(R.plurals.aui_stepper_remaining, remainingCount, remainingCount)
+        stringResource(
+            R.string.aui_stepper_announce,
+            current + 1,
+            steps.size,
+            steps.getOrNull(current)?.label.orEmpty(),
+            remaining,
+        )
+    }
+
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clearAndSetSemantics { contentDescription = announce },
         verticalAlignment = Alignment.Top,
     ) {
         steps.forEachIndexed { index, step ->

@@ -35,17 +35,25 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S2 — Theming**. Audited `aui-compose` for
-  direct styling literals and routed the remaining offenders through
-  `AuiTheme`: new spacing tokens cover chart/table/stepper/card dimensions,
-  table/chart colors no longer use hardcoded `Color(...)`, and the audit grep
-  for `Color(` / `.dp` / `MaterialTheme.*` / stray shape-weight literals is
-  clean outside `theme/`. Verified with
+- Last completed: Sanity-checks **S3 — Accessibility** (with second pass
+  after device TalkBack testing). First pass: RTL/font-scale/touch-target
+  checks clean; selection-row Role wiring; rating-star Role.Button; file
+  "Open" TextButton; table rating-stars merged contentDescription. Second
+  pass: `AuiText` now merges descendants with the plain annotated text so
+  TalkBack actually announces it; `AuiChart` Canvas exposes a generated
+  content description (variant + title + axis + series/slices) via
+  `clearAndSetSemantics`; status badges and banners announce
+  intent-prefixed text ("Success: …" / "Error: …"), and banners use
+  `LiveRegionMode.Polite`; rating-star group collapses to one node with
+  custom actions for "Rate N stars"; horizontal stepper collapses to one
+  node summarizing position, name, and remaining count. Findings recorded
+  in `.planning/library-sanity-checks.md`. Verified with
   `./gradlew :aui-compose:compileDebugKotlin` and
   `./gradlew :aui-compose:testDebugUnitTest`.
-- Next recommended task: Sanity-checks **S3 — Accessibility**: audit
-  TalkBack semantics, 48dp touch targets, font scaling, and RTL behavior in
-  `aui-compose/src/main`.
+- Next recommended task: Sanity-checks **S4 — Public API surface review**:
+  walk public symbols in `aui-compose` and `aui-core`, confirm
+  internal-only types aren't leaking, and lock down the published surface
+  before first tag.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -83,12 +91,12 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S3 — Accessibility** from
+Run **Sanity-checks Session S4 — Public API surface review** from
 `.planning/library-sanity-checks.md`:
-- review `aui-compose/src/main` for TalkBack labels/roles, minimum touch
-  targets, large-font resilience, and RTL-safe spacing/alignment
-- fix obvious semantics / sizing gaps in-session and record findings inline in
-  `.planning/library-sanity-checks.md`
+- enumerate the public Kotlin surface of `aui-core` and `aui-compose`
+- confirm `internal` symbols aren't leaking via inline / reified APIs
+- pin the surface area we're committing to for `0.1.0-alpha01`
+- record findings inline in `.planning/library-sanity-checks.md`
 
 Session 54 (Canonical Host Integration Example) is still queued from
 `.planning/first-release-readiness.md` and should run after the sanity-checks

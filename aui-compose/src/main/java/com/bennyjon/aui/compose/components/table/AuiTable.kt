@@ -25,10 +25,14 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.components.text.AuiHeading
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -284,7 +288,12 @@ private fun RatingStarsCell(cell: TableCell) {
 private fun ReadonlyRatingStars(value: Float, max: Int = 5) {
     val theme = LocalAuiTheme.current
     val clamped = value.coerceIn(0f, max.toFloat())
-    Row(horizontalArrangement = Arrangement.spacedBy(theme.spacing.tableRatingStarGap)) {
+    val formatted = if (clamped % 1f == 0f) clamped.toInt().toString() else clamped.toString()
+    val description = stringResource(R.string.aui_table_rating_stars_content_description, formatted, max)
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(theme.spacing.tableRatingStarGap),
+        modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = description },
+    ) {
         for (i in 1..max) {
             val fillFraction = (clamped - (i - 1)).coerceIn(0f, 1f)
             Box(modifier = Modifier.size(theme.spacing.tableRatingStarSize)) {

@@ -35,6 +35,47 @@
     <!-- AuiInputRatingStars accessibility description for each star icon. -->
     <string name="aui_input_rating_star_content_description">Star %1$d</string>
 
+    <!-- AuiInputRatingStars grouped TalkBack announcement (e.g. "Rated 3 of 5 stars"). -->
+    <string name="aui_input_rating_announce_rated">Rated %1$d of %2$d stars</string>
+    <string name="aui_input_rating_announce_unrated">Not rated, %1$d stars available</string>
+    <!-- Custom action label for rate-N (e.g. "Rate 3 stars"). -->
+    <plurals name="aui_input_rating_action_rate">
+        <item quantity="one">Rate %1$d star</item>
+        <item quantity="other">Rate %1$d stars</item>
+    </plurals>
+
+    <!-- AuiTable read-only rating-stars accessibility description (e.g. "4.5 of 5 stars"). -->
+    <string name="aui_table_rating_stars_content_description">%1$s of %2$d stars</string>
+
+    <!-- AuiBadge*/AuiStatusBanner* TalkBack prefixes that name the intent. -->
+    <string name="aui_status_intent_success">Success</string>
+    <string name="aui_status_intent_info">Information</string>
+    <string name="aui_status_intent_warning">Warning</string>
+    <string name="aui_status_intent_error">Error</string>
+    <!-- "Success: 3 of 3 completed" — joins intent and message text. -->
+    <string name="aui_status_announce">%1$s: %2$s</string>
+
+    <!-- AuiChart TalkBack summary. Variants: bar / line / pie. -->
+    <string name="aui_chart_variant_bar">Bar chart</string>
+    <string name="aui_chart_variant_line">Line chart</string>
+    <string name="aui_chart_variant_pie">Pie chart</string>
+    <!-- "Bar chart: Quarterly revenue. Series: …" -->
+    <string name="aui_chart_announce_titled">%1$s: %2$s. %3$s</string>
+    <string name="aui_chart_announce_untitled">%1$s. %2$s</string>
+    <string name="aui_chart_axis_labels">X axis %1$s, Y axis %2$s.</string>
+    <string name="aui_chart_series_label">Series %1$s: %2$s</string>
+    <string name="aui_chart_pie_slice">%1$s %2$s</string>
+    <string name="aui_chart_point">%1$s %2$s</string>
+    <string name="aui_chart_empty">No data</string>
+
+    <!-- AuiStepperHorizontal TalkBack summary (e.g. "Step 2 of 3: Features. 1 step remaining"). -->
+    <string name="aui_stepper_announce">Step %1$d of %2$d: %3$s. %4$s</string>
+    <string name="aui_stepper_announce_complete">%1$d of %1$d steps complete: %2$s</string>
+    <plurals name="aui_stepper_remaining">
+        <item quantity="one">%1$d step remaining</item>
+        <item quantity="other">%1$d steps remaining</item>
+    </plurals>
+
     <!-- AuiFileContent action labels and download notices. -->
     <string name="aui_file_default_headline">File</string>
     <string name="aui_file_action_download">Download file</string>

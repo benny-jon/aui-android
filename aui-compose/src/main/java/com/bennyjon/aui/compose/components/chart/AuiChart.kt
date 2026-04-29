@@ -26,6 +26,9 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -37,6 +40,7 @@ import androidx.compose.ui.unit.Constraints
 import com.bennyjon.aui.compose.theme.AuiTheme
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
+import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.core.model.data.ChartData
 import com.bennyjon.aui.core.model.data.ChartPoint
 import com.bennyjon.aui.core.model.data.ChartSeries
@@ -62,9 +66,12 @@ internal fun AuiChart(
     val theme = LocalAuiTheme.current
     val textMeasurer = rememberTextMeasurer()
     val palette = remember(theme) { seriesPalette(theme) }
+    val a11yDescription = chartContentDescription(data)
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clearAndSetSemantics { contentDescription = a11yDescription },
         verticalArrangement = Arrangement.spacedBy(theme.spacing.xSmall),
     ) {
         data.title?.takeIf { it.isNotBlank() }?.let { title ->
@@ -157,6 +164,69 @@ private fun ChartLegend(
         }
     }
 }
+
+@Composable
+private fun chartContentDescription(data: ChartData): String {
+    val variant = when (data.variant) {
+        ChartVariant.Bar -> stringResource(R.string.aui_chart_variant_bar)
+        ChartVariant.Line -> stringResource(R.string.aui_chart_variant_line)
+        ChartVariant.Pie -> stringResource(R.string.aui_chart_variant_pie)
+    }
+    val empty = stringResource(R.string.aui_chart_empty)
+    val pieSliceTemplate = stringResource(R.string.aui_chart_pie_slice, "%1\$s", "%2\$s")
+    val seriesTemplate = stringResource(R.string.aui_chart_series_label, "%1\$s", "%2\$s")
+    val pointTemplate = stringResource(R.string.aui_chart_point, "%1\$s", "%2\$s")
+    val axisPrefixTemplate = stringResource(R.string.aui_chart_axis_labels, "%1\$s", "%2\$s")
+    val titledTemplate = stringResource(R.string.aui_chart_announce_titled, "%1\$s", "%2\$s", "%3\$s")
+    val untitledTemplate = stringResource(R.string.aui_chart_announce_untitled, "%1\$s", "%2\$s")
+
+    val body = when (data.variant) {
+        ChartVariant.Pie -> {
+            val total = data.series.sumOf { it.values.sumOf { p -> p.y.toDouble() } }.toFloat()
+            val parts = data.series.flatMap { series ->
+                series.values.map { point ->
+                    val label = if (series.values.size == 1) series.label else point.x
+                    val display = if (total > 0f) {
+                        val pct = point.y / total * 100f
+                        "${formatNumber(point.y)} (${"%.0f".format(pct)}%)"
+                    } else {
+                        formatNumber(point.y)
+                    }
+                    pieSliceTemplate.format(label, display)
+                }
+            }
+            if (parts.isEmpty()) empty else parts.joinToString(", ")
+        }
+
+        else -> {
+            val seriesParts = data.series.map { series ->
+                val pointsText = if (series.values.isEmpty()) {
+                    empty
+                } else {
+                    series.values.joinToString(", ") { point ->
+                        pointTemplate.format(point.x, formatNumber(point.y))
+                    }
+                }
+                seriesTemplate.format(series.label, pointsText)
+            }
+            val axisPrefix = if (!data.xLabel.isNullOrBlank() && !data.yLabel.isNullOrBlank()) {
+                axisPrefixTemplate.format(data.xLabel, data.yLabel) + " "
+            } else {
+                ""
+            }
+            axisPrefix + (if (seriesParts.isEmpty()) empty else seriesParts.joinToString(". "))
+        }
+    }
+    val title = data.title?.takeIf { it.isNotBlank() }
+    return if (title != null) {
+        titledTemplate.format(variant, title, body)
+    } else {
+        untitledTemplate.format(variant, body)
+    }
+}
+
+private fun formatNumber(value: Float): String =
+    if (value % 1f == 0f) value.toInt().toString() else "%.2f".format(value)
 
 private fun legendItems(data: ChartData): List<String> {
     if (data.variant != ChartVariant.Pie) {

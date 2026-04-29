@@ -1,16 +1,17 @@
 package com.bennyjon.aui.compose.components.input
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -29,6 +30,7 @@ internal fun SelectionRow(
     description: String?,
     indicator: @Composable () -> Unit,
     onClick: () -> Unit,
+    role: Role,
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalAuiTheme.current
@@ -37,7 +39,7 @@ internal fun SelectionRow(
         modifier = modifier
             .fillMaxWidth()
             .background(background)
-            .clickable(onClick = onClick)
+            .selectable(selected = selected, role = role, onClick = onClick)
             .padding(horizontal = theme.spacing.medium, vertical = theme.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {

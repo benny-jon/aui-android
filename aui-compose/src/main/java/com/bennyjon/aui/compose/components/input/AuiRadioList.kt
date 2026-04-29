@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
 import com.bennyjon.aui.compose.theme.AuiThemeProvider
@@ -71,6 +72,7 @@ fun AuiRadioList(
                     selected = isSelected,
                     label = option.label,
                     description = option.description,
+                    role = Role.RadioButton,
                     indicator = {
                         RadioButton(
                             selected = isSelected,
