@@ -305,6 +305,37 @@ Exit criteria:
 - Demo release build with R8 enabled renders the canonical responses without
   reflection-related crashes.
 
+Findings (executed 2026-04-29):
+- Both library modules already exported `consumerProguardFiles("consumer-rules.pro")`
+  from `defaultConfig`, but the files were empty. That was sufficient for
+  library self-builds, not for documenting or protecting the public
+  `@Serializable` surface consumed by host apps.
+- `aui-core` now ships explicit consumer keep rules for its public
+  `kotlinx.serialization` model surface under
+  `com.bennyjon.aui.core.model.**` and `.model.data.**`. The rules preserve
+  `Companion` serializer accessors plus generated `$$serializer` classes so
+  host apps that encode/decode `AuiResponse`, `AuiBlock`, `AuiFeedback`, and
+  related public data classes from their own minified code paths keep working.
+- `aui-compose` intentionally still has no extra keep directives; its
+  `consumer-rules.pro` now documents that the module does not perform
+  reflective serializer lookup and instead relies on the transitive `aui-core`
+  consumer rules for the public AUI models. Plugin serializers are supplied
+  explicitly by host code via `AuiComponentPlugin.dataSerializer`, so there is
+  no additional library-owned shrinker contract there.
+- The demo app release build now has `isMinifyEnabled = true`, making the
+  release path exercise R8 instead of only assembling an unshrunk APK.
+- Verification:
+  `./gradlew :aui-core:assembleRelease`,
+  `./gradlew :aui-compose:assembleRelease`, and
+  `./gradlew :demo:assembleRelease` all passed. The demo build completed
+  `:demo:minifyReleaseWithR8` successfully, which confirms the consumer keep
+  rules merge cleanly into a real minified host build with the library on the
+  classpath.
+- Limitation: this session validated the minified release build path and
+  shrinker integration, but did not run a device-side release UI smoke test in
+  this session. No reflection- or serializer-related build/runtime issues were
+  surfaced by R8.
+
 ---
 
 ## Session S6 — Dependencies & manifest hygiene

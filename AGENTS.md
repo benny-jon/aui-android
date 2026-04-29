@@ -35,19 +35,18 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S4 — Public API surface review**. Public
-  host/plugin surface pinned for `0.1.0-alpha01`; no inline / reified /
-  `@PublishedApi` leakage found; `parseInlineMarkdown`,
-  `splitMarkdownBlocks`, `MarkdownSegment`, `DisplayRouter`, and the internal
-  content-color locals were reduced to `internal`; `AuiTheme`, `AuiColors`,
-  `AuiTypography`, `AuiSpacing`, and `AuiShapes` now carry `@Immutable`.
-  Findings recorded in `.planning/library-sanity-checks.md`. Verified with
-  `./gradlew :aui-compose:compileDebugKotlin`,
-  `./gradlew :aui-compose:testDebugUnitTest`, and
-  `./gradlew :demo:compileDebugKotlin`.
-- Next recommended task: Sanity-checks **S5 — R8 / ProGuard / serialization
-  keep rules**: verify consumer rules are sufficient and run a minified
-  release-build smoke check before first tag.
+- Last completed: Sanity-checks **S5 — R8 / ProGuard / serialization keep
+  rules**. `aui-core` now ships consumer keep rules for its public
+  `kotlinx.serialization` model surface; `aui-compose` explicitly documents
+  that it needs no extra consumer rules beyond transitive `aui-core`; and the
+  demo release build now runs with `minifyEnabled = true`. Findings recorded
+  in `.planning/library-sanity-checks.md`. Verified with
+  `./gradlew :aui-core:assembleRelease`,
+  `./gradlew :aui-compose:assembleRelease`, and
+  `./gradlew :demo:assembleRelease` including `:demo:minifyReleaseWithR8`.
+- Next recommended task: Sanity-checks **S6 — Dependencies & manifest hygiene**:
+  audit `api` vs `implementation`, manifests, `namespace`, `minSdk`, and add
+  `android.resourcePrefix = "aui_"` to both library modules if still missing.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -85,11 +84,11 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S5 — R8 / ProGuard / serialization keep rules** from
+Run **Sanity-checks Session S6 — Dependencies & manifest hygiene** from
 `.planning/library-sanity-checks.md`:
-- verify both modules ship correct consumer keep rules
-- confirm release/minified hosts won't hit serialization or reflection crashes
-- run a release-build smoke test with minification enabled
+- audit `api` vs `implementation` in `aui-core` and `aui-compose`
+- verify manifests stay minimal and library-safe
+- confirm `namespace` / `minSdk` / resource-prefix hygiene
 - record findings inline in `.planning/library-sanity-checks.md`
 
 Session 54 (Canonical Host Integration Example) is still queued from
