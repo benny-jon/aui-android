@@ -1,7 +1,12 @@
 # AUI Android
 
-> **🚧 Work in Progress — Not ready for production use.**
-> This library is under active development and has **not been published to Maven Central** yet. APIs may change without notice. Feel free to explore the code and the demo app, but do not add it as a dependency in your project.
+> **🚧 Pre-release — first publish pending.**
+> Coordinates and version are locked: `com.bennyjon:aui-compose:0.1.0-alpha01`,
+> targeting Maven Central. Publishing is wired up in Gradle but the first release
+> has not yet been pushed. APIs are pre-1.0 and may change between alpha
+> versions. Until the artifact is live, consume the library as a source dependency
+> from this repository — see [Quick Start](#quick-start). Track release blockers in
+> [`.planning/release-checklist.md`](.planning/release-checklist.md).
 
 An open-source Kotlin library for rendering AI-driven interactive UI in Jetpack Compose.
 
@@ -215,15 +220,31 @@ The library is a **pure renderer with a callback**. It does not manage chat hist
 
 ### 1. Add the dependency
 
+Once `0.1.0-alpha01` is published to Maven Central:
+
 ```kotlin
-// build.gradle.kts (current state: consume from source)
+// build.gradle.kts
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.bennyjon:aui-compose:0.1.0-alpha01")
+}
+```
+
+`aui-compose` transitively depends on `aui-core`, so a single line is enough.
+
+**Until the first artifact ships,** consume the library as a source dependency
+from this repository. Either include the modules via Gradle's
+[composite build](https://docs.gradle.org/current/userguide/composite_builds.html)
+feature, or copy `aui-core` and `aui-compose` into your project and add:
+
+```kotlin
 dependencies {
     implementation(project(":aui-compose"))
 }
 ```
-
-The Maven coordinates are not live yet. Until publishing is set up, use the repo
-as a source dependency or copy the modules into your build.
 
 ### 2. Render AI responses
 

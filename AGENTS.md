@@ -28,20 +28,30 @@ Do not treat `.planning/archive/` as current execution guidance.
 
 ## Current Status
 
-- Current phase: Phase 5, Live Chat Demo
-- Goal: add a demo chat flow that talks to real LLM providers end-to-end while
-  keeping the library itself a pure renderer
-- Current phase plan: `.planning/phase5-live-chat.md`
-- Next recommended task: polish live chat UX and documentation
-- Known blockers: none recorded
+- Current phase: First Release Readiness (Sessions 53–58)
+- Goal: prepare AUI Android for its first external release as a usable,
+  documented, test-backed library
+- Current phase plan: `.planning/first-release-readiness.md`
+- Release mechanics tracker: `.planning/release-checklist.md`
+- Last completed: Session 53 — Maven Central distribution path locked,
+  `vanniktech-maven-publish` scaffolded in `aui-core` and `aui-compose`,
+  README install snippet sharpened
+- Next recommended task: Session 54 — Canonical Host Integration Example
+- Known blockers: first publish blocked on Sonatype namespace verification +
+  GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
 
 ## Current Direction
 
-Phase 5 work is focused on the `demo` module:
-- provider-neutral `LlmClient` integration
-- Room-backed chat persistence
-- live chat UI and provider switching
+Release-readiness work is focused on tightening the library for adopters:
+- canonical host integration example in docs
+- error-handling / fallback contract documentation
+- release-confidence renderer tests
+- publishing mechanics + release checklist
+
+Phase 5 (live chat demo) is feature-complete for first-release purposes;
+further demo polish is fair game only when it sharpens the host integration
+story.
 
 Library-level changes are allowed only when they are intrinsic to the renderer
 or response model, not chat-product features.
@@ -57,14 +67,20 @@ or response model, not chat-product features.
   Settings screen for prompt/debug inspection.
 - Public docs are synced through 2026-04-25, including `docs/livechat.md`, and
   CI includes separate unit-test and compile-check workflows.
+- Maven publishing is scaffolded via `vanniktech-maven-publish` for `aui-core`
+  and `aui-compose`. Coordinates: `com.bennyjon:aui-{core,compose}:0.1.0-alpha01`.
+  Generated POMs validated locally; first publish gated on owner-side Sonatype
+  + GPG setup.
 
 ## Next Task
 
-Polish the live chat demo and update docs:
-- spinner
-- clear confirmation dialog
-- snackbar on provider switch
-- Phase 5 status/docs sync including `docs/livechat.md`
+Run **Session 54: Canonical Host Integration Example** from
+`.planning/first-release-readiness.md`:
+- add or refine one canonical host integration example showing assistant
+  text-only, assistant text + AUI in one turn, and `onFeedback` routing
+- clarify recommended host-side message model in docs
+- document recommended handling of `EXPANDED` and `SURVEY` responses
+- keep examples aligned with current public API only
 
 ## Constraints
 
