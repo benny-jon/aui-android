@@ -7,12 +7,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.ButtonPrimaryData
 
 /**
  * Renders a `button_primary` block.
@@ -27,13 +25,13 @@ fun AuiButtonPrimary(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
+    val renderState = LocalAuiRenderState.current
     Button(
         onClick = {
             block.feedback?.let { feedback ->
                 // Merge registry values into params so the AI receives all user inputs.
                 // Explicit feedback.params (poll_id, step, etc.) take priority over registry.
-                val allParams = registry.value + feedback.params
+                val allParams = renderState.inputValues + feedback.params
                 onFeedback(feedback.copy(params = allParams))
             }
         },

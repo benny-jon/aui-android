@@ -8,12 +8,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
-import com.bennyjon.aui.compose.theme.AuiThemeProvider
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
-import com.bennyjon.aui.core.model.data.ButtonSecondaryData
 
 /**
  * Renders a `button_secondary` block.
@@ -28,11 +26,11 @@ fun AuiButtonSecondary(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
+    val renderState = LocalAuiRenderState.current
     OutlinedButton(
         onClick = {
             block.feedback?.let { feedback ->
-                val allParams = registry.value + feedback.params
+                val allParams = renderState.inputValues + feedback.params
                 onFeedback(feedback.copy(params = allParams))
             }
         },

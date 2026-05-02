@@ -10,7 +10,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -32,8 +32,8 @@ fun AuiChipSelectMulti(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
-    val selectedValues = decodeUiStateValues(registry.value.uiStateValue(block.data.key))
+    val renderState = LocalAuiRenderState.current
+    val selectedValues = decodeUiStateValues(renderState.uiState(block.data.key))
         .ifEmpty { block.data.selected.toSet() }
 
     Column(modifier = modifier) {
@@ -59,9 +59,11 @@ fun AuiChipSelectMulti(
                             .filter { it.value in newValues }
                             .joinToString(", ") { it.label }
                         val joinedValues = newValues.joinToString(", ")
-                        registry.value = registry.value
-                            .updateValue(block.data.key, joinedLabels.ifBlank { null })
-                            .updateUiStateValue(block.data.key, encodeUiStateValues(newValues))
+                        renderState.setInputState(
+                            key = block.data.key,
+                            value = joinedLabels.ifBlank { null },
+                            uiStateValue = encodeUiStateValues(newValues),
+                        )
                         block.feedback?.let { feedback ->
                             val updatedParams = feedback.params + mapOf(block.data.key to joinedValues)
                             onFeedback(feedback.copy(params = updatedParams))

@@ -1,17 +1,26 @@
 package com.bennyjon.aui.compose.display
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodes
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bennyjon.aui.compose.AuiRenderState
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.model.AuiResponse
 import com.bennyjon.aui.core.model.AuiStep
+import com.bennyjon.aui.core.model.data.HeadingData
+import com.bennyjon.aui.core.model.data.InputTextSingleData
 import com.bennyjon.aui.core.model.data.RadioListData
 import com.bennyjon.aui.core.model.data.SelectionOption
 import org.junit.Assert.assertEquals
@@ -47,6 +56,21 @@ class AuiSurveyContentUiTest {
     private val option2b = "Tablet"
     private val option3a = "Friend"
     private val option3b = "Search"
+
+    private fun inlineTextInputResponse(): AuiResponse = AuiResponse(
+        display = AuiDisplay.INLINE,
+        blocks = listOf(
+            AuiBlock.Heading(data = HeadingData(text = "Your name")),
+            AuiBlock.InputTextSingle(
+                data = InputTextSingleData(
+                    key = "name",
+                    label = "Name",
+                    submitLabel = "Apply",
+                ),
+                feedback = AuiFeedback(action = "submit_name"),
+            ),
+        ),
+    )
 
     private fun threeStepSurvey(): AuiResponse = AuiResponse(
         display = AuiDisplay.SURVEY,
@@ -279,5 +303,91 @@ class AuiSurveyContentUiTest {
         assertEquals(option1a, feedback.entries[0].answer)
         assertEquals(option2a, feedback.entries[1].answer)
         assertEquals(option3b, feedback.entries[2].answer)
+    }
+
+    @Test
+    fun sharedRenderState_preservesSurveyProgressAcrossRemount() {
+        val state = AuiRenderState()
+
+        composeTestRule.setContent {
+            AuiRenderer(
+                response = threeStepSurvey(),
+                state = state,
+                onFeedback = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag(SurveyTestTags.NEXT).performClick()
+        composeTestRule.onNodeWithText(question2).assertIsDisplayed()
+
+        composeTestRule.setContent {
+            AuiRenderer(
+                response = threeStepSurvey(),
+                state = state,
+                onFeedback = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText(question2).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(SurveyTestTags.BACK).assertIsDisplayed()
+    }
+
+    @Test
+    fun sharedRenderState_syncsInputValuesAcrossDuplicateSurfaces() {
+        val state = AuiRenderState()
+        val feedbacks = mutableListOf<AuiFeedback>()
+
+        composeTestRule.setContent {
+            Column {
+                AuiRenderer(
+                    response = inlineTextInputResponse(),
+                    state = state,
+                    onFeedback = { feedbacks.add(it) },
+                )
+                AuiRenderer(
+                    response = inlineTextInputResponse(),
+                    state = state,
+                    onFeedback = { feedbacks.add(it) },
+                )
+            }
+        }
+
+        composeTestRule.onAllNodes(hasSetTextAction()).assertCountEquals(2)
+        composeTestRule.onAllNodes(hasSetTextAction())[0].performTextInput("Alice")
+        composeTestRule.onAllNodesWithText("Apply")[1].performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, feedbacks.size)
+        assertEquals("Alice", feedbacks.single().params["name"])
+    }
+
+    @Test
+    fun separateRenderState_isolatesInputValuesAcrossDuplicateSurfaces() {
+        val leftState = AuiRenderState()
+        val rightState = AuiRenderState()
+        val feedbacks = mutableListOf<AuiFeedback>()
+
+        composeTestRule.setContent {
+            Column {
+                AuiRenderer(
+                    response = inlineTextInputResponse(),
+                    state = leftState,
+                    onFeedback = { feedbacks.add(it) },
+                )
+                AuiRenderer(
+                    response = inlineTextInputResponse(),
+                    state = rightState,
+                    onFeedback = { feedbacks.add(it) },
+                )
+            }
+        }
+
+        composeTestRule.onAllNodes(hasSetTextAction()).assertCountEquals(2)
+        composeTestRule.onAllNodes(hasSetTextAction())[0].performTextInput("Alice")
+        composeTestRule.onAllNodesWithText("Apply")[1].performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, feedbacks.size)
+        assertEquals("", feedbacks.single().params["name"])
     }
 }

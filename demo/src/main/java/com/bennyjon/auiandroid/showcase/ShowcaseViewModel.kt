@@ -2,6 +2,7 @@ package com.bennyjon.auiandroid.showcase
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.bennyjon.aui.compose.AuiRenderState
 import com.bennyjon.aui.core.AuiParser
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,9 +32,14 @@ class ShowcaseViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val _entries = MutableStateFlow<List<ShowcaseEntry>>(emptyList())
+    private val rendererStates = mutableMapOf<String, AuiRenderState>()
 
     /** The parsed list of showcase entries. */
     val entries: StateFlow<List<ShowcaseEntry>> = _entries.asStateFlow()
+
+    /** Returns the explicit renderer state for a showcase entry label. */
+    fun renderStateFor(entryLabel: String): AuiRenderState =
+        rendererStates.getOrPut(entryLabel) { AuiRenderState() }
 
     private val json = Json { ignoreUnknownKeys = true }
     private val prettyJson = Json {

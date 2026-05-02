@@ -9,7 +9,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -30,9 +30,9 @@ fun AuiInputSlider(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
+    val renderState = LocalAuiRenderState.current
     val data = block.data
-    val sliderValue = registry.value.uiStateValue(data.key)?.toFloatOrNull() ?: (data.value ?: data.min)
+    val sliderValue = renderState.uiState(data.key)?.toFloatOrNull() ?: (data.value ?: data.min)
 
     val step = data.step
     val steps = if (step != null && step > 0f) {
@@ -71,10 +71,12 @@ fun AuiInputSlider(
                 } else {
                     "%.1f".format(it)
                 }
-                registry.value = registry.value
-                    .updateUiStateValue(data.key, it.toString())
-                    .updateValue(data.key, valueText)
-                    .updateValue("value", valueText)
+                renderState.setInputState(
+                    key = data.key,
+                    value = valueText,
+                    uiStateValue = it.toString(),
+                )
+                renderState.setValue("value", valueText)
             },
             valueRange = data.min..data.max,
             steps = steps,

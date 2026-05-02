@@ -542,6 +542,33 @@ Success criteria:
 - Demo integrations no longer need complicated renderer save-state key routing
   for the same logical message.
 
+Findings (executed 2026-04-29):
+- Added a new public `AuiRenderState` state holder in `aui-compose` plus
+  `rememberAuiRenderState()` for simple composable-owned usage. `AuiRenderer`
+  now accepts `state: AuiRenderState = rememberAuiRenderState()` on both the
+  JSON and parsed-response overloads, making renderer identity explicit at the
+  API boundary.
+- Removed the temporary internal saveable persistence added in S8 from
+  `DisplayRouter`, `BlockRenderer`, and `AuiSurveyContent`. Renderer input
+  registry data and survey step progress now live in the passed
+  `AuiRenderState` instead of hidden `rememberSaveable` registries or subtree
+  identity tricks.
+- Updated the survey shell to treat progress as host-owned state: passing the
+  same `AuiRenderState` preserves step index and collected answers across
+  remounts, while passing a fresh state resets the flow.
+- Simplified the demo integrations by deleting the `SaveableStateHolder`
+  plumbing in `LiveChatScreen` and `ShowcaseScreen`. Both hosts now supply
+  explicit per-message / per-entry renderer state objects keyed by logical
+  response identity via their view models.
+- Added host-facing docs to `README.md` describing the intended "one
+  `AuiRenderState` per logical response/message id" pattern.
+- Verification:
+  - new UI coverage in `AuiSurveyContentUiTest` confirms shared state survives
+    survey remounts and syncs across duplicate surfaces, while separate states
+    remain isolated
+  - `./gradlew :aui-compose:compileDebugKotlin`
+  - `./gradlew :aui-compose:testDebugUnitTest`
+
 ---
 
 ## Session S9 — Build artifact inspection

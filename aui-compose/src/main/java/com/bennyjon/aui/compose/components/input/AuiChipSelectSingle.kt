@@ -10,7 +10,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiBodyColor
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
@@ -32,8 +32,8 @@ fun AuiChipSelectSingle(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
-    val selectedValue = registry.value.uiStateValue(block.data.key) ?: block.data.selected
+    val renderState = LocalAuiRenderState.current
+    val selectedValue = renderState.uiState(block.data.key) ?: block.data.selected
 
     Column(modifier = modifier) {
         block.data.label?.let { label ->
@@ -53,9 +53,11 @@ fun AuiChipSelectSingle(
                 FilterChip(
                     selected = isSelected,
                     onClick = {
-                        registry.value = registry.value
-                            .updateValue(block.data.key, option.label)
-                            .updateUiStateValue(block.data.key, option.value)
+                        renderState.setInputState(
+                            key = block.data.key,
+                            value = option.label,
+                            uiStateValue = option.value,
+                        )
                         block.feedback?.let { feedback ->
                             val updatedParams = feedback.params + mapOf(block.data.key to option.value)
                             onFeedback(feedback.copy(params = updatedParams))

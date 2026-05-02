@@ -14,8 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui_compose.R
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -35,8 +35,8 @@ fun AuiInputTextSingle(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
-    val text = registry.value.uiStateValue(block.data.key) ?: registry.value[block.data.key].orEmpty()
+    val renderState = LocalAuiRenderState.current
+    val text = renderState.uiState(block.data.key) ?: renderState.value(block.data.key).orEmpty()
 
     Column(modifier = modifier) {
         Text(
@@ -49,9 +49,10 @@ fun AuiInputTextSingle(
             OutlinedTextField(
                 value = text,
                 onValueChange = {
-                    registry.value = registry.value
-                        .updateUiStateValue(block.data.key, it.ifBlank { null })
-                        .updateValue(block.data.key, it.ifBlank { null })
+                    renderState.setInputState(
+                        key = block.data.key,
+                        value = it.ifBlank { null },
+                    )
                 },
                 placeholder = block.data.placeholder?.let {
                     { Text(text = it, style = theme.typography.body) }

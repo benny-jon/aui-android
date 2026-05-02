@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -34,8 +34,8 @@ fun AuiCheckboxList(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
-    val selectedValues = decodeUiStateValues(registry.value.uiStateValue(block.data.key))
+    val renderState = LocalAuiRenderState.current
+    val selectedValues = decodeUiStateValues(renderState.uiState(block.data.key))
         .ifEmpty { block.data.selected.toSet() }
 
     Column(modifier = modifier) {
@@ -83,9 +83,11 @@ fun AuiCheckboxList(
                             .filter { it.value in newValues }
                             .joinToString(", ") { it.label }
                         val joinedValues = newValues.joinToString(", ")
-                        registry.value = registry.value
-                            .updateValue(block.data.key, joinedLabels.ifBlank { null })
-                            .updateUiStateValue(block.data.key, encodeUiStateValues(newValues))
+                        renderState.setInputState(
+                            key = block.data.key,
+                            value = joinedLabels.ifBlank { null },
+                            uiStateValue = encodeUiStateValues(newValues),
+                        )
                         block.feedback?.let { feedback ->
                             val updatedParams = feedback.params + mapOf(block.data.key to joinedValues)
                             onFeedback(feedback.copy(params = updatedParams))

@@ -3,11 +3,8 @@ package com.bennyjon.aui.compose.display
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import com.bennyjon.aui.compose.components.input.RegistryStateSaver
+import com.bennyjon.aui.compose.AuiRenderState
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiDisplay
@@ -53,6 +50,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
 internal fun DisplayRouter(
     response: AuiResponse,
     modifier: Modifier = Modifier,
+    state: AuiRenderState,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
     collectingFeedbackEnabled: Boolean = true,
@@ -65,6 +63,7 @@ internal fun DisplayRouter(
                 surveyTitle = response.surveyTitle,
                 onSubmit = onFeedback,
                 modifier = modifier,
+                state = state,
                 pluginRegistry = pluginRegistry,
                 onStepFeedback = onFeedback,
                 onUnknownBlock = onUnknownBlock,
@@ -76,16 +75,13 @@ internal fun DisplayRouter(
             // Shared registry so all inputs across both split renderers are visible to
             // buildEntriesFromBlocks. allBlocksForEntries = response.blocks ensures headings in
             // bubbleBlocks are correctly associated with inputs in contentBlocks.
-            val sharedRegistry = rememberSaveable(saver = RegistryStateSaver) {
-                mutableStateOf(emptyMap<String, String>())
-            }
             Column(modifier = modifier.fillMaxWidth()) {
                 if (bubbleBlocks.isNotEmpty()) {
                     BlockRenderer(
                         blocks = bubbleBlocks,
+                        renderState = state,
                         pluginRegistry = pluginRegistry,
                         onFeedback = onFeedback,
-                        registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
                         collectingFeedbackEnabled = collectingFeedbackEnabled,
                         onUnknownBlock = onUnknownBlock,
@@ -94,10 +90,10 @@ internal fun DisplayRouter(
                 if (contentBlocks.isNotEmpty()) {
                     BlockRenderer(
                         blocks = contentBlocks,
+                        renderState = state,
                         modifier = Modifier.fillMaxWidth(),
                         pluginRegistry = pluginRegistry,
                         onFeedback = onFeedback,
-                        registryOverride = sharedRegistry,
                         allBlocksForEntries = response.blocks,
                         collectingFeedbackEnabled = collectingFeedbackEnabled,
                         onUnknownBlock = onUnknownBlock,

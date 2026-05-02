@@ -35,14 +35,13 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S8 — Compose-specific correctness**. Made
-  `SurveyFlowState` saveable across configuration changes, switched
-  library-owned input widgets to `rememberSaveable`, re-synced restored values
-  back into the shared feedback registry via keyed `LaunchedEffect`, confirmed
-  `LocalContext` is not captured in remembered lambdas, and moved preview-only
-  code out of `src/main` by putting `ui-tooling-preview` behind
-  `debugImplementation` with debug-only preview entry points. Findings recorded
-  in `.planning/library-sanity-checks.md`. Verified with
+- Last completed: Sanity-checks **S8b — explicit host-owned renderer state**.
+  Added public `AuiRenderState` + `rememberAuiRenderState()` to `aui-compose`,
+  routed renderer input/survey state through that explicit object, removed the
+  temporary `SaveableStateHolder`/internal saveable-registry plumbing from the
+  demo and renderer internals, and documented the "one render state per logical
+  response/message id" host pattern in `README.md`. Findings recorded in
+  `.planning/library-sanity-checks.md`. Verified with
   `./gradlew :aui-compose:testDebugUnitTest` and
   `./gradlew :aui-compose:compileDebugKotlin`.
 - Next recommended task: Sanity-checks **S9 — Build artifact inspection**:
@@ -52,11 +51,7 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
-- Follow-up queued: **S8b — explicit host-owned renderer state**. Session S8's
-  restore work improved configuration-change behavior, but the long-term fix
-  should replace demo/library saveable-state plumbing with a host-supplied
-  renderer state object keyed by logical response/message id. See
-  `.planning/library-sanity-checks.md`.
+- Follow-up queued: none.
 
 ## Current Direction
 

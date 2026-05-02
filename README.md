@@ -166,6 +166,9 @@ AuiRenderer(
 ```
 
 The library is a **pure renderer with a callback**. It does not manage chat history, conversation state, networking, or message models — those are your app's domain.
+For interactive responses, keep one `AuiRenderState` per logical response/message id and pass it
+back into `AuiRenderer` anywhere that same response is shown. That lets input values and survey
+progress survive remounts and stay in sync across inline, sheet, and detail-pane surfaces.
 
 ## Quick Start
 
@@ -203,13 +206,14 @@ dependencies {
 @Composable
 fun AiMessageBubble(auiJson: String?) {
     auiJson?.let { json ->
-        AuiRenderer(
-            json = json,
-            theme = AuiTheme.fromMaterialTheme(),
-            onFeedback = { feedback ->
-                // feedback.action — machine-readable action name
-                // feedback.formattedEntries — human-readable Q&A summary
-                // feedback.params — structured key-value data
+AuiRenderer(
+    json = json,
+    state = messageRenderState,
+    theme = AuiTheme.fromMaterialTheme(),
+    onFeedback = { feedback ->
+        // feedback.action — machine-readable action name
+        // feedback.formattedEntries — human-readable Q&A summary
+        // feedback.params — structured key-value data
                 viewModel.handleFeedback(feedback)
             }
         )
@@ -218,6 +222,9 @@ fun AiMessageBubble(auiJson: String?) {
 ```
 
 That's it. Three lines: dependency, `AuiRenderer`, `onFeedback` callback.
+
+Simple cases can use `rememberAuiRenderState()`. Hosts with a ViewModel typically keep
+`Map<messageId, AuiRenderState>` and reuse the same instance for the same response.
 
 ### 3. Include the AUI schema in your AI system prompt
 

@@ -23,7 +23,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import com.bennyjon.aui_compose.R
-import com.bennyjon.aui.compose.internal.LocalAuiValueRegistry
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.theme.LocalAuiCaptionColor
 import com.bennyjon.aui.compose.theme.LocalAuiTheme
 import com.bennyjon.aui.core.model.AuiBlock
@@ -45,14 +45,15 @@ fun AuiInputRatingStars(
     onFeedback: (AuiFeedback) -> Unit = {},
 ) {
     val theme = LocalAuiTheme.current
-    val registry = LocalAuiValueRegistry.current
-    val rating = registry.value.uiStateValue(block.data.key)?.toIntOrNull() ?: (block.data.value ?: 0)
+    val renderState = LocalAuiRenderState.current
+    val rating = renderState.uiState(block.data.key)?.toIntOrNull() ?: (block.data.value ?: 0)
 
     val rate: (Int) -> Unit = { star ->
-        registry.value = registry.value
-            .updateUiStateValue(block.data.key, star.toString())
-            .updateValue(block.data.key, star.toString())
-            .updateValue("value", star.toString())
+        renderState.setInputState(
+            key = block.data.key,
+            value = star.toString(),
+        )
+        renderState.setValue("value", star.toString())
         block.feedback?.let { feedback ->
             val updatedParams = feedback.params + mapOf(block.data.key to star.toString(), "value" to star.toString())
             onFeedback(feedback.copy(params = updatedParams))

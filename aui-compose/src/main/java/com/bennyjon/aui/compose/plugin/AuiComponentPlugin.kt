@@ -2,6 +2,7 @@ package com.bennyjon.aui.compose.plugin
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.core.plugin.AuiPlugin
 import kotlinx.serialization.KSerializer
 
@@ -33,6 +34,10 @@ import kotlinx.serialization.KSerializer
  *     }
  * }
  * ```
+ *
+ * Plugins that need to persist renderer-local UI state can read
+ * [LocalAuiRenderState.current] inside [Render] and store values there. This keeps plugin state
+ * in the same host-owned response-level state object used by built-in components.
  *
  * @param T the data class that models this component's JSON fields.
  *          Must be `@Serializable` with a matching [KSerializer].
@@ -77,6 +82,8 @@ abstract class AuiComponentPlugin<T : Any> : AuiPlugin {
      * @param data the parsed data object (deserialized via [dataSerializer]).
      * @param onFeedback called when the user interacts with the component.
      *        `null` when no feedback is configured for this block.
+     *        Use [LocalAuiRenderState.current] if the component also needs to save or read
+     *        renderer-local UI state.
      * @param modifier the [Modifier] to apply to the root layout.
      */
     @Composable

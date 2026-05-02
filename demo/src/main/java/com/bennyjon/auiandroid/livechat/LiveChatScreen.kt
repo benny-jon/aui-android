@@ -51,9 +51,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,6 +60,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bennyjon.aui.compose.AuiRenderState
 import com.bennyjon.aui.compose.AuiRenderer
 import com.bennyjon.aui.compose.display.AuiResponseCard
 import com.bennyjon.aui.compose.theme.AuiTheme
@@ -135,7 +134,6 @@ fun LiveChatScreen(
     val screenHeightDp = configuration.screenHeightDp.dp
     val isLandscape = screenWidthDp >= screenHeightDp
     val isTwoPane = screenWidthDp >= TwoPaneBreakpointDp && isLandscape && hasExpandedMessage
-    val rendererStateHolder = rememberSaveableStateHolder()
     val singlePaneLandscapeInset by animateDpAsState(
         targetValue = if (!isTwoPane && isLandscape) {
             ((screenWidthDp - SinglePaneLandscapeMinChatWidthDp) / 2).coerceAtLeast(0.dp)
@@ -228,7 +226,7 @@ fun LiveChatScreen(
                         onOpenDetail = viewModel::openDetail,
                         activeDetailMessageId = detailPaneMessage?.id,
                         retryEnabled = canRetryLastMessage && !isSending,
-                        rendererStateHolder = rendererStateHolder,
+                        renderStateForMessage = viewModel::renderStateFor,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -239,7 +237,7 @@ fun LiveChatScreen(
                         pluginRegistry = pluginRegistry,
                         auiTheme = auiTheme,
                         onFeedback = viewModel::onFeedback,
-                        rendererStateHolder = rendererStateHolder,
+                        renderStateForMessage = viewModel::renderStateFor,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -256,7 +254,7 @@ fun LiveChatScreen(
                     onOpenDetail = viewModel::openDetail,
                     activeDetailMessageId = null,
                     retryEnabled = canRetryLastMessage && !isSending,
-                    rendererStateHolder = rendererStateHolder,
+                    renderStateForMessage = viewModel::renderStateFor,
                     horizontalInset = singlePaneLandscapeInset,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -277,7 +275,7 @@ fun LiveChatScreen(
                             viewModel.closeDetail()
                         }
                     },
-                    rendererStateHolder = rendererStateHolder,
+                    renderStateForMessage = viewModel::renderStateFor,
                     onDismiss = viewModel::closeDetail,
                 )
             }
@@ -296,7 +294,7 @@ private fun ChatList(
     onOpenDetail: (String) -> Unit,
     activeDetailMessageId: String?,
     retryEnabled: Boolean,
-    rendererStateHolder: SaveableStateHolder,
+    renderStateForMessage: (String) -> AuiRenderState,
     horizontalInset: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
@@ -335,7 +333,7 @@ private fun ChatList(
                     isActiveDetail = message.id == activeDetailMessageId,
                     onRetry = onRetry,
                     retryEnabled = retryEnabled,
-                    rendererStateHolder = rendererStateHolder,
+                    renderStateForMessage = renderStateForMessage,
                 )
             }
         }
@@ -392,7 +390,7 @@ private fun DetailPane(
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
     onFeedback: (AuiFeedback) -> Unit,
-    rendererStateHolder: SaveableStateHolder,
+    renderStateForMessage: (String) -> AuiRenderState,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -431,18 +429,17 @@ private fun DetailPane(
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
-            rendererStateHolder.SaveableStateProvider(key = "renderer:${message.id}") {
-                AuiRenderer(
-                    response = response,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    theme = auiTheme,
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = onFeedback,
-                    collectingFeedbackEnabled = !message.isAuiSpent,
-                )
-            }
+            AuiRenderer(
+                response = response,
+                state = renderStateForMessage(message.id),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+                collectingFeedbackEnabled = !message.isAuiSpent,
+            )
         }
     }
 }
@@ -461,7 +458,7 @@ private fun ResponseDetailSheet(
     pluginRegistry: AuiPluginRegistry,
     auiTheme: AuiTheme,
     onFeedback: (AuiFeedback) -> Unit,
-    rendererStateHolder: SaveableStateHolder,
+    renderStateForMessage: (String) -> AuiRenderState,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -492,18 +489,17 @@ private fun ResponseDetailSheet(
                 )
             }
             message.auiResponse?.let { response ->
-                rendererStateHolder.SaveableStateProvider(key = "renderer:${message.id}") {
-                    AuiRenderer(
-                        response = response,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 24.dp),
-                        theme = auiTheme,
-                        pluginRegistry = pluginRegistry,
-                        onFeedback = onFeedback,
-                        collectingFeedbackEnabled = !message.isAuiSpent,
-                    )
-                }
+                AuiRenderer(
+                    response = response,
+                    state = renderStateForMessage(message.id),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 24.dp),
+                    theme = auiTheme,
+                    pluginRegistry = pluginRegistry,
+                    onFeedback = onFeedback,
+                    collectingFeedbackEnabled = !message.isAuiSpent,
+                )
             }
         }
     }
@@ -580,7 +576,7 @@ private fun AssistantMessage(
     isActiveDetail: Boolean,
     onRetry: () -> Unit,
     retryEnabled: Boolean,
-    rendererStateHolder: SaveableStateHolder,
+    renderStateForMessage: (String) -> AuiRenderState,
 ) {
     // Error banner
     message.errorMessage?.let { error ->
@@ -662,18 +658,17 @@ private fun AssistantMessage(
             )
         }
         AuiDisplay.INLINE -> {
-            rendererStateHolder.SaveableStateProvider(key = "renderer:${message.id}") {
-                AuiRenderer(
-                    response = response,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    theme = auiTheme,
-                    pluginRegistry = pluginRegistry,
-                    onFeedback = onFeedback,
-                    collectingFeedbackEnabled = !message.isAuiSpent,
-                )
-            }
+            AuiRenderer(
+                response = response,
+                state = renderStateForMessage(message.id),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                theme = auiTheme,
+                pluginRegistry = pluginRegistry,
+                onFeedback = onFeedback,
+                collectingFeedbackEnabled = !message.isAuiSpent,
+            )
         }
     }
 }

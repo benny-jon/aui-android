@@ -2,6 +2,7 @@ package com.bennyjon.auiandroid.livechat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bennyjon.aui.compose.AuiRenderState
 import com.bennyjon.aui.core.model.AuiDisplay
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.plugin.AuiPluginRegistry
@@ -65,6 +66,7 @@ class LiveChatViewModel @Inject constructor(
     private var repository: ChatRepository = createRepository(LlmProvider.FAKE)
     private val _currentProvider = MutableStateFlow(LlmProvider.FAKE)
     private val _chatDebugLogsEnabled = MutableStateFlow(false)
+    private val rendererStates = mutableMapOf<String, AuiRenderState>()
 
     /** All messages in the conversation, with spent-marking applied. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -72,7 +74,10 @@ class LiveChatViewModel @Inject constructor(
         _repositoryVersion.flatMapLatest {
             repository.observeMessages(conversationId)
                 .map { it.markSpentInteractives(pluginRegistry) }
-                .onEach { maybeAutoOpenLatestSurvey(it) }
+                .onEach {
+                    syncRendererStates(it)
+                    maybeAutoOpenLatestSurvey(it)
+                }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Survey message ids we've already auto-opened. Prevents re-opening after a dismiss.
@@ -181,6 +186,10 @@ class LiveChatViewModel @Inject constructor(
         send(feedback.toUserMessageText())
     }
 
+    /** Returns the explicit renderer state for a logical assistant message id. */
+    fun renderStateFor(messageId: String): AuiRenderState =
+        rendererStates.getOrPut(messageId) { AuiRenderState() }
+
     /**
      * Records the latest measured window size from the screen. Called on every composition; the
      * value is read by [send] when dispatching the next user message so the AI sees current
@@ -218,6 +227,7 @@ class LiveChatViewModel @Inject constructor(
         viewModelScope.launch {
             repository.clearConversation(conversationId)
             autoOpenedSurveyIds.clear()
+            rendererStates.clear()
             _selectedDetailMessageId.value = null
             _lastUserMessage.value = null
         }
@@ -247,6 +257,7 @@ class LiveChatViewModel @Inject constructor(
         viewModelScope.launch {
             repository.clearConversation(conversationId)
             autoOpenedSurveyIds.clear()
+            rendererStates.clear()
             _selectedDetailMessageId.value = null
             _lastUserMessage.value = null
             repository = createRepository(provider)
@@ -278,6 +289,11 @@ class LiveChatViewModel @Inject constructor(
 
     private companion object {
         const val TWO_PANE_BREAKPOINT_DP = 600
+    }
+
+    private fun syncRendererStates(messages: List<ChatMessage>) {
+        val activeIds = messages.asSequence().map { it.id }.toSet()
+        rendererStates.keys.retainAll(activeIds)
     }
 
     private fun isProviderAvailable(provider: LlmProvider): Boolean = when (provider) {

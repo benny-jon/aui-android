@@ -52,6 +52,10 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * @param onParseError Called if the JSON cannot be parsed. The error message is passed as the argument.
  * @param onUnknownBlock Called for each [AuiBlock.Unknown] the renderer skips, including
  *   unmatched block types and plugin-backed unknown blocks whose data is missing or malformed.
+ * @param state Explicit renderer state for this logical response. Pass the same instance
+ *   anywhere the same response is rendered to share input values and survey progress across
+ *   layout branches or duplicate surfaces. Defaults to [rememberAuiRenderState] for simple
+ *   single-surface cases.
  */
 @Composable
 fun AuiRenderer(
@@ -63,6 +67,7 @@ fun AuiRenderer(
     collectingFeedbackEnabled: Boolean = true,
     onParseError: ((String) -> Unit)? = null,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
+    state: AuiRenderState = rememberAuiRenderState(),
 ) {
     val response = runCatching { AuiParser().parse(json) }
         .onFailure { onParseError?.invoke(it.message ?: "Failed to parse AUI JSON") }
@@ -77,6 +82,7 @@ fun AuiRenderer(
         DisplayRouter(
             response = response,
             modifier = modifier,
+            state = state,
             pluginRegistry = pluginRegistry,
             onFeedback = routedOnFeedback,
             collectingFeedbackEnabled = collectingFeedbackEnabled,
@@ -120,6 +126,10 @@ fun AuiRenderer(
  *   (e.g. submit buttons, polls, chip selects) are rendered at reduced alpha with their
  *   feedback callbacks suppressed. Pass-through blocks (no feedback, or read-only plugin
  *   actions like `open_url`) remain fully visible and functional. Defaults to `true`.
+ * @param state Explicit renderer state for this logical response. Pass the same instance
+ *   anywhere the same response is rendered to share input values and survey progress across
+ *   layout branches or duplicate surfaces. Defaults to [rememberAuiRenderState] for simple
+ *   single-surface cases.
  */
 @Composable
 fun AuiRenderer(
@@ -129,6 +139,7 @@ fun AuiRenderer(
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
     collectingFeedbackEnabled: Boolean = true,
+    state: AuiRenderState = rememberAuiRenderState(),
 ) {
     val routedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
         val claimed = pluginRegistry.actionPlugin(feedback.action)?.handle(feedback) ?: false
@@ -139,6 +150,7 @@ fun AuiRenderer(
         DisplayRouter(
             response = response,
             modifier = modifier,
+            state = state,
             pluginRegistry = pluginRegistry,
             onFeedback = routedOnFeedback,
             collectingFeedbackEnabled = collectingFeedbackEnabled,

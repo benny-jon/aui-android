@@ -4,12 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import com.bennyjon.aui.compose.AuiRenderState
+import com.bennyjon.aui.compose.LocalAuiRenderState
 import com.bennyjon.aui.compose.components.input.AuiButtonPrimary
 import com.bennyjon.aui.compose.components.input.AuiButtonSecondary
 import com.bennyjon.aui.compose.components.input.AuiCheckboxList
@@ -20,7 +18,6 @@ import com.bennyjon.aui.compose.components.input.AuiInputSlider
 import com.bennyjon.aui.compose.components.input.AuiInputTextSingle
 import com.bennyjon.aui.compose.components.input.AuiQuickReplies
 import com.bennyjon.aui.compose.components.input.AuiRadioList
-import com.bennyjon.aui.compose.components.input.RegistryStateSaver
 import com.bennyjon.aui.compose.components.layout.AuiDivider
 import com.bennyjon.aui.compose.components.layout.AuiProgressBar
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
@@ -128,8 +125,9 @@ internal fun AuiComponentPlugin<*>.parseData(block: AuiBlock.Unknown): Any? {
  * @param pluginRegistry Registry of component plugins checked before built-ins for unknown block
  *   types. Action plugin routing is handled upstream by
  *   [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer].
- * @param registryOverride If provided, this registry is shared with sibling renderers (e.g. the
- *   two split renderers in EXPANDED display). If null, a fresh local registry is created.
+ * @param registry Shared registry for this logical renderer instance. Hosts can share or isolate
+ *   renderer state upstream by passing the same or different [com.bennyjon.aui.compose.AuiRenderState]
+ *   instances into [AuiRenderer][com.bennyjon.aui.compose.AuiRenderer].
  * @param allBlocksForEntries If provided, [buildEntriesFromBlocks] scans this list instead of
  *   [blocks] when building Q+A entries on feedback. Use this when the heading that precedes an
  *   input lives in a sibling renderer (EXPANDED split).
@@ -144,28 +142,24 @@ internal fun AuiComponentPlugin<*>.parseData(block: AuiBlock.Unknown): Any? {
 @Composable
 internal fun BlockRenderer(
     blocks: List<AuiBlock>,
+    renderState: AuiRenderState,
     modifier: Modifier = Modifier,
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
-    registryOverride: MutableState<Map<String, String>>? = null,
     allBlocksForEntries: List<AuiBlock>? = null,
     collectingFeedbackEnabled: Boolean = true,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
 ) {
-    val localRegistry = rememberSaveable(saver = RegistryStateSaver) {
-        mutableStateOf(emptyMap<String, String>())
-    }
-    val registry = registryOverride ?: localRegistry
     val entryBlocks = allBlocksForEntries ?: blocks
     val wrappedOnFeedback: (AuiFeedback) -> Unit = { feedback ->
-        val entries = buildEntriesFromBlocks(entryBlocks, registry.value, pluginRegistry)
+        val entries = buildEntriesFromBlocks(entryBlocks, renderState.inputValues, pluginRegistry)
         val formattedEntries = entries
             .joinToString("\n\n") { "${it.question}\n${it.answer}" }
             .ifBlank { null }
         onFeedback(feedback.copy(entries = entries, formattedEntries = formattedEntries))
     }
     val theme = LocalAuiTheme.current
-    CompositionLocalProvider(LocalAuiValueRegistry provides registry) {
+    CompositionLocalProvider(LocalAuiRenderState provides renderState) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(theme.spacing.blockSpacing),
@@ -233,7 +227,7 @@ internal fun BlockRenderer(
                             RenderPluginBlock(
                                 plugin = plugin,
                                 block = block,
-                                registry = registry,
+                                renderState = renderState,
                                 onFeedback = blockFeedback,
                                 onUnknownBlock = onUnknownBlock,
                             )
@@ -257,7 +251,7 @@ internal fun BlockRenderer(
 private fun RenderPluginBlock(
     plugin: AuiComponentPlugin<*>,
     block: AuiBlock.Unknown,
-    registry: MutableState<Map<String, String>>,
+    renderState: AuiRenderState,
     onFeedback: (AuiFeedback) -> Unit,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)?,
 ) {
@@ -271,7 +265,7 @@ private fun RenderPluginBlock(
     }
     val pluginOnFeedback: (() -> Unit)? = block.feedback?.let { feedback ->
         {
-            val allParams = registry.value + feedback.params
+            val allParams = renderState.inputValues + feedback.params
             onFeedback(feedback.copy(params = allParams))
         }
     }

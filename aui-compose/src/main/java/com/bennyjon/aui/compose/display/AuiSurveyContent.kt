@@ -15,21 +15,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.mapSaver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.bennyjon.aui_compose.R
+import com.bennyjon.aui.compose.AuiRenderState
+import com.bennyjon.aui.compose.rememberAuiRenderState
 import com.bennyjon.aui.compose.components.layout.AuiStepperHorizontal
 import com.bennyjon.aui.compose.internal.BlockRenderer
 import com.bennyjon.aui.compose.internal.inputMetadata
@@ -78,10 +73,9 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * omitted from [AuiFeedback.entries] and increment [AuiFeedback.stepsSkipped]. A shared
  * registry persists across steps, so Back/Next preserves earlier answers.
  *
- * **State lifetime.** Each mount starts a fresh [SurveyFlowState]. If the host unmounts the
- * composable between opens (the common case for sheet-based containers), progress resets.
- * Hosts that want progress preserved across dismiss/reopen should keep the composable in
- * the composition and toggle their container's visibility instead of removing the content.
+ * **State lifetime.** Survey progress and collected input values live in [state]. Pass the
+ * same [AuiRenderState] instance back to preserve progress across remounts, window/layout
+ * branches, or duplicate surfaces. Pass a fresh instance to reset the survey.
  *
  * @param steps The list of survey steps to render, each containing its own blocks.
  * @param surveyTitle Optional title displayed at the top of the content.
@@ -96,6 +90,7 @@ import com.bennyjon.aui.core.plugin.AuiPluginRegistry
  * @param onUnknownBlock If provided, called for each [AuiBlock.Unknown] the renderer skips,
  *   including unmatched block types and plugin-backed unknown blocks whose data is missing or
  *   malformed.
+ * @param state Explicit render state for this logical survey response.
  */
 @Composable
 fun AuiSurveyContent(
@@ -106,14 +101,12 @@ fun AuiSurveyContent(
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onStepFeedback: (AuiFeedback) -> Unit = {},
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
+    state: AuiRenderState = rememberAuiRenderState(),
 ) {
     if (steps.isEmpty()) return
 
-    val flowState = rememberSaveable(
-        inputs = arrayOf(steps),
-        saver = SurveyFlowState.saver(steps, pluginRegistry),
-    ) {
-        SurveyFlowState(steps, pluginRegistry)
+    val flowState = remember(state, steps, pluginRegistry) {
+        SurveyFlowState(state, steps, pluginRegistry)
     }
     val resources = LocalResources.current
     val skippedLabel = stringResource(R.string.aui_survey_skipped)
@@ -155,26 +148,19 @@ fun AuiSurveyContent(
  */
 @Stable
 internal class SurveyFlowState(
+    internal val renderState: AuiRenderState,
     private val steps: List<AuiStep>,
     private val pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
 ) {
-
-    var stepIndex by mutableIntStateOf(0)
-        private set
-
-    val registry: MutableState<Map<String, String>> = mutableStateOf(emptyMap())
-
-    internal fun restore(stepIndex: Int, registryValue: Map<String, String>) {
-        this.stepIndex = stepIndex.coerceIn(0, steps.lastIndex)
-        registry.value = registryValue
-    }
+    val stepIndex: Int
+        get() = renderState.surveyStepIndex.coerceIn(0, steps.lastIndex)
 
     fun back() {
-        if (stepIndex > 0) stepIndex--
+        renderState.surveyStepIndex = (stepIndex - 1).coerceAtLeast(0)
     }
 
     fun next() {
-        if (stepIndex < steps.lastIndex) stepIndex++
+        renderState.surveyStepIndex = (stepIndex + 1).coerceAtMost(steps.lastIndex)
     }
 
     /**
@@ -183,7 +169,7 @@ internal class SurveyFlowState(
      * steps with answers contribute [AuiEntry] rows (one per input).
      */
     fun finalize(formatStrings: SurveyFormatStrings = SurveyFormatStrings()): AuiFeedback {
-        val registryValue = registry.value
+        val registryValue = renderState.inputValues
         val entries = mutableListOf<AuiEntry>()
         var skipped = 0
         for (step in steps) {
@@ -202,32 +188,6 @@ internal class SurveyFlowState(
             formattedEntries = buildSurveyFormattedEntries(entries, skipped, formatStrings),
             stepsSkipped = skipped,
             stepsTotal = steps.size,
-        )
-    }
-
-    companion object {
-        private const val StepIndexKey = "stepIndex"
-        private const val RegistryKey = "registry"
-
-        fun saver(
-            steps: List<AuiStep>,
-            pluginRegistry: AuiPluginRegistry,
-        ): Saver<SurveyFlowState, Any> = mapSaver(
-            save = { state ->
-                mapOf(
-                    StepIndexKey to state.stepIndex,
-                    RegistryKey to state.registry.value.toMap(),
-                )
-            },
-            restore = { restored ->
-                SurveyFlowState(steps, pluginRegistry).apply {
-                    @Suppress("UNCHECKED_CAST")
-                    restore(
-                        stepIndex = restored[StepIndexKey] as? Int ?: 0,
-                        registryValue = restored[RegistryKey] as? Map<String, String> ?: emptyMap(),
-                    )
-                }
-            },
         )
     }
 }
@@ -308,12 +268,12 @@ private fun SurveyStepScaffold(
         }
 
         // key() forces a fresh BlockRenderer each time the step changes, while the shared
-        // registry passed via registryOverride persists across steps.
+        // registry stored in AuiRenderState persists across steps.
         key(flowState.stepIndex) {
             BlockRenderer(
                 blocks = step.blocks,
+                renderState = flowState.renderState,
                 pluginRegistry = pluginRegistry,
-                registryOverride = flowState.registry,
                 onFeedback = onStepFeedback,
                 onUnknownBlock = onUnknownBlock,
             )
