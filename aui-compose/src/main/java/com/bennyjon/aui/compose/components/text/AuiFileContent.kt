@@ -1,5 +1,6 @@
 package com.bennyjon.aui.compose.components.text
 
+import android.content.ClipData
 import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,10 +29,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import com.bennyjon.aui_compose.R
 import com.bennyjon.aui.compose.internal.openDownloadsFolder
 import com.bennyjon.aui.compose.internal.saveFileToDownloads
@@ -71,7 +72,7 @@ internal fun AuiFileContentSurface(
 ) {
     val theme = LocalAuiTheme.current
     val bodyColor = LocalAuiBodyColor.current
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var downloadNotice by remember { mutableStateOf<DownloadNotice?>(null) }
@@ -104,7 +105,11 @@ internal fun AuiFileContentSurface(
                         } ?: DownloadNotice.Failed
                     }
                 },
-                onCopy = { clipboard.setText(AnnotatedString(content)) },
+                onCopy = {
+                    scope.launch {
+                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(filename, content)))
+                    }
+                },
             )
 
             downloadNotice?.let { notice ->
