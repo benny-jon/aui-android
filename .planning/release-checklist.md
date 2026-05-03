@@ -106,14 +106,36 @@ Run these in order for each published version.
 
 1. Bump `VERSION_NAME` in root `gradle.properties` (single source of truth for
    library coordinates).
-2. Verify the build is green:
+2. Run the pre-tag verification command set from a clean checkout:
    ```
-   ./gradlew :aui-core:test :aui-compose:testDebugUnitTest
-   ./gradlew :aui-core:assembleRelease :aui-compose:assembleRelease
+   ./gradlew clean \
+     :aui-core:compileDebugKotlin \
+     :aui-compose:compileDebugKotlin \
+     :demo:compileDebugKotlin \
+     :demo:assembleDebug \
+     :aui-core:testDebugUnitTest \
+     :aui-compose:testDebugUnitTest \
+     :aui-core:lintDebug \
+     :aui-compose:lintDebug \
+     :aui-core:assembleRelease \
+     :aui-compose:assembleRelease \
+     :demo:assembleRelease \
+     :aui-core:publishToMavenLocal \
+     :aui-compose:publishToMavenLocal
    ```
-3. Smoke-publish to a local Maven repo and inspect the generated POM/AAR:
+   Why this exact set:
+   - matches current CI coverage for compile checks (`:aui-core`, `:aui-compose`,
+     `:demo`, plus demo resource assembly)
+   - reruns the library unit-test and lint gates that protect the published
+     renderer surface
+   - exercises release assembly for both published artifacts and the R8-minified
+     demo host
+   - republishes both library modules to `mavenLocal()` so the packaged AAR/POM
+     path is revalidated immediately before tagging
+   - `apiCheck` is intentionally omitted because Binary Compatibility Validator
+     is not wired up yet
+3. Smoke-publish verification / artifact inspection:
    ```
-   ./gradlew publishToMavenLocal
    ls ~/.m2/repository/com/bennyjon/aui-compose/<version>/
    ```
    Confirm the POM has: name, description, url, license, scm, developers, and
@@ -147,8 +169,8 @@ These must be true before `0.1.0-alpha01` can ship.
 
 - [ ] Sonatype namespace `com.bennyjon` verified.
 - [ ] GPG key generated and published to a keyserver.
-- [ ] Secrets present in `~/.gradle/gradle.properties` (local) and GitHub
-      Actions (CI).
+- [ ] Publishing secrets present in the local shell environment
+      (`ORG_GRADLE_PROJECT_*`) and GitHub Actions (CI).
 - [ ] `vanniktech-maven-publish` plugin applied to `aui-core` and `aui-compose`
       with full POM metadata. *(Scaffolded in Session 53.)*
 - [ ] `LICENSE`, `scm`, `url`, `developers` POM fields verified against actual

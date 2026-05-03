@@ -630,9 +630,12 @@ Goal: a documented, repeatable verification command set anyone can run before
 tagging.
 
 Checks / outputs:
-- `./gradlew :aui-core:test :aui-compose:test` — green.
-- `./gradlew :aui-core:lint :aui-compose:lint` — fix or baseline anything
-  user-visible.
+- choose one root command line that reflects the repo's actual current release
+  gates, including compile checks, unit tests, lint, release assembly, and the
+  packaging path already validated in S9
+- prefer the concrete variant tasks the repo already uses in CI
+  (`compileDebugKotlin`, `testDebugUnitTest`) over broader aliases where they
+  would add noise without extra signal
 - If wired up: `./gradlew :aui-core:apiCheck :aui-compose:apiCheck` against
   the committed `.api` baseline.
 - Add the chosen command set to `release-checklist.md` as the "pre-tag
@@ -641,6 +644,35 @@ Checks / outputs:
 Exit criteria:
 - A single, documented verification command set exists in
   `release-checklist.md` and runs green on a clean checkout.
+
+Findings (executed 2026-05-03):
+- `apiCheck` is still not available, so it remains explicitly omitted from the
+  pre-tag set rather than being listed as a phantom gate. Binary Compatibility
+  Validator is still a useful follow-up, but not a blocker for `0.1.0-alpha01`.
+- Locked the final pre-tag command set to one root Gradle invocation:
+  `./gradlew clean :aui-core:compileDebugKotlin :aui-compose:compileDebugKotlin
+  :demo:compileDebugKotlin :demo:assembleDebug :aui-core:testDebugUnitTest
+  :aui-compose:testDebugUnitTest :aui-core:lintDebug :aui-compose:lintDebug
+  :aui-core:assembleRelease :aui-compose:assembleRelease :demo:assembleRelease
+  :aui-core:publishToMavenLocal :aui-compose:publishToMavenLocal`
+- Why this set:
+  - mirrors existing CI compile coverage for both library modules plus the demo
+    host
+  - uses the library unit-test gates already running in CI
+  - keeps lint focused on the published library modules rather than the demo
+  - includes release assembly so the pre-tag pass exercises the actual release
+    variants, including the demo's R8 path
+- includes `publishToMavenLocal` for both published modules so artifact
+  packaging stays in the final pre-tag gate instead of living only in the
+  one-off S9 session
+- Recorded the same command set in `.planning/release-checklist.md` under
+  Per-Release Step 2.
+- Verification result: the full command set ran green from `clean` on
+  2026-05-03. Residual output was limited to pre-existing compiler deprecation
+  warnings (`LocalClipboardManager` in `aui-compose`, `hiltViewModel` import
+  path in `demo`) plus the usual Android packaging notice about unstripped
+  native libraries in the demo; none blocked lint, tests, release assembly, or
+  local publishing.
 
 ---
 

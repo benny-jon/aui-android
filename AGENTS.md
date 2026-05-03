@@ -35,17 +35,16 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S9 — Build artifact inspection**. Published
-  `aui-core` and `aui-compose` `0.1.0-alpha01` to `mavenLocal`, inspected the
-  generated AAR / sources / javadoc / POM payloads under `~/.m2/repository`,
-  confirmed the artifacts were signed and metadata-complete, and verified the
-  primary consumer path with a tiny external Android sample build consuming
-  `com.bennyjon:aui-compose:0.1.0-alpha01` from `mavenLocal()`. Findings
-  recorded in `.planning/library-sanity-checks.md`. Local publish verified with
-  `./gradlew :aui-core:publishToMavenLocal :aui-compose:publishToMavenLocal`.
-- Next recommended task: Sanity-checks **S10 — Verification commands**:
-  define and record the final pre-tag command set in
-  `.planning/release-checklist.md`, then run that command set on a clean pass.
+- Last completed: Sanity-checks **S10 — Verification commands**. Locked the
+  final pre-tag command set in `.planning/release-checklist.md` and ran it
+  clean from `./gradlew clean`, covering library compile/test/lint, demo
+  compile/debug assemble, release assembly, and `publishToMavenLocal` for
+  `aui-core` + `aui-compose`. Findings recorded in
+  `.planning/library-sanity-checks.md`; residual output was limited to
+  non-blocking deprecation warnings plus the usual Android native-library
+  stripping notice in the demo release build.
+- Next recommended task: Session 54 — Canonical Host Integration Example from
+  `.planning/first-release-readiness.md`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -84,15 +83,12 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S10 — Verification commands** from
-`.planning/library-sanity-checks.md`:
-- confirm the final pre-tag verification command set
-- add that command set to `.planning/release-checklist.md`
-- run the selected commands and record any remaining release blockers
-
-Session 54 (Canonical Host Integration Example) is still queued from
-`.planning/first-release-readiness.md` and should run after the sanity-checks
-sweep (S1–S10) finishes.
+Run **Session 54 — Canonical Host Integration Example** from
+`.planning/first-release-readiness.md`:
+- add or refine one canonical host integration example in public docs
+- cover assistant text-only, text + AUI, feedback routing, and host-owned
+  `expanded` / `survey` presentation
+- keep the example aligned with the current pure-renderer library boundary
 
 ## Constraints
 
