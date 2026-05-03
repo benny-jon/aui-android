@@ -35,19 +35,17 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S8b — explicit host-owned renderer state**.
-  Added public `AuiRenderState` + `rememberAuiRenderState()` to `aui-compose`,
-  routed renderer input/survey state through that explicit object, removed the
-  temporary `SaveableStateHolder`/internal saveable-registry plumbing from the
-  demo and renderer internals, and documented the "one render state per logical
-  response/message id" host pattern in `README.md`. Findings recorded in
-  `.planning/library-sanity-checks.md`. Verified with
-  `./gradlew :aui-compose:testDebugUnitTest` and
-  `./gradlew :aui-compose:compileDebugKotlin`.
-- Next recommended task: Sanity-checks **S9 — Build artifact inspection**:
-  publish `aui-core` and `aui-compose` to `mavenLocal`, inspect the generated
-  AARs / POMs for debug leakage or missing metadata, and smoke-test a consumer
-  build against the local artifacts.
+- Last completed: Sanity-checks **S9 — Build artifact inspection**. Published
+  `aui-core` and `aui-compose` `0.1.0-alpha01` to `mavenLocal`, inspected the
+  generated AAR / sources / javadoc / POM payloads under `~/.m2/repository`,
+  confirmed the artifacts were signed and metadata-complete, and verified the
+  primary consumer path with a tiny external Android sample build consuming
+  `com.bennyjon:aui-compose:0.1.0-alpha01` from `mavenLocal()`. Findings
+  recorded in `.planning/library-sanity-checks.md`. Local publish verified with
+  `./gradlew :aui-core:publishToMavenLocal :aui-compose:publishToMavenLocal`.
+- Next recommended task: Sanity-checks **S10 — Verification commands**:
+  define and record the final pre-tag command set in
+  `.planning/release-checklist.md`, then run that command set on a clean pass.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -86,11 +84,11 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Sanity-checks Session S9 — Build artifact inspection** from
+Run **Sanity-checks Session S10 — Verification commands** from
 `.planning/library-sanity-checks.md`:
-- publish `aui-core` and `aui-compose` to `mavenLocal`
-- inspect produced AARs / sources / javadoc / POM metadata for release hygiene
-- smoke-test local artifact consumption from a tiny external sample build
+- confirm the final pre-tag verification command set
+- add that command set to `.planning/release-checklist.md`
+- run the selected commands and record any remaining release blockers
 
 Session 54 (Canonical Host Integration Example) is still queued from
 `.planning/first-release-readiness.md` and should run after the sanity-checks

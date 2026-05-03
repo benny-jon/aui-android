@@ -591,6 +591,37 @@ Checks:
 Exit criteria:
 - AAR contents are minimal and POM is publish-ready.
 
+Findings (executed 2026-05-03):
+- `./gradlew :aui-core:publishToMavenLocal :aui-compose:publishToMavenLocal`
+  passed and installed both artifacts under
+  `~/.m2/repository/com/bennyjon/{aui-core,aui-compose}/0.1.0-alpha01/`.
+  Each module published the expected signed payload set:
+  `.aar`, `.pom`, `.module`, `-sources.jar`, and `-javadoc.jar`, each with
+  matching `.asc` signatures.
+- AAR inspection was clean. `aui-core` contained only `R.txt`,
+  `AndroidManifest.xml`, `classes.jar`, `proguard.txt`, and Gradle AAR
+  metadata. `aui-compose` added only the expected packaged `res/values`
+  resources. No `demo/` packages, test fixtures, build logs, or other obvious
+  debug junk were present in the published AARs.
+- Nested `classes.jar` inspection was also clean for publish scope:
+  `aui-core` exposed only `com.bennyjon.aui.core...` classes plus its Kotlin
+  module metadata; `aui-compose` exposed only the expected renderer/theme/plugin
+  classes plus Kotlin module metadata. The only symbol matching a raw "test"
+  name scan was the intentionally public `SurveyTestTags` API already accepted
+  in the earlier public-surface review, not bundled test code.
+- Generated POM metadata for both modules was complete and publish-ready:
+  `name`, `description`, `url`, `licenses`, `developers`, and `scm` were all
+  populated. `aui-compose` declared the expected dependency on
+  `com.bennyjon:aui-core:0.1.0-alpha01`.
+- Smoke test status:
+  - primary adopter path passed: a tiny external Android sample build
+    consuming `com.bennyjon:aui-compose:0.1.0-alpha01` from `mavenLocal()`
+    compiled and rendered successfully when run manually by the repo owner.
+  - direct standalone `aui-core` smoke consumption was discussed but not run in
+    this session; that is acceptable for S9 because the primary install story is
+    the `aui-compose` path, but a tiny JVM consumer remains a useful optional
+    follow-up if we want independent confidence in both published coordinates.
+
 ---
 
 ## Session S10 — Verification commands
