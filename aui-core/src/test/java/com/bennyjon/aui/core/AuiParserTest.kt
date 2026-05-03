@@ -363,6 +363,34 @@ class AuiParserTest {
     }
 
     @Test
+    fun `parseOrNull returns null when top level display is missing or unknown`() {
+        assertNull(
+            parser.parseOrNull(
+                """
+                    {
+                      "blocks": [
+                        { "type": "text", "data": { "text": "Hello" } }
+                      ]
+                    }
+                """.trimIndent(),
+            ),
+        )
+
+        assertNull(
+            parser.parseOrNull(
+                """
+                    {
+                      "display": "future_display",
+                      "blocks": [
+                        { "type": "text", "data": { "text": "Hello" } }
+                      ]
+                    }
+                """.trimIndent(),
+            ),
+        )
+    }
+
+    @Test
     fun `parseOrNull returns response for valid JSON`() {
         val json = """{"display":"expanded","blocks":[]}"""
         assertNotNull(parser.parseOrNull(json))

@@ -664,6 +664,38 @@ The library MUST handle unknown component types gracefully:
 - Missing / unknown `display` value → parse fails (handled via `onParseError`); hosts decide how to surface
 - This allows newer AI models to use newer components without crashing older clients
 
+### Parsing And Fallback Contract
+
+The public contract is intentionally split between strict parsing and tolerant parsing:
+
+- `AuiParser.parse(json)` is strict. It throws when the payload cannot be decoded into a usable `AuiResponse`.
+- `AuiParser.parseOrNull(json)` is tolerant. It returns `null` only when the top-level response is unusable, such as invalid JSON or a missing/unknown `display`.
+
+When `parseOrNull` can still understand the top-level response, it salvages what it can:
+
+- unknown block `type` values become `AuiBlock.Unknown`
+- malformed known blocks are downgraded to `AuiBlock.Unknown`
+- malformed survey steps keep any blocks that can still be decoded
+- malformed block `feedback` is dropped rather than crashing the whole response
+- unknown JSON fields on known types are ignored
+
+Renderer behavior builds on that contract:
+
+- `AuiRenderer(json = ...)` uses strict parsing internally. A total parse failure causes no UI to render and triggers `onParseError`.
+- `AuiRenderer(response = ...)` assumes the host has already decided how to handle parsing and fallback.
+- `onUnknownBlock` is render-time only. It fires when an `AuiBlock.Unknown` cannot be rendered by any registered component plugin, or when a matching plugin cannot decode that block's `rawData`.
+
+This gives hosts two valid integration styles:
+
+1. Pre-parse with `parseOrNull`, decide the fallback UI in your own message model, then call `AuiRenderer(response = ...)`.
+2. Render from raw JSON and treat `onParseError` / `onUnknownBlock` as observability hooks around an otherwise fire-and-forget render path.
+
+Recommended host stance for LLM-driven payloads:
+
+- keep assistant text independent from AUI so text can still render when AUI fails
+- use `onUnknownBlock` for telemetry, not for blocking the rest of the response
+- treat unknown future block types as additive forward-compatibility, not as fatal errors
+
 ### Backward Compatibility
 
 - New components are additive — never remove existing types

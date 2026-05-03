@@ -398,6 +398,66 @@ whether to surface `expanded` responses in a separate detail surface.
 | **expanded** | 3+ rich cards, image galleries, comparisons, long-form content the user may want to study. | Renders identically to `inline`. Hosts may route it to a bottom sheet (narrow windows) or a side detail pane (wide windows) using the included [`AuiResponseCard`](#expanded-content) stub. |
 | **survey** | Multi-page structured input — 2+ questions, feedback forms, onboarding flows. | Flat content with library-injected Back / Next / Submit navigation, stepper indicator, and consolidated submission. The library does **not** wrap itself in a bottom sheet — hosts own the container. |
 
+## Error Handling
+
+AUI has two parser modes, and they serve different host needs:
+
+- `AuiParser.parse(json)`: strict. Use when AUI JSON is already trusted or pre-validated. It throws if the top-level response is unusable.
+- `AuiParser.parseOrNull(json)`: tolerant. Use when the JSON comes directly from an LLM or any other untrusted source. It returns `null` only when the top-level response cannot be understood at all.
+
+`parseOrNull` salvages partial responses instead of failing the entire render:
+
+- Unknown block `type` values become `AuiBlock.Unknown`.
+- Malformed known blocks are downgraded to `AuiBlock.Unknown` when the top-level response is still valid.
+- Unknown fields on known block types are ignored.
+- Missing or unknown top-level `display` still fails the whole parse and returns `null`.
+
+The renderer follows the same fail-soft policy:
+
+- `AuiRenderer(json = ...)` uses strict parsing internally. If the whole payload is unusable, it renders nothing and calls `onParseError`.
+- When parsing succeeds but some blocks are unknown, the renderer checks the plugin registry first. If no component plugin can render that block, it skips just that block and calls `onUnknownBlock`.
+- If a plugin-backed unknown block has missing or malformed `rawData`, the renderer also skips just that block and calls `onUnknownBlock`.
+
+Recommended host pattern:
+
+```kotlin
+val parser = AuiParser()
+val response = parser.parseOrNull(auiJson)
+
+if (response != null) {
+    AuiRenderer(
+        response = response,
+        state = renderState,
+        theme = AuiTheme.fromMaterialTheme(),
+        pluginRegistry = pluginRegistry,
+        onFeedback = onFeedback,
+    )
+} else {
+    AssistantTextBubble("I couldn't render that interactive response.")
+}
+```
+
+If you prefer the raw JSON overload, wire `onParseError` and `onUnknownBlock` explicitly:
+
+```kotlin
+AuiRenderer(
+    json = auiJson,
+    state = renderState,
+    theme = AuiTheme.fromMaterialTheme(),
+    pluginRegistry = pluginRegistry,
+    onFeedback = onFeedback,
+    onParseError = { error -> logger.warn("AUI parse failed: $error") },
+    onUnknownBlock = { block -> logger.warn("Skipped AUI block type=${block.type}") },
+)
+```
+
+Host guidance:
+
+- Show normal assistant text even when AUI parsing fails. Treat AUI as additive, not required for the turn to make sense.
+- Use `parseOrNull` when you want the host to decide the fallback UI before composition.
+- Use `onParseError` for telemetry and for a generic fallback surface when rendering directly from raw JSON.
+- Use `onUnknownBlock` for forward-compatibility telemetry. Unknown future block types should not break the rest of the response.
+
 ## Expanded content
 
 For `expanded` responses, include `card_title` and `card_description` so the host can
