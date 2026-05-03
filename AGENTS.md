@@ -35,16 +35,14 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Sanity-checks **S10 — Verification commands**. Locked the
-  final pre-tag command set in `.planning/release-checklist.md` and ran it
-  clean from `./gradlew clean`, covering library compile/test/lint, demo
-  compile/debug assemble, release assembly, and `publishToMavenLocal` for
-  `aui-core` + `aui-compose`. Findings recorded in
-  `.planning/library-sanity-checks.md`; residual output was limited to
-  non-blocking deprecation warnings plus the usual Android native-library
-  stripping notice in the demo release build.
-- Next recommended task: Session 54 — Canonical Host Integration Example from
-  `.planning/first-release-readiness.md`.
+- Last completed: Session 54 — Canonical Host Integration Example. Updated
+  `README.md` and `docs/architecture.md` with one canonical host-side
+  integration pattern covering assistant text-only turns, text + AUI turns,
+  feedback routing, host-owned `expanded` / `survey` presentation, and explicit
+  `AuiRenderState` ownership per logical response id. Also corrected stale docs
+  examples around renderer state and release coordinates.
+- Next recommended task: Session 55 — Error Handling + Compatibility Contract
+  from `.planning/first-release-readiness.md`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: none recorded
@@ -53,10 +51,10 @@ Do not treat `.planning/archive/` as current execution guidance.
 ## Current Direction
 
 Release-readiness work is focused on tightening the library for adopters:
-- canonical host integration example in docs
 - error-handling / fallback contract documentation
 - release-confidence renderer tests
 - publishing mechanics + release checklist
+- keeping the newly canonical host integration docs aligned with the real API
 
 Phase 5 (live chat demo) is feature-complete for first-release purposes;
 further demo polish is fair game only when it sharpens the host integration
@@ -74,8 +72,9 @@ or response model, not chat-product features.
 - The demo includes key UX polish already landed: multiline composer, centered
   empty state, retryable error banners, responsive split-pane behavior, and a
   Settings screen for prompt/debug inspection.
-- Public docs are synced through 2026-04-25, including `docs/livechat.md`, and
-  CI includes separate unit-test and compile-check workflows.
+- Public docs are synced through 2026-05-03, including a canonical host
+  integration example in `README.md` and matching architecture notes, and CI
+  includes separate unit-test and compile-check workflows.
 - Maven publishing is scaffolded via `vanniktech-maven-publish` for `aui-core`
   and `aui-compose`. Coordinates: `com.bennyjon:aui-{core,compose}:0.1.0-alpha01`.
   Generated POMs validated locally; first publish gated on owner-side Sonatype
@@ -83,12 +82,12 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Session 54 — Canonical Host Integration Example** from
+Run **Session 55 — Error Handling + Compatibility Contract** from
 `.planning/first-release-readiness.md`:
-- add or refine one canonical host integration example in public docs
-- cover assistant text-only, text + AUI, feedback routing, and host-owned
-  `expanded` / `survey` presentation
-- keep the example aligned with the current pure-renderer library boundary
+- document the parser and renderer fallback contract in public docs
+- cover unknown blocks, malformed known blocks, total parse failure, and
+  `onParseError` / `onUnknownBlock` host guidance
+- add or tighten tests only where the documented behavior is not yet protected
 
 ## Constraints
 

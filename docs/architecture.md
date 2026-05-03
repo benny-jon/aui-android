@@ -94,17 +94,21 @@ Separate repo / separate module (NOT part of the library):
 
 ## Planned Artifacts
 
-These are the intended consumer artifacts once publishing is in place. The repo
-is not published to Maven Central yet.
+These are the intended consumer artifacts for the first release. The repo is
+not published to Maven Central yet, but the first target is locked.
 
 ```kotlin
 // build.gradle.kts (consumer's app)
 dependencies {
-    // Option A: Full package (most apps want this)
-    implementation("com.bennyjon.aui:aui-compose:0.1.0")
-    
-    // Option B: Core only (for custom renderers, server-side validation, KMP)
-    implementation("com.bennyjon.aui:aui-core:0.1.0")
+    implementation("com.bennyjon:aui-compose:0.1.0-alpha01")
+}
+```
+
+Advanced consumers that only want the parser/model layer can depend on:
+
+```kotlin
+dependencies {
+    implementation("com.bennyjon:aui-core:0.1.0-alpha01")
 }
 ```
 
@@ -271,6 +275,7 @@ fun AuiRenderer(
     collectingFeedbackEnabled: Boolean = true,
     onParseError: ((String) -> Unit)? = null,
     onUnknownBlock: ((AuiBlock.Unknown) -> Unit)? = null,
+    state: AuiRenderState = rememberAuiRenderState(),
 )
 
 @Composable
@@ -281,6 +286,7 @@ fun AuiRenderer(
     pluginRegistry: AuiPluginRegistry = AuiPluginRegistry.Empty,
     onFeedback: (AuiFeedback) -> Unit = {},
     collectingFeedbackEnabled: Boolean = true,
+    state: AuiRenderState = rememberAuiRenderState(),
 )
 
 // ── Host-rendered stub ───────────────────────────────────
@@ -341,92 +347,110 @@ abstract class AuiComponentPlugin<T : Any> : AuiPlugin() {
 
 ## Integration Examples
 
-### Minimal Integration (3 lines)
+### Canonical Host Message Shape
+
+The recommended host model is one assistant turn with always-present text plus
+optional AUI:
+
+```kotlin
+data class AssistantTurn(
+    val id: String,
+    val text: String,
+    val auiResponse: AuiResponse? = null,
+)
+```
+
+This covers:
+
+- text-only replies
+- AUI-only replies
+- text + AUI in one turn
+
+### Canonical Host Routing
+
+Keep one `AuiRenderState` per logical assistant turn id and reuse that same
+instance anywhere the same response is rendered.
+
+```kotlin
+class ChatViewModel : ViewModel() {
+    private val renderStates = mutableMapOf<String, AuiRenderState>()
+
+    var activeDetailTurnId by mutableStateOf<String?>(null)
+        private set
+
+    fun renderStateFor(turnId: String): AuiRenderState =
+        renderStates.getOrPut(turnId) { AuiRenderState() }
+
+    fun onAuiFeedback(feedback: AuiFeedback) {
+        sendUserMessage(
+            text = feedback.formattedEntries ?: feedback.action,
+            metadata = feedback.params,
+        )
+    }
+}
+```
 
 ```kotlin
 @Composable
-fun AiMessageBubble(jsonResponse: String) {
-    AuiRenderer(
-        json = jsonResponse,
-        onFeedback = { feedback -> 
-            Log.d("AUI", "User tapped: ${feedback.action}")
+fun AssistantTurnRow(
+    turn: AssistantTurn,
+    renderState: AuiRenderState,
+    isDetailOpen: Boolean,
+    onOpenDetail: () -> Unit,
+    onCloseDetail: () -> Unit,
+    onFeedback: (AuiFeedback) -> Unit,
+) {
+    Column {
+        if (turn.text.isNotBlank()) {
+            AssistantTextBubble(turn.text)
         }
-    )
-}
-```
 
-### With Custom Theme (matching your app's design)
+        val response = turn.auiResponse ?: return@Column
+        when (response.display) {
+            AuiDisplay.INLINE -> AuiRenderer(
+                response = response,
+                state = renderState,
+                theme = AuiTheme.fromMaterialTheme(),
+                onFeedback = onFeedback,
+            )
 
-```kotlin
-@Composable
-fun AiMessageBubble(jsonResponse: String) {
-    val myTheme = AuiTheme(
-        colors = AuiColors(
-            primary = Color(0xFF6750A4),
-            onPrimary = Color.White,
-            tertiary = Color(0xFF7D5260),
-            surface = Color(0xFFFFFBFE),
-            // ... your brand colors
-        ),
-        typography = AuiTypography(
-            heading = TextStyle(
-                fontFamily = YourBrandFont,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
-            ),
-            // ... your type scale
-        ),
-        spacing = AuiSpacing.Default,
-        shapes = AuiShapes.Default
-    )
-    
-    AuiRenderer(
-        json = jsonResponse,
-        theme = myTheme,
-        onFeedback = { sendToChatViewModel(it) }
-    )
-}
-```
+            AuiDisplay.EXPANDED,
+            AuiDisplay.SURVEY -> AuiResponseCard(
+                response = response,
+                isActive = isDetailOpen,
+                onClick = onOpenDetail,
+            )
+        }
+    }
 
-### Adapting from MaterialTheme (zero config)
-
-```kotlin
-@Composable
-fun AiMessageBubble(jsonResponse: String) {
-    AuiRenderer(
-        json = jsonResponse,
-        theme = AuiTheme.fromMaterialTheme(), // auto-maps your Material colors/fonts
-        onFeedback = { sendToChatViewModel(it) }
-    )
-}
-```
-
-### Full Chat Integration
-
-```kotlin
-@Composable
-fun ChatScreen(viewModel: ChatViewModel) {
-    val messages by viewModel.messages.collectAsState()
-    
-    LazyColumn {
-        items(messages) { message ->
-            when (message) {
-                is ChatMessage.UserText -> UserBubble(message.text)
-                is ChatMessage.UserFeedback -> UserBubble(message.feedback.formattedEntries ?: message.feedback.action)
-                is ChatMessage.AiResponse -> {
-                    AuiRenderer(
-                        response = message.auiResponse,
-                        theme = AuiTheme.fromMaterialTheme(),
-                        onFeedback = { feedback ->
-                            viewModel.onFeedback(feedback)
-                        }
-                    )
-                }
-            }
+    if (isDetailOpen) {
+        val response = turn.auiResponse ?: return
+        ModalBottomSheet(onDismissRequest = onCloseDetail) {
+            AuiRenderer(
+                response = response,
+                state = renderState,
+                theme = AuiTheme.fromMaterialTheme(),
+                onFeedback = { feedback ->
+                    onFeedback(feedback)
+                    if (response.display == AuiDisplay.SURVEY) onCloseDetail()
+                },
+            )
         }
     }
 }
 ```
+
+Routing guidance:
+
+- `inline` renders directly in the chat flow
+- `expanded` is host-routed: show `AuiResponseCard` in the timeline and render
+  the full `AuiRenderer` in a sheet, dialog, or side pane on demand
+- `survey` is also host-routed: the library manages step navigation and the
+  final consolidated submit, but the host owns the sheet/dialog/pane lifecycle
+
+If a survey is dismissed and reopened, reusing the same `AuiRenderState`
+preserves its progress. If the same response appears in multiple surfaces,
+reusing that same state keeps those renders synchronized.
 
 ### With Custom Components (Plugin System)
 

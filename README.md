@@ -204,20 +204,18 @@ dependencies {
 
 ```kotlin
 @Composable
-fun AiMessageBubble(auiJson: String?) {
-    auiJson?.let { json ->
-AuiRenderer(
-    json = json,
-    state = messageRenderState,
-    theme = AuiTheme.fromMaterialTheme(),
-    onFeedback = { feedback ->
-        // feedback.action — machine-readable action name
-        // feedback.formattedEntries — human-readable Q&A summary
-        // feedback.params — structured key-value data
-                viewModel.handleFeedback(feedback)
-            }
-        )
-    }
+fun AiMessageBubble(
+    response: AuiResponse,
+    onFeedback: (AuiFeedback) -> Unit,
+) {
+    val renderState = rememberAuiRenderState()
+
+    AuiRenderer(
+        response = response,
+        state = renderState,
+        theme = AuiTheme.fromMaterialTheme(),
+        onFeedback = onFeedback,
+    )
 }
 ```
 
@@ -262,6 +260,119 @@ val systemPrompt = buildString {
 
 - **Aggressiveness**: `Conservative` (plain text default), `Balanced` (default — use components when helpful), `Eager` (prefer components for links, lists, choices).
 - **Custom examples**: Appended after built-in examples. Teach the model your domain patterns without losing the library's foundational examples.
+
+## Canonical Host Integration
+
+The recommended host model is one assistant turn with always-present text plus
+optional AUI:
+
+```kotlin
+data class AssistantTurn(
+    val id: String,
+    val text: String,
+    val auiResponse: AuiResponse? = null,
+)
+```
+
+That one shape covers:
+
+- text-only reply: `text != ""`, `auiResponse == null`
+- AUI-only reply: `text == ""`, `auiResponse != null`
+- text + AUI in one turn: both fields present
+
+For interactive responses, keep one `AuiRenderState` per `AssistantTurn.id`
+and reuse that same instance anywhere the same response is shown.
+
+```kotlin
+class ChatViewModel : ViewModel() {
+    private val renderStates = mutableMapOf<String, AuiRenderState>()
+
+    var activeDetailTurnId by mutableStateOf<String?>(null)
+        private set
+
+    fun renderStateFor(turnId: String): AuiRenderState =
+        renderStates.getOrPut(turnId) { AuiRenderState() }
+
+    fun openDetail(turnId: String) {
+        activeDetailTurnId = turnId
+    }
+
+    fun closeDetail() {
+        activeDetailTurnId = null
+    }
+
+    fun onAuiFeedback(feedback: AuiFeedback) {
+        sendUserMessage(
+            text = feedback.formattedEntries ?: feedback.action,
+            metadata = feedback.params,
+        )
+    }
+}
+```
+
+Render assistant text inline, then choose the AUI surface from
+`response.display`:
+
+```kotlin
+@Composable
+fun AssistantTurnRow(
+    turn: AssistantTurn,
+    renderState: AuiRenderState,
+    isDetailOpen: Boolean,
+    onOpenDetail: () -> Unit,
+    onCloseDetail: () -> Unit,
+    onFeedback: (AuiFeedback) -> Unit,
+) {
+    Column {
+        if (turn.text.isNotBlank()) {
+            AssistantTextBubble(turn.text)
+        }
+
+        val response = turn.auiResponse ?: return@Column
+        when (response.display) {
+            AuiDisplay.INLINE -> AuiRenderer(
+                response = response,
+                state = renderState,
+                theme = AuiTheme.fromMaterialTheme(),
+                onFeedback = onFeedback,
+            )
+
+            AuiDisplay.EXPANDED,
+            AuiDisplay.SURVEY -> AuiResponseCard(
+                response = response,
+                isActive = isDetailOpen,
+                onClick = onOpenDetail,
+            )
+        }
+    }
+
+    if (isDetailOpen) {
+        val response = turn.auiResponse ?: return
+        ModalBottomSheet(onDismissRequest = onCloseDetail) {
+            AuiRenderer(
+                response = response,
+                state = renderState,
+                theme = AuiTheme.fromMaterialTheme(),
+                onFeedback = { feedback ->
+                    onFeedback(feedback)
+                    if (response.display == AuiDisplay.SURVEY) onCloseDetail()
+                },
+            )
+        }
+    }
+}
+```
+
+Recommended routing:
+
+- `inline`: render directly in the timeline
+- `expanded`: show an `AuiResponseCard`, then open the full `AuiRenderer` in a
+  sheet, dialog, or side pane when tapped
+- `survey`: also host-owned; the library manages step navigation and final
+  consolidated submit, but the host owns the container lifecycle
+
+The same `AuiRenderState` instance is what makes a dismissed survey reopen at
+the same step or a detail-pane render stay in sync with any duplicate surface.
 
 ### 4. Enable prompt caching (recommended)
 

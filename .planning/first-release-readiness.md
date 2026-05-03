@@ -213,6 +213,25 @@ This order matters. There is no value polishing Maven instructions before the
 artifact path is decided, and there is no value publishing if the consumer story
 is still ambiguous.
 
+## Completed Overlap From Library Sanity Checks
+
+The separate pre-tag audit in `.planning/library-sanity-checks.md` is complete
+through Sessions `S1`-`S10` as of `2026-05-03`. That work already closed a
+meaningful slice of this release-readiness plan.
+
+Treat the following as already satisfied unless related files change again:
+
+- distribution path and first-version decision are locked
+- Maven publishing scaffold is in place for `aui-core` and `aui-compose`
+- POM metadata and artifact contents were audited
+- local publish via `publishToMavenLocal` was validated
+- the pre-tag verification command set is documented
+- the documented command set already ran green from `./gradlew clean`
+
+This means the remaining release-readiness work should focus on public docs,
+consumer guidance, any still-missing contract tests, and final pre-tag drift
+checking rather than repeating the completed audit wholesale.
+
 ---
 
 ## Session Plan
@@ -247,6 +266,11 @@ Deliverables:
 - dependency/install instructions aligned to reality
 - publishing tasks enumerated if still pending
 ```
+
+Status:
+- Effectively completed. See `.planning/release-checklist.md` for the locked
+  Maven Central target, first version (`0.1.0-alpha01`), publishing scaffold,
+  and remaining owner-only blockers.
 
 ## Session 54: Canonical Host Integration Example
 
@@ -327,6 +351,12 @@ Deliverables:
 - documented verification commands
 ```
 
+Status note:
+- The "documented verification commands" deliverable is already complete via
+  `.planning/release-checklist.md` and sanity-check Session `S10`.
+- Execute this session only for the remaining coverage-gap review and any
+  missing high-signal renderer / feedback tests.
+
 ## Session 57: Publishing Mechanics + Release Checklist
 
 ```
@@ -350,6 +380,13 @@ Deliverables:
 - release checklist
 - docs aligned to release mechanics
 ```
+
+Status note:
+- Publishing config, release checklist, artifact inspection, and local publish
+  validation are already complete via Session `53` plus sanity-check Sessions
+  `S9`-`S10`.
+- Execute this session only for final docs/mechanics alignment and any updates
+  caused by later Sessions `54`-`56` or owner-side publishing setup progress.
 
 ## Session 58: Release Candidate Sweep
 
@@ -394,7 +431,7 @@ The release is ready only when every item below is true:
 
 ## Current Recommendation
 
-If only one thing is done next, do **Session 53** first.
+If only one thing is done next, do **Session 54** first.
 
-Until the distribution path is decided, every install example and release claim
-will remain unstable.
+The distribution and verification mechanics are now stable enough that the main
+remaining release risk is adopter ambiguity in the public integration story.
