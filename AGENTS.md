@@ -35,17 +35,21 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Current phase plan: `.planning/first-release-readiness.md`
 - Sanity-checks audit plan: `.planning/library-sanity-checks.md`
 - Release mechanics tracker: `.planning/release-checklist.md`
-- Last completed: Session 55 — Error Handling + Compatibility Contract.
-  Documented the public parser / renderer fallback contract in `README.md` and
-  `docs/architecture.md`, covering unknown blocks, malformed known block
-  salvage, total parse failure, and host guidance for `parseOrNull`,
-  `onParseError`, and `onUnknownBlock`. Added a focused `AuiParserTest` for the
-  top-level missing / unknown `display` failure case.
-- Next recommended task: Session 56 — Release-Confidence Renderer Tests from
-  `.planning/first-release-readiness.md`.
+- Last completed: Session 56 — Release-Confidence Renderer Tests. Added a
+  focused `AuiRendererContractUiTest` suite covering expanded multi-input
+  feedback aggregation across split blocks, `collectingFeedbackEnabled` vs
+  read-only action-plugin behavior, unknown-block reporting, parse-error
+  callback behavior, and chart accessibility summaries. Also fixed stale
+  Compose test imports in `AuiSurveyContentUiTest` so androidTest sources
+  compile again.
+- Next recommended task: Session 57 — Publishing Mechanics + Release Checklist
+  final alignment from `.planning/first-release-readiness.md`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
-- Known issues: none recorded
+- Known issues: local `:aui-compose:connectedDebugAndroidTest` currently fails
+  on the configured AVD before assertions run with Espresso /
+  `InputManager.getInstance` reflection failure; unit tests and androidTest
+  source compilation are green.
 - Follow-up queued: none.
 
 ## Current Direction
@@ -76,6 +80,10 @@ or response model, not chat-product features.
   integration example plus explicit error-handling / compatibility guidance in
   `README.md` and `docs/architecture.md`, and CI includes separate unit-test
   and compile-check workflows.
+- Renderer contract coverage now includes survey UX flows plus focused
+  non-survey checks for expanded feedback aggregation, disabled interactive
+  states vs read-only plugin actions, parse/unknown fallback callbacks, and
+  chart accessibility output.
 - Maven publishing is scaffolded via `vanniktech-maven-publish` for `aui-core`
   and `aui-compose`. Coordinates: `com.bennyjon:aui-{core,compose}:0.1.0-alpha01`.
   Generated POMs validated locally; first publish gated on owner-side Sonatype
@@ -83,12 +91,12 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Session 56 — Release-Confidence Renderer Tests** from
+Run **Session 57 — Publishing Mechanics + Release Checklist** from
 `.planning/first-release-readiness.md`:
-- identify the highest-value renderer and feedback coverage gaps
-- add focused user-visible tests rather than broad internal coverage
-- reuse the existing release verification command set from the sanity-check
-  audit unless new coverage reveals a missing command
+- confirm release docs/mechanics still match the now-expanded renderer test
+  surface and current verification commands
+- decide whether the connected-androidTest AVD/Espresso failure is a repo issue
+  to fix now or an environment caveat to document before Session 58
 
 ## Constraints
 
