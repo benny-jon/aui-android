@@ -42,8 +42,15 @@ Do not treat `.planning/archive/` as current execution guidance.
   callback behavior, and chart accessibility summaries. Also fixed stale
   Compose test imports in `AuiSurveyContentUiTest` so androidTest sources
   compile again.
-- Next recommended task: Session 57 — Publishing Mechanics + Release Checklist
-  final alignment from `.planning/first-release-readiness.md`.
+- Last completed: Session 57 — Publishing Mechanics + Release Checklist final
+  alignment. Release docs now explicitly match the checked-in Maven Central
+  scaffold (`vanniktech-maven-publish`, root `GROUP` / `VERSION_NAME` /
+  POM metadata, module `POM_ARTIFACT_ID` values), the first-release path is
+  documented as manual owner-run publishing, and the connected
+  `:aui-compose:connectedDebugAndroidTest` failure remains documented as a
+  local AVD/Espresso caveat rather than a release gate.
+- Next recommended task: Session 58 — Release Candidate Sweep from
+  `.planning/first-release-readiness.md`.
 - Known blockers: first publish blocked on Sonatype namespace verification +
   GPG key setup (owner-only, see release checklist)
 - Known issues: local `:aui-compose:connectedDebugAndroidTest` currently fails
@@ -91,12 +98,13 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Run **Session 57 — Publishing Mechanics + Release Checklist** from
+Run **Session 58 — Release Candidate Sweep** from
 `.planning/first-release-readiness.md`:
-- confirm release docs/mechanics still match the now-expanded renderer test
-  surface and current verification commands
-- decide whether the connected-androidTest AVD/Espresso failure is a repo issue
-  to fix now or an environment caveat to document before Session 58
+- run the agreed verification commands that are locally available
+- review README, architecture, spec references, and release docs for final
+  drift before owner-side publish
+- keep the connected-androidTest AVD/Espresso failure documented as a
+  non-gating environment caveat unless reproduced as a repo issue
 
 ## Constraints
 

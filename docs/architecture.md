@@ -719,8 +719,8 @@ Recommended host stance for LLM-driven payloads:
 - [ ] CODE_OF_CONDUCT.md (Contributor Covenant)
 - [ ] CI/CD pipeline:
   - GitHub Actions: build, test, lint on every PR
-  - Snapshot publishing to Maven Central (on main merge)
-  - Release publishing (on tag)
+  - Manual first release to Maven Central from a trusted local machine
+  - Optional automated publishing later, after the first release is stable
 - [ ] Demo app with screen recordings in README
 - [ ] Documentation site (GitHub Pages or Docusaurus)
 - [ ] JSON Schema published and versioned
@@ -857,7 +857,6 @@ Every component emits correct semantics:
 ### Stretch Goals
 - [ ] 50+ components (full catalog)
 - [ ] Snapshot tests for every component
-- [ ] GitHub Actions CI/CD
-- [ ] Maven Central publishing
+- [ ] Automated publish workflow in GitHub Actions
 - [ ] Video demo
 - [ ] Interactive component gallery app (like a Compose catalog)

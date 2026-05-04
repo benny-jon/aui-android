@@ -4,6 +4,14 @@ Operational checklist for publishing AUI Android to Maven Central. Pairs with
 `.planning/first-release-readiness.md` (the broader release-readiness plan) and
 is the source of truth for the install/publish mechanics.
 
+Execution split for the first release:
+- Agent/local work ends at repo verification, docs alignment, and optional
+  `publishToMavenLocal` validation.
+- Owner takeover starts at Sonatype/GPG setup and the real
+  `publishAndReleaseToMavenCentral` run.
+- The first release is intentionally manual. No CI-driven publish flow is
+  required for `0.1.0-alpha01`.
+
 ---
 
 ## Distribution Decision (Session 53)
@@ -149,6 +157,9 @@ Run these in order for each published version.
    requires a manual release in the Central Portal UI.) Targeting is driven
    by `SONATYPE_HOST=CENTRAL_PORTAL` in the root `gradle.properties`, not
    by a DSL call in the module build files.
+   Owner takeover starts here. This is the first step that should be run
+   manually by the repository owner on a trusted machine with real
+   Sonatype/GPG credentials present.
 5. Tag the release in git: `git tag v0.1.0-alpha01 && git push origin v0.1.0-alpha01`.
 6. Wait ~10–30 minutes for the artifact to appear at
    `https://repo1.maven.org/maven2/com/bennyjon/aui-compose/<version>/`.
@@ -177,6 +188,10 @@ These must be true before `0.1.0-alpha01` can ship.
       repo metadata.
 - [ ] `./gradlew publishToMavenLocal` produces a valid POM + signed AAR for
       both modules.
+- [ ] Connected device `androidTest` remains documented as a non-gating local
+      environment caveat until the AVD/Espresso `InputManager.getInstance`
+      failure is reproduced as a repo issue. Current release verification keeps
+      compile/unit/lint/release/publish-local coverage only.
 - [ ] Sessions 54 (canonical integration example), 55 (error contract docs),
       and 56 (release-confidence tests) landed — these are gating conditions
       from `first-release-readiness.md`, not optional.
