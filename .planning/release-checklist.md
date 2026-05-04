@@ -178,24 +178,35 @@ Run these in order for each published version.
 
 These must be true before `0.1.0-alpha01` can ship.
 
-- [ ] Sonatype namespace `com.bennyjon` verified.
-- [ ] GPG key generated and published to a keyserver.
-- [ ] Publishing secrets present in the local shell environment
+- [x] Sonatype namespace `com.bennyjon` verified.
+- [x] GPG key generated and published to a keyserver.
+- [x] Publishing secrets present in the local shell environment
       (`ORG_GRADLE_PROJECT_*`) and GitHub Actions (CI).
-- [ ] `vanniktech-maven-publish` plugin applied to `aui-core` and `aui-compose`
+- [x] `vanniktech-maven-publish` plugin applied to `aui-core` and `aui-compose`
       with full POM metadata. *(Scaffolded in Session 53.)*
-- [ ] `LICENSE`, `scm`, `url`, `developers` POM fields verified against actual
+- [x] `LICENSE`, `scm`, `url`, `developers` POM fields verified against actual
       repo metadata.
-- [ ] `./gradlew publishToMavenLocal` produces a valid POM + signed AAR for
+- [x] `./gradlew publishToMavenLocal` produces a valid POM + signed AAR for
       both modules.
-- [ ] Connected device `androidTest` remains documented as a non-gating local
+- [x] Connected device `androidTest` remains documented as a non-gating local
       environment caveat until the AVD/Espresso `InputManager.getInstance`
       failure is reproduced as a repo issue. Current release verification keeps
       compile/unit/lint/release/publish-local coverage only.
-- [ ] Sessions 54 (canonical integration example), 55 (error contract docs),
+- [x] Sessions 54 (canonical integration example), 55 (error contract docs),
       and 56 (release-confidence tests) landed — these are gating conditions
       from `first-release-readiness.md`, not optional.
-- [ ] README install snippet matches the real published coordinate.
+- [x] README install snippet matches the real published coordinate.
+
+---
+
+## First Publish Status
+
+- [x] `0.1.0-alpha01` published to Maven Central.
+- [x] Git tag `v0.1.0-alpha01` created and pushed.
+- [ ] Central propagation smoke-tested from a fresh consumer project.
+- [ ] GitHub release created with concise release notes.
+- [x] Repo docs updated to treat Maven Central as the primary install path.
+- [x] `CHANGELOG.md` created with the first release entry.
 
 ---
 

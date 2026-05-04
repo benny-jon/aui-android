@@ -49,10 +49,14 @@ Do not treat `.planning/archive/` as current execution guidance.
   documented as manual owner-run publishing, and the connected
   `:aui-compose:connectedDebugAndroidTest` failure remains documented as a
   local AVD/Espresso caveat rather than a release gate.
-- Next recommended task: Session 58 — Release Candidate Sweep from
-  `.planning/first-release-readiness.md`.
-- Known blockers: first publish blocked on Sonatype namespace verification +
-  GPG key setup (owner-only, see release checklist)
+- Last completed: First publish — `0.1.0-alpha01` was published to Maven
+  Central and tag `v0.1.0-alpha01` was pushed. Local repo follow-up updated
+  the README to treat Maven Central as the primary install path, added the
+  first `CHANGELOG.md` entry, and marked release-checklist publish milestones.
+- Next recommended task: post-release smoke verification from a fresh consumer
+  app plus a GitHub release entry for `v0.1.0-alpha01`.
+- Known blockers: none for the first publish. Remaining follow-up is
+  post-release verification/announcement work.
 - Known issues: local `:aui-compose:connectedDebugAndroidTest` currently fails
   on the configured AVD before assertions run with Espresso /
   `InputManager.getInstance` reflection failure; unit tests and androidTest
@@ -83,26 +87,25 @@ or response model, not chat-product features.
 - The demo includes key UX polish already landed: multiline composer, centered
   empty state, retryable error banners, responsive split-pane behavior, and a
   Settings screen for prompt/debug inspection.
-- Public docs are synced through 2026-05-03, including a canonical host
+- Public docs are synced through 2026-05-04, including a canonical host
   integration example plus explicit error-handling / compatibility guidance in
-  `README.md` and `docs/architecture.md`, and CI includes separate unit-test
-  and compile-check workflows.
+  `README.md` and `docs/architecture.md`. Maven Central is now the primary
+  install path for `0.1.0-alpha01`, and CI includes separate unit-test and
+  compile-check workflows.
 - Renderer contract coverage now includes survey UX flows plus focused
   non-survey checks for expanded feedback aggregation, disabled interactive
   states vs read-only plugin actions, parse/unknown fallback callbacks, and
   chart accessibility output.
-- Maven publishing is scaffolded via `vanniktech-maven-publish` for `aui-core`
-  and `aui-compose`. Coordinates: `com.bennyjon:aui-{core,compose}:0.1.0-alpha01`.
-  Generated POMs validated locally; first publish gated on owner-side Sonatype
-  + GPG setup.
+- AUI Android is now published on Maven Central as
+  `com.bennyjon:aui-core:0.1.0-alpha01` and
+  `com.bennyjon:aui-compose:0.1.0-alpha01`.
 
 ## Next Task
 
-Run **Session 58 — Release Candidate Sweep** from
-`.planning/first-release-readiness.md`:
-- run the agreed verification commands that are locally available
-- review README, architecture, spec references, and release docs for final
-  drift before owner-side publish
+Post-release follow-up:
+- smoke-test `0.1.0-alpha01` from a fresh consumer project resolved from
+  Maven Central
+- create a GitHub release for tag `v0.1.0-alpha01`
 - keep the connected-androidTest AVD/Espresso failure documented as a
   non-gating environment caveat unless reproduced as a repo issue
 
