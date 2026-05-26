@@ -53,10 +53,12 @@ Do not treat `.planning/archive/` as current execution guidance.
   Central and tag `v0.1.0-alpha01` was pushed. Local repo follow-up updated
   the README to treat Maven Central as the primary install path, added the
   first `CHANGELOG.md` entry, and marked release-checklist publish milestones.
-- Next recommended task: post-release smoke verification from a fresh consumer
-  app plus a GitHub release entry for `v0.1.0-alpha01`.
-- Known blockers: none for the first publish. Remaining follow-up is
-  post-release verification/announcement work.
+- Last completed: Post-release follow-up — `0.1.0-alpha01` was smoke-tested
+  from a fresh consumer app resolved from Maven Central, and a GitHub release
+  entry was created for tag `v0.1.0-alpha01`.
+- Next recommended task: none queued.
+- Known blockers: none for the first publish or immediate post-release
+  follow-up.
 - Known issues: local `:aui-compose:connectedDebugAndroidTest` currently fails
   on the configured AVD before assertions run with Espresso /
   `InputManager.getInstance` reflection failure; unit tests and androidTest
@@ -102,12 +104,9 @@ or response model, not chat-product features.
 
 ## Next Task
 
-Post-release follow-up:
-- smoke-test `0.1.0-alpha01` from a fresh consumer project resolved from
-  Maven Central
-- create a GitHub release for tag `v0.1.0-alpha01`
-- keep the connected-androidTest AVD/Espresso failure documented as a
-  non-gating environment caveat unless reproduced as a repo issue
+No queued release follow-up. Keep the connected-androidTest AVD/Espresso
+failure documented as a non-gating environment caveat unless reproduced as a
+repo issue.
 
 ## Constraints
 
