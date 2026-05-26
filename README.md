@@ -3,7 +3,7 @@
 > **Released on Maven Central.**
 > Current first public version: `com.bennyjon:aui-compose:0.1.0-alpha01`.
 > APIs are pre-1.0 and may change between alpha versions. Release mechanics and
-> follow-up checklist notes live in [`.planning/release-checklist.md`](.planning/release-checklist.md).
+> follow-up checklist notes live in [`.planning/archive/release-checklist.md`](.planning/archive/release-checklist.md).
 
 An open-source Kotlin library for rendering AI-driven interactive UI in Jetpack Compose.
 

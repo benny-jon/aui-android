@@ -19,22 +19,22 @@ The repo has three main modules:
 
 Read these files in order at the start of a work session:
 1. `AGENTS.md`
-2. `.planning/phase5-live-chat.md`
-3. `README.md` for public-facing usage and examples
-4. `docs/architecture.md` for design details
-5. `spec/aui-spec-v1.md` when changing wire format, prompt rules, or components
+2. `README.md` for public-facing usage and examples
+3. `docs/architecture.md` for design details
+4. `spec/aui-spec-v1.md` when changing wire format, prompt rules, or components
+
+Archived plans in `.planning/archive/` are historical context only. Read them
+only when a task explicitly needs prior execution details.
 
 Do not treat `.planning/archive/` as current execution guidance.
 
 ## Current Status
 
-- Current phase: First Release Readiness (Sessions 53–58) +
-  library-sanity-checks pre-tag audit (S1–S10)
+- Current phase: post-`0.1.0-alpha01` maintenance; no active execution plan
 - Goal: prepare AUI Android for its first external release as a usable,
   documented, test-backed library
-- Current phase plan: `.planning/first-release-readiness.md`
-- Sanity-checks audit plan: `.planning/library-sanity-checks.md`
-- Release mechanics tracker: `.planning/release-checklist.md`
+- Active planning docs: `.planning/multi-conversation-plan.md` (optional,
+  not started); completed plans live under `.planning/archive/`
 - Last completed: Session 56 — Release-Confidence Renderer Tests. Added a
   focused `AuiRendererContractUiTest` suite covering expanded multi-input
   feedback aggregation across split blocks, `collectingFeedbackEnabled` vs
@@ -123,13 +123,12 @@ repo issue.
 - Public usage and integration: `README.md`
 - Architecture: `docs/architecture.md`
 - Wire format and component spec: `spec/aui-spec-v1.md`
-- Active execution plan: `.planning/phase5-live-chat.md`
-- Release-readiness plan: `.planning/first-release-readiness.md`
+- Open proposal (not started): `.planning/multi-conversation-plan.md`
 - Historical plans: `.planning/archive/`
 
 If the user asks to prepare the library for a first release, release readiness,
-publishing, or launch polish, load `.planning/first-release-readiness.md` in
-addition to the current phase plan.
+publishing, or launch polish, load the relevant archived plan from
+`.planning/archive/` in addition to the canonical docs above.
 
 ## Update Rules
 

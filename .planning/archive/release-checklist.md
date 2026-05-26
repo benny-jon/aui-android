@@ -203,8 +203,8 @@ These must be true before `0.1.0-alpha01` can ship.
 
 - [x] `0.1.0-alpha01` published to Maven Central.
 - [x] Git tag `v0.1.0-alpha01` created and pushed.
-- [ ] Central propagation smoke-tested from a fresh consumer project.
-- [ ] GitHub release created with concise release notes.
+- [x] Central propagation smoke-tested from a fresh consumer project.
+- [x] GitHub release created with concise release notes.
 - [x] Repo docs updated to treat Maven Central as the primary install path.
 - [x] `CHANGELOG.md` created with the first release entry.
 
