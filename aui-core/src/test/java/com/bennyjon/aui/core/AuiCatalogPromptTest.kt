@@ -1,5 +1,6 @@
 package com.bennyjon.aui.core
 
+import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
 import com.bennyjon.aui.core.plugin.AuiActionPlugin
 import com.bennyjon.aui.core.plugin.AuiPlugin
@@ -31,9 +32,9 @@ class AuiCatalogPromptTest {
 
     @Test
     fun `ALL_COMPONENT_TYPES matches AuiBlockSerializer type strings`() {
-        // This list must match the type→serializer mapping in AuiBlockSerializer.
-        // If a new AuiBlock subclass is added but not listed here, this test reminds
-        // you to update ALL_COMPONENT_TYPES (which in turn fails the coverage test).
+        // This set must match the type→serializer mapping in AuiBlockSerializer.
+        // ALL_COMPONENT_TYPES is now derived from COMPONENT_CATALOG, so adding a
+        // ComponentDesc entry there is sufficient — this test catches any remaining gaps.
         val expected = setOf(
             "text", "heading", "caption", "file_content",
             "chart",
@@ -49,6 +50,22 @@ class AuiCatalogPromptTest {
             "status_banner_info", "status_banner_success", "status_banner_warning", "status_banner_error",
         )
         assertEquals(expected, AuiCatalogPrompt.ALL_COMPONENT_TYPES.toSet())
+    }
+
+    @Test
+    fun `BLOCK_TYPE_MAP covers exactly the same wire types as COMPONENT_CATALOG`() {
+        // Enforces that includeInPrompt() can filter every type that appears in the
+        // generated prompt, and that no filterable type is undocumented in the catalog.
+        // If this test fails: add the missing type to whichever inventory lacks it.
+        val catalogTypes = AuiCatalogPrompt.ALL_COMPONENT_TYPES.toSet()
+        val mapTypes = AuiPluginRegistry.BLOCK_TYPE_MAP.values.toSet()
+        assertEquals(
+            "BLOCK_TYPE_MAP and COMPONENT_CATALOG are out of sync.\n" +
+            "  In COMPONENT_CATALOG but missing from BLOCK_TYPE_MAP: ${catalogTypes - mapTypes}\n" +
+            "  In BLOCK_TYPE_MAP but missing from COMPONENT_CATALOG: ${mapTypes - catalogTypes}",
+            catalogTypes,
+            mapTypes,
+        )
     }
 
     // ── Meta-frame ────────────────────────────────────────────────────────────
@@ -719,6 +736,111 @@ class AuiCatalogPromptTest {
         assertTrue(result.contains("demo_fun_fact(title, fact) — Fun fact card."))
         assertTrue(result.contains("Prefer rich AUI components"))
         assertTrue(result.contains("Example: Test"))
+    }
+
+    // ── includeInPrompt filtering ────────────────────────────────────────────
+
+    @Test
+    fun `no filter - generated prompt contains ALL built-in type strings`() {
+        val result = AuiCatalogPrompt.generate()
+
+        for (type in AuiCatalogPrompt.ALL_COMPONENT_TYPES) {
+            assertTrue(
+                "No-filter prompt missing built-in type '$type'",
+                result.contains(type)
+            )
+        }
+    }
+
+    @Test
+    fun `includeInPrompt subset - prompt contains only those component signatures`() {
+        val registry = AuiPluginRegistry()
+            .includeInPrompt(
+                AuiBlock.Text::class,
+                AuiBlock.Heading::class,
+                AuiBlock.ButtonPrimary::class,
+            )
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        // Included types — matched by their unique component signatures
+        assertTrue(result.contains("text(text)"))
+        assertTrue(result.contains("heading(text)"))
+        assertTrue(result.contains("button_primary(label)"))
+    }
+
+    @Test
+    fun `includeInPrompt subset - other built-in component signatures are absent`() {
+        val registry = AuiPluginRegistry()
+            .includeInPrompt(
+                AuiBlock.Text::class,
+                AuiBlock.Heading::class,
+                AuiBlock.ButtonPrimary::class,
+            )
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        // Excluded types — check their unique component signatures are gone from the catalog section
+        assertFalse(result.contains("caption(text)"))
+        assertFalse(result.contains("file_content(content,"))
+        assertFalse(result.contains("chart(variant,"))
+        assertFalse(result.contains("table(title?,"))
+        assertFalse(result.contains("button_secondary(label)"))
+        assertFalse(result.contains("quick_replies(options[]"))
+        assertFalse(result.contains("chip_select_single(key,"))
+        assertFalse(result.contains("radio_list(key,"))
+        assertFalse(result.contains("checkbox_list(key,"))
+        assertFalse(result.contains("input_text_single(key,"))
+        assertFalse(result.contains("input_slider(key,"))
+        assertFalse(result.contains("input_rating_stars(key"))
+        assertFalse(result.contains("divider()"))
+        assertFalse(result.contains("stepper_horizontal("))
+        assertFalse(result.contains("progress_bar("))
+        assertFalse(result.contains("badge_info(text)"))
+        assertFalse(result.contains("badge_success(text)"))
+        assertFalse(result.contains("badge_warning(text)"))
+        assertFalse(result.contains("badge_error(text)"))
+        assertFalse(result.contains("status_banner_info(text)"))
+        assertFalse(result.contains("status_banner_success(text)"))
+        assertFalse(result.contains("status_banner_warning(text)"))
+        assertFalse(result.contains("status_banner_error(text)"))
+    }
+
+    @Test
+    fun `plugin component type is always present regardless of includeInPrompt`() {
+        val plugin = fakeComponentPlugin(
+            id = "add_to_cart",
+            promptSchema = "add_to_cart(product_id, label) — Add item to cart.",
+        )
+        val registry = AuiPluginRegistry()
+            .register(plugin)
+            .includeInPrompt(AuiBlock.Text::class, AuiBlock.ButtonPrimary::class)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        assertTrue(result.contains("PLUGIN COMPONENTS:"))
+        assertTrue(result.contains("add_to_cart(product_id, label) — Add item to cart."))
+    }
+
+    @Test
+    fun `includeInPrompt filter does not affect plugin schema output`() {
+        val componentPlugin = fakeComponentPlugin(
+            id = "product_card",
+            promptSchema = "product_card(title, price) — Rich product card.",
+        )
+        val actionPlugin = fakeActionPlugin(
+            action = "open_url",
+            promptSchema = "open_url(url) — Open URL",
+        )
+        val registry = AuiPluginRegistry()
+            .register(componentPlugin)
+            .register(actionPlugin)
+            .includeInPrompt(AuiBlock.Text::class)
+        val result = AuiCatalogPrompt.generate(pluginRegistry = registry)
+
+        // Plugin schemas unaffected by filter
+        assertTrue(result.contains("product_card(title, price) — Rich product card."))
+        assertTrue(result.contains("open_url(url) — Open URL"))
+        // Filter still applied to built-ins
+        assertFalse(result.contains("heading(text)"))
+        assertFalse(result.contains("button_primary(label)"))
     }
 
     // ── Test helpers ─────────────────────────────────────────────────────────

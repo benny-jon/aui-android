@@ -1,7 +1,9 @@
 package com.bennyjon.aui.core.plugin
 
+import com.bennyjon.aui.core.model.AuiBlock
 import com.bennyjon.aui.core.model.AuiFeedback
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -140,5 +142,87 @@ class AuiPluginRegistryTest {
 
         assertEquals(1, registry.allPlugins().size)
         assertEquals(second, registry.actionPlugin("navigate"))
+    }
+
+    // ── includeInPrompt / isAllowedInPrompt ─────────────────────────────────
+
+    @Test
+    fun `no filter set - isAllowedInPrompt returns true for every wire type`() {
+        val registry = AuiPluginRegistry()
+
+        // Spot-check a variety of built-in wire types
+        assertTrue(registry.isAllowedInPrompt("text"))
+        assertTrue(registry.isAllowedInPrompt("heading"))
+        assertTrue(registry.isAllowedInPrompt("chart"))
+        assertTrue(registry.isAllowedInPrompt("table"))
+        assertTrue(registry.isAllowedInPrompt("button_primary"))
+        assertTrue(registry.isAllowedInPrompt("radio_list"))
+        assertTrue(registry.isAllowedInPrompt("badge_info"))
+        assertTrue(registry.isAllowedInPrompt("status_banner_error"))
+    }
+
+    @Test
+    fun `includeInPrompt with subset - allowed types return true`() {
+        val registry = AuiPluginRegistry()
+            .includeInPrompt(
+                AuiBlock.Text::class,
+                AuiBlock.Heading::class,
+                AuiBlock.ButtonPrimary::class,
+            )
+
+        assertTrue(registry.isAllowedInPrompt("text"))
+        assertTrue(registry.isAllowedInPrompt("heading"))
+        assertTrue(registry.isAllowedInPrompt("button_primary"))
+    }
+
+    @Test
+    fun `includeInPrompt with subset - other built-in types return false`() {
+        val registry = AuiPluginRegistry()
+            .includeInPrompt(
+                AuiBlock.Text::class,
+                AuiBlock.Heading::class,
+                AuiBlock.ButtonPrimary::class,
+            )
+
+        assertFalse(registry.isAllowedInPrompt("caption"))
+        assertFalse(registry.isAllowedInPrompt("chart"))
+        assertFalse(registry.isAllowedInPrompt("table"))
+        assertFalse(registry.isAllowedInPrompt("radio_list"))
+        assertFalse(registry.isAllowedInPrompt("badge_info"))
+        assertFalse(registry.isAllowedInPrompt("status_banner_info"))
+    }
+
+    @Test
+    fun `includeInPrompt is fluent - can be chained with register`() {
+        val plugin = actionPlugin(id = "nav", action = "navigate")
+
+        val registry = AuiPluginRegistry()
+            .register(plugin)
+            .includeInPrompt(AuiBlock.Text::class, AuiBlock.ButtonPrimary::class)
+
+        assertTrue(registry.isAllowedInPrompt("text"))
+        assertTrue(registry.isAllowedInPrompt("button_primary"))
+        assertEquals(plugin, registry.actionPlugin("navigate"))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `AuiBlock Unknown passed to includeInPrompt throws IllegalArgumentException`() {
+        AuiPluginRegistry().includeInPrompt(AuiBlock.Unknown::class)
+    }
+
+    @Test
+    fun `includeInPrompt error message names the offending class`() {
+        // AuiBlock.Unknown is intentionally excluded from BLOCK_TYPE_MAP and must not
+        // be passed to includeInPrompt. Verify the exception message is informative.
+        try {
+            AuiPluginRegistry().includeInPrompt(AuiBlock.Unknown::class)
+        } catch (e: IllegalArgumentException) {
+            assertTrue(
+                "Exception message should name the offending class",
+                e.message?.contains("Unknown") == true
+            )
+            return
+        }
+        throw AssertionError("Expected IllegalArgumentException was not thrown")
     }
 }

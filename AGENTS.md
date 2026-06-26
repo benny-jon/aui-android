@@ -56,6 +56,14 @@ Do not treat `.planning/archive/` as current execution guidance.
 - Last completed: Post-release follow-up — `0.1.0-alpha01` was smoke-tested
   from a fresh consumer app resolved from Maven Central, and a GitHub release
   entry was created for tag `v0.1.0-alpha01`.
+- Last completed: Session 58 — Prompt-Only Block Filtering via `includeInPrompt`.
+  Added `includeInPrompt(vararg KClass<out AuiBlock>)` to `AuiPluginRegistry`
+  (with `isAllowedInPrompt` internal helper and `BLOCK_TYPE_MAP` companion-level
+  mapping). Refactored `AuiCatalogPrompt` to build the "AVAILABLE COMPONENTS:"
+  section dynamically from a new `COMPONENT_CATALOG` list filtered through the
+  registry; filtering is prompt-only — `BlockRenderer` is unchanged. Added 10
+  new tests across `AuiPluginRegistryTest` and `AuiCatalogPromptTest`. Updated
+  README with a "Filtering the prompt catalog" subsection.
 - Next recommended task: none queued.
 - Known blockers: none for the first publish or immediate post-release
   follow-up.

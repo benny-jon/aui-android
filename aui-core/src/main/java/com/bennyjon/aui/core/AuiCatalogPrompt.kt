@@ -148,7 +148,7 @@ object AuiCatalogPrompt {
         appendLine()
         appendLine(FEEDBACK_FORMAT)
         appendLine()
-        appendLine(COMPONENTS)
+        append(buildComponentsSection(pluginRegistry))
 
         val componentSchemas = pluginRegistry.allPlugins()
             .filter { it !is AuiActionPlugin && it.promptSchema.isNotBlank() }
@@ -350,66 +350,6 @@ surface. When in doubt, inline."""
   "action" must be a registered action ID (see AVAILABLE ACTIONS below).
   Never invent action names. "params" are passed to the action when the user
   interacts with the component."""
-
-    internal const val COMPONENTS = """AVAILABLE COMPONENTS:
-
-Display:
-  text(text)
-  heading(text)
-  caption(text)
-  file_content(content, filename?, language?, title?, description?)
-  chart(variant, title?, x_label?, y_label?, series[]{label, values[]{x, y}})
-    — Native chart. variant: "bar" | "line" | "pie".
-      title: optional heading above the chart.
-      x_label / y_label: optional axis labels (ignored for pie).
-      series: one or more data series. Each series has a label (shown in the legend)
-      and a values array of {x, y} points. For pie, supply one series per slice —
-      each with a single {x, y} where x is the slice label and y is the raw value;
-      the library computes percentages. For bar/line, all series must share the same
-      x labels in the same order. Chart is display-only — do not add feedback.
-    Use chart when the user asks to visualise data, compare values over time,
-    or show a breakdown. Prefer pie for part-of-whole breakdowns (≤6 slices), bar for
-    comparisons across categories, line for trends over time.
-  table(title?, columns[]{label, type, format?, align?}, rows[][])
-    — Tabular data with semantic cells. columns.type is one of
-      "text" | "number" | "badge" | "rating" and drives alignment
-      and bare-cell interpretation. Cells can be bare values (string or number)
-      or typed objects:
-        text         → "Alice"      or { "text": "Alice" }
-        number       → 1280         or { "value": 1280, "format": "currency" }
-        badge        → "Active"     or { "text": "Active", "tone": "success" }
-        rating       → 4.5          or { "value": 4.5 }
-      Badge tones: "info" | "success" | "warning" | "error".
-      Number formats: "integer" | "decimal" | "currency" | "percent".
-      Column align (optional, overrides default): "start" | "center" | "end".
-      Number columns right-align by default — omit align unless you need to override.
-      Tables scroll horizontally when wider than the chat area — prefer ≤6
-      columns and ≤20 rows. Table is display-only — do not add feedback.
-    Use table for structured comparisons, specs, leaderboards, receipts,
-    metadata. Do not fake a table with multiple text blocks.
-
-Input:
-  button_primary(label)
-  button_secondary(label)
-  quick_replies(options[]{label, feedback?})
-  chip_select_single(key, options[]{label, value}, label?, selected?)
-  chip_select_multi(key, options[]{label, value}, label?, selected?)
-  radio_list(key, options[]{label, description?, value}, label?, selected?)
-  checkbox_list(key, options[]{label, description?, value}, label?, selected?)
-  input_text_single(key, label, placeholder?, submit_label?)
-  input_slider(key, label, min, max, value?, step?)
-  input_rating_stars(key, label?, value?)
-
-Layout:
-  divider()
-
-Progress:
-  stepper_horizontal(steps[]{label}, current)
-  progress_bar(label, progress, max?)
-
-Status:
-  badge_info(text) | badge_success(text) | badge_warning(text) | badge_error(text)
-  status_banner_info(text) | status_banner_success(text) | status_banner_warning(text) | status_banner_error(text)"""
 
     internal const val SURVEY_STRUCTURE = """SURVEY STRUCTURE (when display = "survey"):
   survey_title: string — title shown at the top of the survey
@@ -639,40 +579,152 @@ Quick replies with per-option actions (each chip fires its own feedback):
   }
 }"""
 
+    // ── Per-component catalog ────────────────────────────────────────────────
+
+    /**
+     * A single entry in the built-in component catalog.
+     *
+     * [category] groups the entry under "Display", "Input", "Layout", "Progress", or "Status".
+     * [wireType] is the JSON `type` string for this block.
+     * [description] is the human-readable signature (without its leading 2-space indent) as it
+     * appears in the "AVAILABLE COMPONENTS:" section of the generated prompt.
+     */
+    private data class ComponentDesc(
+        val category: String,
+        val wireType: String,
+        val description: String,
+    )
+
+    /**
+     * Ordered catalog of all built-in component descriptions.
+     *
+     * Descriptions are stored without a leading 2-space indent; [buildComponentsSection]
+     * adds the indent when building the prompt. Category order is preserved.
+     *
+     * When a new [com.bennyjon.aui.core.model.AuiBlock] subclass is added, add its entry
+     * here AND in [ALL_COMPONENT_TYPES].
+     */
+    private val COMPONENT_CATALOG: List<ComponentDesc> = listOf(
+        // Display
+        ComponentDesc("Display", "text", "text(text)"),
+        ComponentDesc("Display", "heading", "heading(text)"),
+        ComponentDesc("Display", "caption", "caption(text)"),
+        ComponentDesc(
+            "Display", "file_content",
+            "file_content(content, filename?, language?, title?, description?)"
+        ),
+        ComponentDesc(
+            "Display", "chart",
+            """chart(variant, title?, x_label?, y_label?, series[]{label, values[]{x, y}})
+  — Native chart. variant: "bar" | "line" | "pie".
+    title: optional heading above the chart.
+    x_label / y_label: optional axis labels (ignored for pie).
+    series: one or more data series. Each series has a label (shown in the legend)
+    and a values array of {x, y} points. For pie, supply one series per slice —
+    each with a single {x, y} where x is the slice label and y is the raw value;
+    the library computes percentages. For bar/line, all series must share the same
+    x labels in the same order. Chart is display-only — do not add feedback.
+  Use chart when the user asks to visualise data, compare values over time,
+  or show a breakdown. Prefer pie for part-of-whole breakdowns (≤6 slices), bar for
+  comparisons across categories, line for trends over time."""
+        ),
+        ComponentDesc(
+            "Display", "table",
+            """table(title?, columns[]{label, type, format?, align?}, rows[][])
+  — Tabular data with semantic cells. columns.type is one of
+    "text" | "number" | "badge" | "rating" and drives alignment
+    and bare-cell interpretation. Cells can be bare values (string or number)
+    or typed objects:
+      text         → "Alice"      or { "text": "Alice" }
+      number       → 1280         or { "value": 1280, "format": "currency" }
+      badge        → "Active"     or { "text": "Active", "tone": "success" }
+      rating       → 4.5          or { "value": 4.5 }
+    Badge tones: "info" | "success" | "warning" | "error".
+    Number formats: "integer" | "decimal" | "currency" | "percent".
+    Column align (optional, overrides default): "start" | "center" | "end".
+    Number columns right-align by default — omit align unless you need to override.
+    Tables scroll horizontally when wider than the chat area — prefer ≤6
+    columns and ≤20 rows. Table is display-only — do not add feedback.
+  Use table for structured comparisons, specs, leaderboards, receipts,
+  metadata. Do not fake a table with multiple text blocks."""
+        ),
+        // Input
+        ComponentDesc("Input", "button_primary", "button_primary(label)"),
+        ComponentDesc("Input", "button_secondary", "button_secondary(label)"),
+        ComponentDesc("Input", "quick_replies", "quick_replies(options[]{label, feedback?})"),
+        ComponentDesc(
+            "Input", "chip_select_single",
+            "chip_select_single(key, options[]{label, value}, label?, selected?)"
+        ),
+        ComponentDesc(
+            "Input", "chip_select_multi",
+            "chip_select_multi(key, options[]{label, value}, label?, selected?)"
+        ),
+        ComponentDesc(
+            "Input", "radio_list",
+            "radio_list(key, options[]{label, description?, value}, label?, selected?)"
+        ),
+        ComponentDesc(
+            "Input", "checkbox_list",
+            "checkbox_list(key, options[]{label, description?, value}, label?, selected?)"
+        ),
+        ComponentDesc(
+            "Input", "input_text_single",
+            "input_text_single(key, label, placeholder?, submit_label?)"
+        ),
+        ComponentDesc("Input", "input_slider", "input_slider(key, label, min, max, value?, step?)"),
+        ComponentDesc("Input", "input_rating_stars", "input_rating_stars(key, label?, value?)"),
+        // Layout
+        ComponentDesc("Layout", "divider", "divider()"),
+        // Progress
+        ComponentDesc("Progress", "stepper_horizontal", "stepper_horizontal(steps[]{label}, current)"),
+        ComponentDesc("Progress", "progress_bar", "progress_bar(label, progress, max?)"),
+        // Status
+        ComponentDesc("Status", "badge_info", "badge_info(text)"),
+        ComponentDesc("Status", "badge_success", "badge_success(text)"),
+        ComponentDesc("Status", "badge_warning", "badge_warning(text)"),
+        ComponentDesc("Status", "badge_error", "badge_error(text)"),
+        ComponentDesc("Status", "status_banner_info", "status_banner_info(text)"),
+        ComponentDesc("Status", "status_banner_success", "status_banner_success(text)"),
+        ComponentDesc("Status", "status_banner_warning", "status_banner_warning(text)"),
+        ComponentDesc("Status", "status_banner_error", "status_banner_error(text)"),
+    )
+
+    /**
+     * Builds the "AVAILABLE COMPONENTS:" section of the generated prompt, filtered through
+     * [pluginRegistry.isAllowedInPrompt][com.bennyjon.aui.core.plugin.AuiPluginRegistry.isAllowedInPrompt].
+     *
+     * When no [includeInPrompt][com.bennyjon.aui.core.plugin.AuiPluginRegistry.includeInPrompt]
+     * filter is set on the registry, all built-in types are included and the output is
+     * equivalent to the unfiltered catalog. Plugin schemas are not affected by this filter.
+     */
+    internal fun buildComponentsSection(pluginRegistry: AuiPluginRegistry): String =
+        buildString {
+            appendLine("AVAILABLE COMPONENTS:")
+            val categoryOrder = listOf("Display", "Input", "Layout", "Progress", "Status")
+            for (category in categoryOrder) {
+                val entries = COMPONENT_CATALOG.filter {
+                    it.category == category && pluginRegistry.isAllowedInPrompt(it.wireType)
+                }
+                if (entries.isEmpty()) continue
+                appendLine()
+                appendLine("$category:")
+                for (entry in entries) {
+                    for (line in entry.description.lines()) {
+                        appendLine("  $line")
+                    }
+                }
+            }
+        }
+
     /**
      * All component type strings supported by the library.
      *
-     * This list is used by tests to verify that [COMPONENTS] stays in sync with the
-     * actual component catalog. When a new [com.bennyjon.aui.core.model.AuiBlock] subclass
-     * is added, add its type string here — the test will fail until you do.
+     * Derived directly from [COMPONENT_CATALOG] — no separate maintenance required.
+     * When a new [com.bennyjon.aui.core.model.AuiBlock] subclass is added, add its
+     * [ComponentDesc] entry to [COMPONENT_CATALOG]; this list updates automatically,
+     * and the existing test coverage will flag any remaining gaps.
      */
-    internal val ALL_COMPONENT_TYPES = listOf(
-        "text",
-        "heading",
-        "caption",
-        "file_content",
-        "chart",
-        "table",
-        "chip_select_single",
-        "chip_select_multi",
-        "button_primary",
-        "button_secondary",
-        "quick_replies",
-        "input_rating_stars",
-        "input_text_single",
-        "input_slider",
-        "radio_list",
-        "checkbox_list",
-        "divider",
-        "stepper_horizontal",
-        "progress_bar",
-        "badge_info",
-        "badge_success",
-        "badge_warning",
-        "badge_error",
-        "status_banner_info",
-        "status_banner_success",
-        "status_banner_warning",
-        "status_banner_error",
-    )
+    internal val ALL_COMPONENT_TYPES: List<String>
+        get() = COMPONENT_CATALOG.map { it.wireType }
 }

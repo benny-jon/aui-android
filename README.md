@@ -608,6 +608,27 @@ AuiRenderer(
 val systemPrompt = AuiCatalogPrompt.generate(pluginRegistry = pluginRegistry)
 ```
 
+### Filtering the prompt catalog
+
+By default, `AuiCatalogPrompt.generate()` advertises all built-in block types. For focused
+apps, you can restrict this to only the types you use:
+
+```kotlin
+val registry = AuiPluginRegistry()
+    .register(AddToCartPlugin)
+    .includeInPrompt(
+        AuiBlock.Text::class,
+        AuiBlock.Heading::class,
+        AuiBlock.ButtonPrimary::class,
+        AuiBlock.QuickReplies::class,
+        AuiBlock.InputRatingStars::class,
+    )
+```
+
+This reduces prompt size and helps the AI pick components more purposefully. Filtering is
+prompt-only — the renderer still handles all block types, including those in older
+conversations that predate the filter.
+
 ## Component Catalog
 
 27 built-in component types across these categories:
